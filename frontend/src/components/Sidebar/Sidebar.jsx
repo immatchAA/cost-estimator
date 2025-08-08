@@ -1,4 +1,7 @@
 import React from "react";
+import {Link} from "react-router-dom";
+import { FaHome, FaChartLine, FaPencilRuler} from "react-icons/fa";
+import './Sidebar.css';
 
 function Sidebar () {
     return (

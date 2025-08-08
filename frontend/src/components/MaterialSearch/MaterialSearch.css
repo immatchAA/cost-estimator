@@ -1,0 +1,33 @@
+.material-search-page{
+    display: flex;
+    min-height: 100vh;
+    background-color: #eef5ff;
+}
+
+.search-content {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+}
+.search-bar {
+    flex: 1;
+    padding: 40px;
+}
+
+.virtualstore-header h1 {
+    font-size: 2rem;
+    color: #176bb7;
+}
+
+.virtualstore-header p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.virtualstore-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
