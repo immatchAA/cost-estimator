@@ -1,0 +1,311 @@
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    background-color: transparent;
+    overflow-x: hidden;
+  }
+  
+  /* Background Wrapper with Blur */
+  .login-page.background-blur,
+  .register-page.background-blur {
+    background: url('/assets/bgbg.png') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .login-page.background-blur::before,
+  .register-page.background-blur::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    backdrop-filter: blur(3px);
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 1;
+  }
+  
+  .login-page .login-container,
+  .register-page .login-container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 20px;
+    width: 100%;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+
+.login-page .input-container select,
+.register-page .input-container select {
+    width: 100%;
+    max-width: 600px;
+    padding: 14px;
+    border: 1px solid #86b6f6;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #fff;
+    outline: none;
+    transition: border-color 0.3s;
+    cursor: pointer;
+}
+
+.login-page .input-container select:focus,
+.register-page .input-container select:focus {
+    border-color: #176bb7;
+}
+
+  .login-page .login-cards,
+  .register-page .login-cards {
+    display: flex;
+    width: 100%;
+    max-width: 1600px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    min-height: 500px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+  }
+  
+  .login-page .left-card,
+  .register-page .left-card {
+    background-color: #86b6f6;
+    width: 50%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #fff;
+  }
+  
+  .login-page .instructor-title,
+  .register-page .instructor-title {
+    font-size: 5.2rem;
+    margin-bottom: 20px;
+  }
+  
+  .login-page .register-btn,
+  .register-page .register-btn {
+    margin-top: 20px;
+    padding: 12px 40px;
+    background-color: #176bb7;
+    color: #fff;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    width: auto;
+    align-self: flex-start;
+  }
+  
+  .login-page .register-btn:hover,
+  .register-page .register-btn:hover {
+    background-color: #145a99;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(23, 107, 183, 0.3);
+  }
+  
+  .login-page .right-card,
+  .register-page .right-card {
+    width: 50%;
+    padding: 60px 100px;
+    background-color: #b4d4ff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-page .right-card h2,
+  .register-page .right-card h2 {
+    font-size: 3.2rem;
+    margin-bottom: 30px;
+    color: #176bb7;
+  }
+  
+  .login-page .input-container,
+  .register-page .input-container {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .login-page .input-container label,
+  .register-page .input-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #176bb7;
+  }
+  
+  .login-page .input-container input,
+  .register-page .input-container input {
+    width: 100%;
+    max-width: 600px;
+    padding: 14px;
+    border: 1px solid #86b6f6;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #fff;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  
+  .login-page .input-container input:focus,
+  .register-page .input-container input:focus {
+    border-color: #176bb7;
+  }
+  
+  .login-page .actions,
+  .register-page .actions {
+    width: 100%;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .login-page .actions button,
+  .register-page .actions button {
+    width: auto;
+    padding: 12px 40px;
+    background-color: #176bb7;
+    color: #fff;
+    border: none;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .login-page .actions button:hover,
+  .register-page .actions button:hover {
+    background-color: #145a99;
+  }
+  
+  .login-page .forgot-password,
+  .register-page .forgot-password {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    text-align: center;
+    color: #222;
+    cursor: pointer;
+  }
+  
+  .login-page .forgot-password:hover,
+  .register-page .forgot-password:hover {
+    text-decoration: underline;
+  }
+  
+  .login-page .register-text,
+  .register-page .register-text {
+    margin-top: 20px;
+    font-size: 1rem;
+    color: #222;
+    text-align: center;
+  }
+  
+  .login-page .register-text a,
+  .register-page .register-text a {
+    color: #176bb7;
+    font-weight: bold;
+  }
+  
+  .login-page .register-text a:hover,
+  .register-page .register-text a:hover {
+    text-decoration: underline;
+  }
+  
+  .login-page .google-signin,
+  .register-page .google-signin {
+    width: 100%;
+    display: flex;
+    margin-top: 20px;
+    justify-content: center;
+  }
+  
+  .login-page .google-btn,
+  .register-page .google-btn {
+    width: auto;
+    padding: 8px 16px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .login-page .google-btn:hover,
+  .register-page .google-btn:hover {
+    background-color: #357ae8;
+    box-shadow: 0 0 8px rgba(66, 133, 244, 0.6);
+  }
+  
+  .login-page .google-btn img,
+  .register-page .google-btn img {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .login-page form,
+  .login-page .google-signin,
+  .register-page form,
+  .register-page .google-signin {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  @media (max-width: 768px) {
+    .login-page .login-cards,
+    .register-page .login-cards {
+      flex-direction: column;
+      height: auto;
+      gap: 20px;
+    }
+  
+    .login-page .left-card,
+    .login-page .right-card,
+    .register-page .left-card,
+    .register-page .right-card {
+      width: 100%;
+      padding: 30px;
+    }
+  }
+  
+  .login-page,
+  .register-page {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
