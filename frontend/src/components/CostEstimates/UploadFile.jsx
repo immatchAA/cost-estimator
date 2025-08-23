@@ -53,7 +53,7 @@ const UploadFile = () => {
                     </div>
 
                     <div className="challenge-details">
-                    <label htmlFor="planDescription">Challenge Description</label>
+                    <label htmlFor="planDescription">Project Objectives</label>
                     <textarea
                         id="planDescription"
                         name="planDescription"
@@ -128,8 +128,14 @@ const UploadFile = () => {
                     </ol>
                 </div>
                    </div>
-                
-    
+            </div>
+
+            <div className="publish-container">
+                <button className="publish-btn"
+                onClick={() => alert("Challenge published to class!")}
+                >
+                    📢 Publish to Class
+                </button>
             </div>
             </div>
         </div>
