@@ -13,7 +13,6 @@
     overflow-x: hidden;
   }
   
-  /* Background Wrapper with Blur */
   .login-page.background-blur,
   .register-page.background-blur {
     background: url('/assets/bgbg.png') no-repeat center center fixed;
@@ -135,6 +134,21 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+
+  .register-title {
+    font-size: 100px;
+    align-items: left;
+    display: flex;
+  }
+
+  .login-btn{
+    font-size: 20px;
+  }
+  
+  .left-card p {
+    font-size: 1.5rem;
+    padding-bottom: 15px;
   }
   
   .login-page .right-card h2,

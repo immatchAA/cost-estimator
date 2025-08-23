@@ -1,16 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import backgroundImage from '../../assets/bgbg.png';
+import googleIcon from '../../assets/google.png';
 import '../Register/Register.css';
+import { useNavigate } from 'react-router-dom';
 
 function Register() {
-
+    const navigate = useNavigate();
+   
     return (
         <div className="register-page background-blur" style={{ backgroundImage: `url(${backgroundImage})` }}>
            <div className="login-container">
                 <div className="login-cards">
                     <div className="left-card">
                         <h2 className="register-title">REGISTER HERE</h2>
-                        <button className="login-btn">LOGIN</button>
+                        <p>Don't have an account?</p>
+                        <button className="login-btn" onClick={() => navigate ('/login')}>LOGIN HERE</button>
                     </div>
 
                 <div className="right-card">
@@ -68,7 +72,8 @@ function Register() {
                             <option value="teacher">Teacher</option>
                         </select>
                     </div>
-                        
+
+        
                     <div className="actions">
                         <button type= "submit">SIGN UP</button>
                     </div>
@@ -80,7 +85,7 @@ function Register() {
 
                         <div className="google-signin">
                         <button className="google-btn">
-                            <img src="google.png" alt="google icon"/>
+                            <img src={googleIcon} alt="google icon"/>
                             Or Register with Google
                         </button>
 

@@ -21,12 +21,12 @@ function Sidebar () {
             </div>
 
             <nav className="custom-nav-links">
-                <Link to="/dashboard" className="custom-nav-item">
+                <Link to="/uploadfile" className="custom-nav-item">
                     <FaHome className="custom-icon" /> Dashboard
                 </Link>
 
                 <Link className="custom-nav-item">
-                    <FaChartLine className="custom-icon" /> Student Progress
+                    <FaChartLine className="custom-icon" /> Price Material Analytics
                 </Link>
 
                 <Link className="custom-nav-item">

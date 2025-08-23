@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 import json
 import re
-
+from routes.auth import auth_bp
 load_dotenv()
 
 app = Flask(__name__)
@@ -14,6 +14,8 @@ CORS(app)
 
 gemini = GeminiPriceSearch()
 supabase = SupabaseClient()
+
+app.register_blueprint(auth_bp, url_prefix="/api")
 
 @app.route('/search_price', methods=['POST'])
 def search_price():
