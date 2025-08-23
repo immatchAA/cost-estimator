@@ -6,5 +6,4 @@ class ChallengeCreate(BaseModel):
     challenge_instructions: str
     file_url: str
 
-class MaterialRequest(BaseModel):
-    material: str
+

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from backend.services.supabase_service import SupabaseClient
+from services.supabase_service import SupabaseClient
 import os
 import shutil
 from uuid import uuid4
@@ -32,8 +32,8 @@ async def create_challenge(
 
         response = supabase_service.client.table("student_challenges").insert(challenge_data).execute()
 
-        if response.error:
-            raise HTTPException(status_code=400, detail=response.error.message)
+        if not response.data:
+                raise HTTPException(status_code=400, detail="Failed to insert challenge into database")
 
         return {"message": "Challenge created", "data": response.data}
 

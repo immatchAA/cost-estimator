@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from routes.challenges import router as challenges_router
+
 from pydantic import BaseModel
 from services.gemini_service import GeminiPriceSearch
 from services.supabase_service import SupabaseClient
@@ -7,7 +9,7 @@ import json
 import re
 
 app = FastAPI()
-
+app.include_router(challenges_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
