@@ -1,23 +1,13 @@
-import {BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './components/Login/LoginPage'
-import Register from './components/Register/RegisterPage';
-import MaterialSearch from './components/MaterialSearch/MaterialSearch';
-import UploadFile from './components/CostEstimates/UploadFile';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path ="/login" element={<Login />} /> 
-        <Route path ="/register" element={<Register /> }/>
-        <Route path ="/materialsearch" element={<MaterialSearch /> }/>
-        <Route path ="/uploadfile" element={<UploadFile /> }/>
-      </Routes>
-    </BrowserRouter>
-  
-  )
+    <>
+      <div>
+        <h1>This is Home</h1>
+      </div>
+    </>
+  );
 }
- 
-
 
 export default App;
