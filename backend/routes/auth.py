@@ -1,70 +1,84 @@
-from flask import Blueprint, request, jsonify
+from fastapi import FastAPI, APIRouter, HTTPException, Request
+from pydantic import BaseModel
 from supabase import create_client, Client
 import os
-import random
-import smtplib
-from email.mime.text import MIMEText
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
-auth_bp = Blueprint("auth", __name__)
+app = FastAPI()
+auth_router = APIRouter(prefix="/auth")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase: Client = create_client (SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-@auth_bp.route("/register", methods=["POST"])
-def register():
-    data = request.json
-    first_name = data.get("first_name")
-    last_name = data.get("last_name")
-    email = data.get("email")
-    password = data.get("password")
-    role = data.get("role")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+
+# Pydantic models for request validation
+class RegisterRequest(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    password: str
+    role: str
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+@auth_router.post("/register")
+async def register(request: RegisterRequest):
     auth_response = supabase.auth.sign_up({
-        "email": email,
-        "password": password,
-        "redirect_to": None  
+        "email": request.email,
+        "password": request.password,
+        "redirect_to": None
     })
 
     if "error" in auth_response and auth_response["error"]:
-        return jsonify({"error": auth_response["error"]["message"]}), 400
+        raise HTTPException(status_code=400, detail=auth_response["error"]["message"])
 
-    user = auth_response.user  
+    user = auth_response.user
 
     insert_response = supabase.table("users").insert({
-        "id": user.id,  
-        "first_name": first_name,
-        "last_name": last_name,
-        "email": email,
-        "role": role
+        "id": user.id,
+        "first_name": request.first_name,
+        "last_name": request.last_name,
+        "email": request.email,
+        "role": request.role
     }).execute()
 
     if insert_response.get("error"):
-        return jsonify({"error": insert_response["error"]["message"]}), 400
+        raise HTTPException(status_code=400, detail=insert_response["error"]["message"])
 
-    return jsonify({"message": "User registered successfully"}), 201
+    return {"message": "User registered successfully"}
 
 
-
-@auth_bp.route("/login", methods=["POST"])
-def login_user():
-    """Login user using Supabase"""
-    data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
-
-    if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
+@auth_router.post("/login")
+async def login_user(request: LoginRequest):
+    if not request.email or not request.password:
+        raise HTTPException(status_code=400, detail="Email and password are required")
 
     try:
         user = supabase.auth.sign_in_with_password({
-            "email": email,
-            "password": password
+            "email": request.email,
+            "password": request.password
         })
-        return jsonify({"message": "Login successful", "data": user}), 200
+        return {"message": "Login successful", "data": user}
     except Exception as e:
-        return jsonify({"error": str(e)}), 401
+        raise HTTPException(status_code=401, detail=str(e))
+
+
+# Register router with the app
+app.include_router(auth_router)

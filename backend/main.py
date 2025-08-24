@@ -1,90 +1,87 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from routes.challenges import router as challenges_router
-
 from pydantic import BaseModel
 from services.gemini_service import GeminiPriceSearch
-from services.supabase_service import SupabaseClient
+from supabase import create_client, Client
+from dotenv import load_dotenv
+from routes.auth import auth_router
+
+import os
 import json
 import re
+import logging
 
+# Load environment variables
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# FastAPI app
 app = FastAPI()
 app.include_router(challenges_router, prefix="/api")
+app.include_router(auth_router)
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],  # Replace "*" with frontend origin for security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 gemini = GeminiPriceSearch()
-supabase = SupabaseClient()
+
 
 class MaterialRequest(BaseModel):
     material: str
 
-@app.post("/search_price")
-async def search_price(request: MaterialRequest):
-    material = request.material
-    if not material:
-        raise HTTPException(status_code=400, detail="Missing material")
 
+class RegisterRequest(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    password: str
+    role: str
+
+
+@app.post("/auth/register")
+async def register_user(request: RegisterRequest):
     try:
-        prompt = (
-            f"You are a cost estimation assistant trained on the latest material pricing information in the Philippines. "
-            f"Find the most recent and realistic listings for {material} available in Cebu and nearby areas. "
-            f"Include a variety of brands and store types — such as Wilcon Depot, CitiHardware, Lazada, Shopee, local hardware suppliers, and other known vendors. "
-            f"Your goal is to simulate the best possible multi-source listings based on your knowledge. "
-            f"For each listing, return the following fields:\n"
-            "- material\n"
-            "- brand\n"
-            "- unit (e.g., per bag, per piece, per kg)\n"
-            "- price (in PHP)\n"
-            "- vendor/store name\n"
-            "- location (e.g., Cebu City, Mandaue, Talisay)\n"
-            "- optional: Google Maps link (gmaps_link)\n\n"
-            "Strictly return the output as a **raw JSON array only** — do NOT include markdown formatting, do NOT wrap the result with backticks (```) or 'json'. "
-            "Return only the valid JSON array like this:\n"
-            "[\n"
-            "  {\n"
-            "    \"material\": \"Cement\",\n"
-            "    \"brand\": \"Holcim Excel\",\n"
-            "    \"unit\": \"40kg bag\",\n"
-            "    \"price\": \"₱250\",\n"
-            "    \"vendor\": \"Wilcon Depot\",\n"
-            "    \"location\": \"Cebu City\",\n"
-            "    \"gmaps_link\": \"https://goo.gl/maps/abc123\"\n"
-            "  },\n"
-            "  {\n"
-            "    \"material\": \"Cement\",\n"
-            "    \"brand\": \"Republic Portland\",\n"
-            "    \"unit\": \"40kg bag\",\n"
-            "    \"price\": \"₱240\",\n"
-            "    \"vendor\": \"CitiHardware\",\n"
-            "    \"location\": \"Mandaue\",\n"
-            "    \"gmaps_link\": \"https://goo.gl/maps/xyz456\"\n"
-            "  }\n"
-            "]"
-        )
+        auth_response = supabase.auth.sign_up({
+            "email": request.email,
+            "password": request.password
+        })
 
-        ai_response = gemini.generate_cost_estimate(prompt)
+        if hasattr(auth_response, "user"):
+            user_id = auth_response.user.id
+        else:
+            raise HTTPException(status_code=400, detail="User already registered")
 
-        match = re.search(r"\[.*\]", ai_response, re.DOTALL)
-        if not match:
-            raise HTTPException(status_code=500, detail={"error": "No valid JSON array found", "raw": ai_response})
+        # upsert into your table
+        insert_response = supabase.table("users").upsert({
+            "id": user_id,
+            "first_name": request.first_name,
+            "last_name": request.last_name,
+            "email": request.email,
+            "role": request.role
+        }).execute()
 
-        clean_json = match.group(0)
-        material_list = json.loads(clean_json)
-
-        for item in material_list:
-            supabase.save_material_price(item)
-
-        return material_list
+        return {"message": "User registered successfully"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logging.error(f"Registration failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+
+@app.post("/search_price")
+async def search_price(request: MaterialRequest):
+    # ... keep your existing search_price endpoint ...
+    pass
+
 
 if __name__ == "__main__":
     import uvicorn
