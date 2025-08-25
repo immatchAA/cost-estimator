@@ -67,7 +67,10 @@ function Login() {
       <div className="login-container">
         <div className="login-cards">
           <div className="left-card">
-            <h2 className="instructor-title">LOGIN HERE</h2>
+            <span className="font-extralight text-2xl mb-4">
+              ARCHITECTURAL AI COST ESTIMATOR
+            </span>
+            <h2 className="instructor-title mt-10">LOGIN HERE</h2>
             <button
               className="register-btn"
               onClick={() => navigate("/register")}
