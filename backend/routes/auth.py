@@ -1,37 +1,25 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
-from fastapi.middleware.cors import CORSMiddleware
+from supabase_auth.errors import AuthApiError
 
 load_dotenv()
 
-app = FastAPI()
 auth_router = APIRouter(prefix="/auth")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React dev server
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-# Pydantic models for request validation
+# Pydantic models
 class RegisterRequest(BaseModel):
     first_name: str
     last_name: str
     email: str
     password: str
     role: str
-
 
 class LoginRequest(BaseModel):
     email: str
@@ -40,45 +28,57 @@ class LoginRequest(BaseModel):
 
 @auth_router.post("/register")
 async def register(request: RegisterRequest):
-    auth_response = supabase.auth.sign_up({
-        "email": request.email,
-        "password": request.password,
-        "redirect_to": None
-    })
+    try:
+        # Create user in Supabase Auth
+        auth_response = supabase.auth.sign_up({
+            "email": request.email,
+            "password": request.password,
+        })
 
-    if "error" in auth_response and auth_response["error"]:
-        raise HTTPException(status_code=400, detail=auth_response["error"]["message"])
+        if not auth_response.user:
+            raise HTTPException(status_code=400, detail="Failed to create user")
 
-    user = auth_response.user
+        # Insert into custom users table
+        insert_response = supabase.table("users").insert({
+            "id": auth_response.user.id,
+            "first_name": request.first_name,
+            "last_name": request.last_name,
+            "email": request.email,
+            "role": request.role
+        }).execute()
 
-    insert_response = supabase.table("users").insert({
-        "id": user.id,
-        "first_name": request.first_name,
-        "last_name": request.last_name,
-        "email": request.email,
-        "role": request.role
-    }).execute()
+        return {"message": "User registered successfully"}
 
-    if insert_response.get("error"):
-        raise HTTPException(status_code=400, detail=insert_response["error"]["message"])
-
-    return {"message": "User registered successfully"}
+    except AuthApiError as e:
+        # Handles cases like "User already registered"
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 @auth_router.post("/login")
 async def login_user(request: LoginRequest):
-    if not request.email or not request.password:
-        raise HTTPException(status_code=400, detail="Email and password are required")
-
     try:
-        user = supabase.auth.sign_in_with_password({
+        auth_response = supabase.auth.sign_in_with_password({
             "email": request.email,
             "password": request.password
         })
-        return {"message": "Login successful", "data": user}
-    except Exception as e:
+
+        if not auth_response.user:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        return {
+            "message": "Login successful",
+            "user": {
+                "id": auth_response.user.id,
+                "email": auth_response.user.email
+            },
+            "session": {
+                "access_token": auth_response.session.access_token if auth_response.session else None
+            }
+        }
+
+    except AuthApiError as e:
         raise HTTPException(status_code=401, detail=str(e))
-
-
-# Register router with the app
-app.include_router(auth_router)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")

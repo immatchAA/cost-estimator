@@ -1,6 +1,12 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Background from "./assets/main_bg.jpg";
 import Background2 from "./assets/main_bg1.jpg";
+import Background3 from "./assets/main_bg2.jpg";
+import Background4 from "./assets/main_bg3.jpg";
+import Background5 from "./assets/main_bg4.jpg";
+import Background6 from "./assets/main_bg5.jpg";
+import Background7 from "./assets/main_bg6.jpg";
+
 function App() {
   return (
     <>
@@ -45,15 +51,15 @@ function App() {
 
       {/* Page Content */}
       <main
-        className=" flex flex-col items-center  min-h-screen bg-cover bg-center"
+        className="flex flex-col min-h-screen bg-cover bg-center"
         style={{
-          backgroundImage: `url(${Background2})`,
+          backgroundImage: `url(${Background7})`,
         }}
       >
-        <section className="flex flex-col items-center justify-center text-center mt-48   ">
+        <section className="flex flex-col ml-50 mt-95">
           <span
             style={{ fontFamily: "'Montserrat', sans-serif" }}
-            className="text-black text-9xl font-medium flex drop-shadow-lg"
+            className="text-black text-9xl font-medium flex drop-shadow-lg w-5"
           >
             COST SMARTER
           </span>
