@@ -27,7 +27,9 @@ app.include_router(auth_router)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Replace "*" with frontend origin for security
+    allow_origins=["http://localhost:5173", 
+                   "http://127.0.0.1:5173"
+                   ],  # Replace "*" with frontend origin for security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -56,12 +58,12 @@ async def register_user(request: RegisterRequest):
             "password": request.password
         })
 
-        if hasattr(auth_response, "user"):
+        if auth_response.user:
             user_id = auth_response.user.id
         else:
             raise HTTPException(status_code=400, detail="User already registered")
 
-        # upsert into your table
+        # Insert/Upsert user into your custom users table
         insert_response = supabase.table("users").upsert({
             "id": user_id,
             "first_name": request.first_name,
@@ -70,11 +72,15 @@ async def register_user(request: RegisterRequest):
             "role": request.role
         }).execute()
 
+        if insert_response.error:
+            raise HTTPException(status_code=400, detail=insert_response.error.message)
+
         return {"message": "User registered successfully"}
 
     except Exception as e:
         logging.error(f"Registration failed: {e}")
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
 
 
 @app.post("/search_price")
