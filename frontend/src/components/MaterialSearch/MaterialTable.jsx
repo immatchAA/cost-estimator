@@ -1,7 +1,7 @@
 import React from "react";
 import "./MaterialTable.css";
 
-import Sidebar from "../Dashboard/Sidebar";
+import Sidebar from "../Sidebar/Sidebar";
 
 function MaterialTable({ materials }) {
   return (

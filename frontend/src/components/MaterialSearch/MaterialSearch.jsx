@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import MaterialTable from "./MaterialTable";
 import "./MaterialSearch.css";
-import Sidebar from "../Dashboard/Sidebar";
+import Sidebar from "../Sidebar/Sidebar";
 
 function MaterialSearch() {
   const [material, setMaterial] = useState("");

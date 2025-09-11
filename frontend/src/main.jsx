@@ -7,6 +7,7 @@ import App from "./App.jsx";
 import LoginPage from "./components/Login/LoginForm.jsx";
 import RegisterPage from "./components/Register/RegisterForm.jsx";
 import Dashboard from "./components/Dashboard/Dashboard.jsx";
+import AccountE from "./components/UserProfile/accountE.jsx";
 
 import MaterialSearch from "./components/MaterialSearch/MaterialSearch.jsx";
 import MaterialTable from "./components/MaterialSearch/MaterialTable.jsx";
@@ -23,6 +24,9 @@ createRoot(document.getElementById("root")).render(
 
         {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* Account Settings */}
+        <Route path="/AccountE" element={<AccountE />} />
 
         {/* Module 2 Real-Time Material Pricing Engine */}
         <Route path="/material-search" element={<MaterialSearch />} />
