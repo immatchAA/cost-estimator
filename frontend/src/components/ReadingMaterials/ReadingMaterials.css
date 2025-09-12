@@ -1,0 +1,67 @@
+.readingmaterial-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: #EEF5FF;
+}
+
+.readingmaterial-container {
+  flex: 1;
+  padding: 40px;
+}
+
+.readingmaterial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.readingmaterial-header h1 {
+  font-size: 2rem;
+  color: #176BB7;
+}
+
+.readingmaterial-header p {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.readingmaterial-section-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.edit-btn,
+.delete-btn {
+  background-color: #176bb7;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.delete-btn {
+  background-color: #d9534f;
+}
+
+.edit-btn:hover {
+  background-color: #145a99;
+}
+
+.delete-btn:hover {
+  background-color: #c9302c;
+}
+
+.readingmaterial-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+
