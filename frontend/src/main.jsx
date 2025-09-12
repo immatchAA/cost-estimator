@@ -12,6 +12,9 @@ import AccountE from "./components/UserProfile/accountE.jsx";
 import MaterialSearch from "./components/MaterialSearch/MaterialSearch.jsx";
 import MaterialTable from "./components/MaterialSearch/MaterialTable.jsx";
 
+import ReadingMaterials from "./components/ReadingMaterials/ReadingMaterials.jsx"
+import AddReadingMaterial from "./components/AddReadingMaterial/AddReadingMaterial.jsx"
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
@@ -31,6 +34,9 @@ createRoot(document.getElementById("root")).render(
         {/* Module 2 Real-Time Material Pricing Engine */}
         <Route path="/material-search" element={<MaterialSearch />} />
         <Route path="/material-table" element={<MaterialTable />} />
+
+        <Route path="/reading-materials" element={<ReadingMaterials />} />
+        <Route path="/add-reading-material" element={<AddReadingMaterial />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
