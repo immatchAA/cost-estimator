@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Sidebar from './Sidebar';
+import Sidebar from "../Sidebar/Sidebar";
 import './AddReadingMaterial.css';
 import { supabase } from '../../supabaseClient';
 import ReactMarkdown from 'react-markdown';

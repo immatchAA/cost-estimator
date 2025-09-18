@@ -1,4 +1,5 @@
 import React, { useState, useRef} from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
 import '../CostEstimates/UploadFile.css';
 
@@ -9,6 +10,9 @@ const UploadFile = () => {
   const [planDescription, setPlanDescription] = useState("");
   const [planInstructions, setPlanInstructions] = useState("");
   const [file, setFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files[0];
@@ -39,7 +43,7 @@ const UploadFile = () => {
 
     const formData = new FormData();
     formData.append("challenge_name", planName);
-    formData.append("challenge_objectives", planDescription); // ✅ matches backend
+    formData.append("challenge_objectives", planDescription); 
     formData.append("challenge_instructions", planInstructions);
     formData.append("file", file);
 
@@ -50,16 +54,29 @@ const UploadFile = () => {
       });
 
       const data = await res.json();
-      if (res.ok) {
-        alert("✅ Challenge successfully submitted!");
-        console.log("Response: ", data);
-      } else {
+
+      if(!res.ok){
         alert("❌ Error: " + (data.detail || "Something went wrong"));
+        setIsSubmitting(false);
+        return;
       }
+
+      const challengeId = data?.challenge_id;
+
+      if(!challengeId){
+        alert("Challenge published, but no challenge ID was returned. Please check the API response.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      alert("✅ Challenge published. Redirecting you to the AI Automated Structural Cost Estimation");
+        //navigate(/GenerateEstimates);
+        navigate(`/challenges/${challengeId}/estimate`, { replace: true });
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to connect to server");
-    }
+      alert("Failed to connect to server");
+      setIsSubmitting(false);
+    }   
   };
 
   return (
@@ -176,8 +193,8 @@ const UploadFile = () => {
           </div>
 
           <div className="publish-container">
-            <button className="publish-btn" onClick={handleSubmit}>
-              📢 Publish to Class
+            <button className="publish-btn" onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Publishing..." : "📢 Publish to Class"}
             </button>
           </div>
         </div>

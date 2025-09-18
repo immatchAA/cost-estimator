@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { formatDistanceToNow } from 'date-fns';
-import Sidebar from './Sidebar';
+import Sidebar from "../Sidebar/Sidebar";
 import './ReadingMaterials.css';
 
 function ReadingMaterials() {
