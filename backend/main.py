@@ -36,7 +36,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", 
                    "http://127.0.0.1:5173"
-                   ],  # Replace "*" with frontend origin for security
+                   ],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -133,7 +133,7 @@ async def search_price(request: MaterialRequest):
             "]"
         )
 
-        ai_response = gemini.generate_cost_estimates(prompt)
+        ai_response = gemini._call_gemini(prompt)
 
         match = re.search(r"\[.*\]", ai_response, re.DOTALL)
         if not match:

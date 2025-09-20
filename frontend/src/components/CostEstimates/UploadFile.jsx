@@ -70,7 +70,6 @@ const UploadFile = () => {
       }
 
       alert("✅ Challenge published. Redirecting you to the AI Automated Structural Cost Estimation");
-        //navigate(/GenerateEstimates);
         navigate(`/challenges/${challengeId}/estimate`, { replace: true });
     } catch (err) {
       console.error(err);

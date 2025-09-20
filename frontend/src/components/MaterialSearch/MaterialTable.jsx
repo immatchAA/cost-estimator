@@ -1,28 +1,26 @@
 import React from "react";
 import "./MaterialTable.css";
 
-import Sidebar from "../Sidebar/Sidebar";
-
 function MaterialTable({ materials }) {
+  const hasResults = materials && materials.length > 0;
+
   return (
-    <>
-      <Sidebar />
-      <div className="table-wrapper">
-        <div className="table-controls"></div>
-        <table className="material-table">
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th>Brand</th>
-              <th>Unit</th>
-              <th>Price</th>
-              <th>Location</th>
-              <th>Vendor</th>
-              <th>Map</th>
-            </tr>
-          </thead>
-          <tbody>
-            {materials.map((item, index) => (
+    <div className="table-wrapper">
+      <table className="material-table">
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Brand</th>
+            <th>Unit</th>
+            <th>Price</th>
+            <th>Location</th>
+            <th>Vendor</th>
+            <th>Map</th>
+          </tr>
+        </thead>
+        <tbody>
+          {hasResults ? (
+            materials.map((item, index) => (
               <tr key={index}>
                 <td>{item.material}</td>
                 <td>{item.brand}</td>
@@ -32,7 +30,11 @@ function MaterialTable({ materials }) {
                 <td>{item.vendor}</td>
                 <td>
                   {item.gmaps_link ? (
-                    <a href={item.gmaps_link} target="_blank" rel="noreferrer">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location || item.gmaps_link)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       📍
                     </a>
                   ) : (
@@ -40,11 +42,17 @@ function MaterialTable({ materials }) {
                   )}
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="7" className="placeholder">
+                🔍 Start by searching for a material to see results here.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
