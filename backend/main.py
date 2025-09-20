@@ -12,6 +12,7 @@ from supabase import create_client, Client
 from routes.challenges import router as challenges_router
 from routes.auth import auth_router
 from routes import estimate_route
+from routes import reading_materials
 from pydantic import BaseModel
 from services.gemini_service import GeminiPriceSearch
 from services.supabase_service import SupabaseClient
@@ -30,6 +31,7 @@ app = FastAPI()
 app.include_router(challenges_router, prefix="/api")
 app.include_router(estimate_route.router, prefix="/api") 
 app.include_router(auth_router)
+app.include_router(reading_materials.router)
 
 # CORS
 app.add_middleware(
