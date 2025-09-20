@@ -92,17 +92,17 @@ function Sidebar() {
           <FaChartLine className="custom-icon" /> Student Progress
         </Link>
 
-        <Link to="/designPlanList" className="custom-nav-item">
-          <FaPencilRuler className="custom-icon" /> Create Design
+        <Link to="/uploadChallenge" className="custom-nav-item">
+          <FaPencilRuler className="custom-icon" /> Create Challenge
         </Link>
 
         <Link to="/reading-materials" className="custom-nav-item">
           <FaBook className="custom-icon" /> Reading Materials
         </Link>
 
-        <Link to="/Virtualstore" className="custom-nav-item">
+        <Link to="/material-search" className="custom-nav-item">
           <FaStore className="custom-icon" /> Virtual Store
-        </Link>
+        </Link> 
 
         <Link to="/AccountE" className="custom-nav-item">
           <FaUser className="custom-icon" /> Account
