@@ -80,7 +80,7 @@ function Sidebar() {
 
       {/* Navigation Links */}
       <nav className="custom-nav-links">
-        <Link to="/dashboard" className="custom-nav-item">
+        <Link to="/teacher-dashboard" className="custom-nav-item">
           <FaHome className="custom-icon" /> Dashboard
         </Link>
 
