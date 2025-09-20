@@ -2,8 +2,9 @@ import React, { useState, useRef} from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
 import '../CostEstimates/UploadFile.css';
+import EstimatesTable from "../CostEstimates/EstimatesTable";
 
-const UploadFile = () => {
+const UploadChallenge = () => {
   const [fileName, setFileName] = useState(null);
   const fileInputRef = useRef();
   const [planName, setPlanName] = useState("");
@@ -193,13 +194,15 @@ const UploadFile = () => {
 
           <div className="publish-container">
             <button className="publish-btn" onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Publishing..." : "📢 Publish to Class"}
+              {isSubmitting ? "Publishing... Generating AI Automated Structural Cost Estimation" : "📢 Publish to Class"}
             </button>
           </div>
+
+          <EstimatesTable />
         </div>
       </div>
     </div>
   );
 };
 
-export default UploadFile;
+export default UploadChallenge;
