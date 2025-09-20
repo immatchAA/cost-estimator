@@ -6,7 +6,7 @@ import "./index.css";
 import App from "./App.jsx";
 import LoginPage from "./components/Login/LoginForm.jsx";
 import RegisterPage from "./components/Register/RegisterForm.jsx";
-import Dashboard from "./components/Dashboard/Dashboard.jsx";
+
 import AccountE from "./components/UserProfile/accountE.jsx";
 
 import MaterialSearch from "./components/MaterialSearch/MaterialSearch.jsx";
@@ -14,8 +14,9 @@ import MaterialTable from "./components/MaterialSearch/MaterialTable.jsx";
 
 import ReadingMaterials from "./components/ReadingMaterials/ReadingMaterials.jsx"
 import AddReadingMaterial from "./components/AddReadingMaterial/AddReadingMaterial.jsx"
-import UploadFile from "./components/CostEstimates/UploadFile.jsx";
-import GenerateEstimate from "./components/GenerateEstimates/GenerateEstimate.jsx";
+import UploadFile from "./components/CostEstimates/UploadChallenge.jsx";
+import Dashboard from "./components/TeacherDashboard/Dashboard.jsx";
+import EstimatesTable from "./components/CostEstimates/EstimatesTable.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -28,7 +29,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/register" element={<RegisterPage />} />
 
         {/* Dashboard */}
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/teacher-dashboard" element={<Dashboard />} />
 
         {/* Account Settings - Both Users */}
         <Route path="/AccountE" element={<AccountE />} />
@@ -42,7 +43,7 @@ createRoot(document.getElementById("root")).render(
 
         {/* Module 1 - For Teachers Only */}
         <Route path="/uploadChallenge" element= {<UploadFile />}/>
-        <Route path="/generateEstimates" element= {<GenerateEstimate />}/>
+        <Route path="/table" element= {<EstimatesTable />}/>
 
       </Routes>
     </BrowserRouter>
