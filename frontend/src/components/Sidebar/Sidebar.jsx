@@ -10,6 +10,7 @@ import {
   FaSignOutAlt,
   FaUser,
   FaBook,
+  FaGraduationCap,
 } from "react-icons/fa";
 import { supabase } from "../../supabaseClient";
 
@@ -64,7 +65,9 @@ function Sidebar() {
     <div className="custom-sidebar">
       {/* Profile Section */}
       <div className="custom-profile">
-        <div className="custom-profile-pic"></div>
+        <div className="custom-profile-pic">
+          <FaUser className="profile-icon" />
+        </div>
         <div className="custom-profile-info">
           <h3>{userProfile.name}</h3>
           <p>{userProfile.role}</p>
@@ -80,33 +83,59 @@ function Sidebar() {
 
       {/* Navigation Links */}
       <nav className="custom-nav-links">
-        <Link to="/teacher-dashboard" className="custom-nav-item">
-          <FaHome className="custom-icon" /> Dashboard
-        </Link>
+        {userProfile.role === "teacher" ? (
+          <>
+            <Link to="/teacher-dashboard" className="custom-nav-item">
+              <FaHome className="custom-icon" /> Dashboard
+            </Link>
 
-        <Link to="/classkey" className="custom-nav-item">
-          <FaTasks className="custom-icon" /> Class Keys
-        </Link>
+            <Link to="/classkey" className="custom-nav-item">
+              <FaTasks className="custom-icon" /> Class Keys
+            </Link>
 
-        <Link to="/student-progress" className="custom-nav-item">
-          <FaChartLine className="custom-icon" /> Student Progress
-        </Link>
+            <Link to="/student-progress" className="custom-nav-item">
+              <FaChartLine className="custom-icon" /> Student Progress
+            </Link>
 
-        <Link to="/uploadChallenge" className="custom-nav-item">
-          <FaPencilRuler className="custom-icon" /> Create Challenge
-        </Link>
+            <Link to="/uploadChallenge" className="custom-nav-item">
+              <FaPencilRuler className="custom-icon" /> Create Challenge
+            </Link>
 
-        <Link to="/reading-materials" className="custom-nav-item">
-          <FaBook className="custom-icon" /> Reading Materials
-        </Link>
+            <Link to="/reading-materials" className="custom-nav-item">
+              <FaBook className="custom-icon" /> Reading Materials
+            </Link>
 
-        <Link to="/material-search" className="custom-nav-item">
-          <FaStore className="custom-icon" /> Virtual Store
-        </Link> 
+            <Link to="/material-search" className="custom-nav-item">
+              <FaStore className="custom-icon" /> Virtual Store
+            </Link>
 
-        <Link to="/AccountE" className="custom-nav-item">
-          <FaUser className="custom-icon" /> Account
-        </Link>
+            <Link to="/AccountE" className="custom-nav-item">
+              <FaUser className="custom-icon" /> Account
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link to="/student-dashboard" className="custom-nav-item">
+              <FaHome className="custom-icon" /> Dashboard
+            </Link>
+
+            <Link to="/student-dashboard" className="custom-nav-item">
+              <FaGraduationCap className="custom-icon" /> My Classes
+            </Link>
+
+            <Link to="/reading-materials" className="custom-nav-item">
+              <FaBook className="custom-icon" /> Reading Materials
+            </Link>
+
+            <Link to="/material-search" className="custom-nav-item">
+              <FaStore className="custom-icon" /> Virtual Store
+            </Link>
+
+            <Link to="/AccountE" className="custom-nav-item">
+              <FaUser className="custom-icon" /> Account
+            </Link>
+          </>
+        )}
 
         <div
           className="custom-nav-item"

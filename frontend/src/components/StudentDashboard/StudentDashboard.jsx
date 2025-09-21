@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./StudentDashboard.css";
 import Sidebar from "../Sidebar/Sidebar";
+import Class from "../Class/Class";
 import { supabase } from "../../supabaseClient";
 
 function StudentDashboard() {
@@ -93,9 +94,16 @@ function StudentDashboard() {
             </div>
           </header>
 
+          {/* Classes Section */}
+          <div className="student-section">
+            <Class />
+          </div>
+
           {/* Active Projects */}
           <div className="student-section">
-            <h3 className="student-section-title">📂 Active Cost Estimations</h3>
+            <h3 className="student-section-title">
+              📂 Active Cost Estimations
+            </h3>
             {projects.map((proj, idx) => (
               <div key={idx} className="student-project-card">
                 <div className="student-project-header">

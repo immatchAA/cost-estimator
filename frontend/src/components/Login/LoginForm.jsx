@@ -49,8 +49,27 @@ function Login() {
         localStorage.setItem("supabaseSession", JSON.stringify(data.session));
         localStorage.setItem("supabaseUser", JSON.stringify(data.user));
 
-        // Redirect to dashboard after a short delay
-        setTimeout(() => navigate("/dashboard"), 1000);
+        // Get user role and redirect accordingly
+        const { data: profile, error: profileError } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Failed to fetch user profile:", profileError.message);
+          setError("Failed to fetch user profile. Please try again.");
+          return;
+        }
+
+        // Redirect based on role
+        if (profile.role === "teacher") {
+          setTimeout(() => navigate("/teacher-dashboard"), 1000);
+        } else if (profile.role === "student") {
+          setTimeout(() => navigate("/student-dashboard"), 1000);
+        } else {
+          setError("Invalid user role. Please contact administrator.");
+        }
       } else {
         setError("Login failed. Please try again.");
       }

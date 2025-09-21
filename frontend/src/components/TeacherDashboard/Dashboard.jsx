@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Dashboard.css";
 import Sidebar from "../Sidebar/Sidebar";
+import ClassManagement from "../ClassManagement/ClassManagement";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
 
@@ -128,6 +129,13 @@ function Dashboard() {
               <p className="card-title">Active Projects</p>
               <h2 className="card-value">42</h2>
               <span className="card-subtext">15 due this week</span>
+            </div>
+          </div>
+
+          {/* Class Management Section */}
+          <div className="dashboard-row">
+            <div className="long-card">
+              <ClassManagement />
             </div>
           </div>
 
