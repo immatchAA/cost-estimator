@@ -17,6 +17,7 @@ import AddReadingMaterial from "./components/AddReadingMaterial/AddReadingMateri
 import UploadFile from "./components/CostEstimates/UploadChallenge.jsx";
 import Dashboard from "./components/TeacherDashboard/Dashboard.jsx";
 import EstimatesTable from "./components/CostEstimates/EstimatesTable.jsx";
+import StudentDashboard from "./components/StudentDashboard/StudentDashboard.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -45,6 +46,9 @@ createRoot(document.getElementById("root")).render(
         <Route path="/uploadChallenge" element= {<UploadFile />}/>
         <Route path="/table" element= {<EstimatesTable />}/>
 
+        {/* Module 1 - For Students Only */}
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
+        
       </Routes>
     </BrowserRouter>
   </StrictMode>
