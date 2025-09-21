@@ -49,7 +49,7 @@ function Login() {
         localStorage.setItem("supabaseUser", JSON.stringify(data.user));
 
         // Redirect to dashboard after a short delay
-        setTimeout(() => navigate("/dashboard"), 1000);
+        setTimeout(() => navigate("/teacher-dashboard"), 1000);
       } else {
         setError("Login failed. Please try again.");
       }

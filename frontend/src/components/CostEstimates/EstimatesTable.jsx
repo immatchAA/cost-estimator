@@ -1,127 +1,231 @@
 import React from "react";
 import "./EstimatesTable.css";
 
-const EstimatesTable = () => {
+const peso = (v) => {
+  const n = Number(v ?? 0);
+  if (!Number.isFinite(n)) return "-";
+  return `₱${n.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const CAT_ORDER = [
+  "EARTHWORK",
+  "FORMWORK & SCAFFOLDING",
+  "MASONRY WORK",
+  "CONCRETE WORK",
+  "STEELWORK",
+  "CARPENTRY WORK",
+  "ROOFING WORK",
+];
+
+export default function EstimatesTable({ data }) {
+  const hasData = !!data;
+  const challengeId = data?.challenge_id ?? "-";
+  const analysisId = data?.analysis_id ?? "-";
+  const overallConfidence = data?.overall_confidence ?? null;
+  const catSubs = data?.category_subtotals ?? [];
+  const summary = data?.summary ?? {};
+  const estimates = data?.estimates ?? [];
+
+  const grouped = CAT_ORDER.map((cat) => ({
+    cat,
+    rows: estimates.filter((r) => r.cost_category === cat),
+    subtotal:
+      estimates
+        .filter((r) => r.cost_category === cat)
+        .reduce((s, r) => s + (Number(r.amount) || 0), 0) || 0,
+  })).filter((g) => g.rows.length > 0 || !hasData);
+
   return (
     <div className="cost-estimate">
-    <div className="estimate-header">
-        <h2>Challenge ID: </h2>
-    </div>
+      <div className="estimate-header">
+        <h2>Challenge ID: {challengeId}</h2>
+        {hasData && (
+          <p>
+            <strong>Analysis ID:</strong> {analysisId}
+          </p>
+        )}
+      </div>
 
-      {/* Left column */}
+      {/* LEFT: Project Summary */}
       <div className="project-summary">
         <h4>Project Summary</h4>
         <table className="summary-table">
           <tbody>
-            <tr><td>I. EARTHWORK</td><td>₱6000</td></tr>
-            <tr><td>II. FORMWORK &amp; SCAFFOLDING</td><td>-</td></tr>
-            <tr><td>III. MASONRY WORK</td><td>-</td></tr>
-            <tr><td>IV. CONCRETE WORK</td><td>-</td></tr>
-            <tr><td>V. STEELWORK</td><td>-</td></tr>
-            <tr><td>VI. CARPENTRY WORK</td><td>-</td></tr>
-            <tr><td>VII. ROOFING WORK</td><td>-</td></tr>
-            <tr><td><strong>TOTAL MATERIAL COST (TC)</strong></td><td>-</td></tr>
-            <tr><td><strong>LABOR COST LC (40% of TC)</strong></td><td>-</td></tr>
-            <tr><td><strong>CONTINGENCIES C (5% of (TC + LC))</strong></td><td>-</td></tr>
-            <tr><td><strong>GRAND TOTAL COST</strong></td><td>-</td></tr>
+            {hasData ? (
+              <>
+                {catSubs.map((c, i) => (
+                  <tr key={i}>
+                    <td>{c.cost_category}</td>
+                    <td>{peso(c.subtotal)}</td>
+                  </tr>
+                ))}
+                <tr>
+                  <td>
+                    <strong>Subtotal</strong>
+                  </td>
+                  <td>{peso(summary.subtotal)}</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>
+                      Contingency (
+                      {Math.round(
+                        (summary.contingency_percentage || 0) * 100
+                      )}
+                      %)
+                    </strong>
+                  </td>
+                  <td>{peso(summary.contingency_amount)}</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Total</strong>
+                  </td>
+                  <td>{peso(summary.total)}</td>
+                </tr>
+              </>
+            ) : (
+              <>
+                <tr><td>I. EARTHWORK</td><td>–</td></tr>
+                <tr><td>II. FORMWORK & SCAFFOLDING</td><td>–</td></tr>
+                <tr><td>III. MASONRY WORK</td><td>–</td></tr>
+                <tr><td>IV. CONCRETE WORK</td><td>–</td></tr>
+                <tr><td>V. STEELWORK</td><td>–</td></tr>
+                <tr><td>VI. CARPENTRY WORK</td><td>–</td></tr>
+                <tr><td>VII. ROOFING WORK</td><td>–</td></tr>
+                <tr><td><strong>TOTAL MATERIAL COST (TC)</strong></td><td>–</td></tr>
+                <tr><td><strong>LABOR COST LC (40% of TC)</strong></td><td>–</td></tr>
+                <tr><td><strong>CONTINGENCIES C (5% of (TC + LC))</strong></td><td>–</td></tr>
+                <tr><td><strong>GRAND TOTAL COST</strong></td><td>–</td></tr>
+              </>
+            )}
           </tbody>
         </table>
 
-        {/* Confidence Block */}
-        <div className="analysis-confidence">
-          <h5>Analysis Confidence</h5>
-          <p><strong>Overall Accuracy:</strong></p>
-          <div className="progress-bar">
-            <div className="progress-fill"></div>
+        {hasData && (
+          <div className="analysis-confidence">
+            <h5>Analysis confidence</h5>
+            <p>
+              <strong>Overall Accuracy: </strong>
+              {Math.round((overallConfidence || 0) * 100)}%
+            </p>
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{
+                  width: `${Math.round((overallConfidence || 0) * 100)}%`,
+                }}
+              />
+            </div>
+            <p className="confidence-text">
+              {overallConfidence >= 0.8
+                ? "High confidence in structural cost estimation"
+                : overallConfidence >= 0.5
+                ? "Moderate confidence in structural cost estimation"
+                : "Low confidence in structural cost estimation"}
+            </p>
           </div>
-          <p className="confidence-text">
-            High confidence in structural cost estimation
-          </p>
-        </div>
-      </div>
+        )}
+      </div>{/* ← CLOSE project-summary BEFORE starting right-column */}
 
-      {/* Right column */}
       <div className="right-column">
         <h4>Structural Cost Estimates</h4>
         <table className="cost-estimate-table">
           <thead>
             <tr>
-              <th>Item</th>
+              <th style={{ width: 50 }}>Item</th>
               <th>Description</th>
-              <th>Quantity</th>
-              <th>Unit</th>
-              <th>Unit Price</th>
-              <th>Amount</th>
+              <th style={{ width: 110 }}>Quantity</th>
+              <th style={{ width: 90 }}>Unit</th>
+              <th style={{ width: 130 }}>Unit Price</th>
+              <th style={{ width: 140 }}>Amount</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>1</td>
-              <td>Earthwork</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>Formwork &amp; Scaffolding</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td>Masonry Work</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>4</td>
-              <td>Concrete Work</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>5</td>
-              <td>Steelwork</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>6</td>
-              <td>Carpentry Work</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td>7</td>
-              <td>Roofing Work</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr className="subtotal-row">
-              <td colSpan={7}><strong>Subtotal</strong></td>
-            </tr>
-            <tr className="total-row">
-              <td colSpan={7}><strong>Total (incl. 10% Contingency)</strong></td>
-            </tr>
+            {hasData ? (
+              grouped.map((g, gi) => (
+                <React.Fragment key={g.cat + gi}>
+                  <tr className="cat-row">
+                    <td colSpan={6}>
+                      <strong>
+                        {roman(gi + 1)}. {g.cat}
+                      </strong>
+                    </td>
+                  </tr>
+                  {g.rows.map((r, i) => (
+                    <tr key={`${g.cat}-${i}`}>
+                      <td>{i + 1}</td>
+                      <td>{r.description}</td>
+                      <td>{Number(r.quantity ?? 0) || "-"}</td>
+                      <td>{r.unit || "-"}</td>
+                      <td>{peso(r.unit_price)}</td>
+                      <td>{peso(r.amount)}</td>
+                    </tr>
+                  ))}
+                  <tr className="subtotal-row">
+                    <td colSpan={5}>
+                      <strong>Sub-Total</strong>
+                    </td>
+                    <td>
+                      <strong>{peso(g.subtotal)}</strong>
+                    </td>
+                  </tr>
+                </React.Fragment>
+              ))
+            ) : (
+              CAT_ORDER.map((cat, i) => (
+                <React.Fragment key={cat}>
+                  <tr className="cat-row">
+                    <td colSpan={6}>
+                      <strong>
+                        {roman(i + 1)}. {cat}
+                      </strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>–</td><td>—</td><td>–</td><td>–</td><td>–</td><td>–</td>
+                  </tr>
+                  <tr className="subtotal-row">
+                    <td colSpan={5}>
+                      <strong>Sub-Total</strong>
+                    </td>
+                    <td>–</td>
+                  </tr>
+                </React.Fragment>
+              ))
+            )}
+            {hasData && (
+              <tr className="grand-footer">
+                <td colSpan={5}>
+                  <strong>Total (incl. 10% Contingency)</strong>
+                </td>
+                <td>
+                  <strong>{peso(summary.total)}</strong>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
-};
+}
 
-export default EstimatesTable;
+function roman(n) {
+  const map = [
+    [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
+    [100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
+    [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+  ];
+  let res = "";
+  for (const [v, s] of map) {
+    while (n >= v) {
+      res += s;
+      n -= v;
+    }
+  }
+  return res;
+}
