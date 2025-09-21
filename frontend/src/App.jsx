@@ -1,23 +1,17 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import Background from "./assets/main_bg.jpg";
-import Background2 from "./assets/main_bg1.jpg";
-import Background3 from "./assets/main_bg2.jpg";
-import Background4 from "./assets/main_bg3.jpg";
-import Background5 from "./assets/main_bg4.jpg";
-import Background6 from "./assets/main_bg5.jpg";
 import Background7 from "./assets/main_bg6.jpg";
 
 function App() {
   return (
     <>
       {/* Navigation Bar */}
-      <header className="bg-white shadow-sm border-b border-gray-300">
+      <header className="bg-[#E8E8E8] shadow-md border-b border-gray-200">
         <div className="container flex items-center h-20 px-6 justify-between">
           {/* Logo / Title */}
           <Link
             to="/"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
-            className="text-black text-3xl font-extralight hover:text-gray-700 transition"
+            className="text-[#176bb7] text-2xl font-semibold hover:text-blue-700 transition"
           >
             ARCHITECTURAL AI COST ESTIMATOR
           </Link>
@@ -27,21 +21,21 @@ function App() {
             <Link
               to="/"
               style={{ fontFamily: "'Montserrat', sans-serif" }}
-              className="text-gray-700 hover:text-black text-lg font-light transition"
+              className="text-[#176bb7] hover:text-[#176bb7] text-lg font-medium transition"
             >
               Home
             </Link>
             <Link
               to="/login"
               style={{ fontFamily: "'Montserrat', sans-serif" }}
-              className="text-gray-700 hover:text-black text-lg font-light transition"
+              className="text-[#176bb7] hover:text-[#176bb7] text-lg font-medium transition"
             >
               Login
             </Link>
             <Link
               to="/register"
               style={{ fontFamily: "'Montserrat', sans-serif" }}
-              className="text-gray-700 hover:text-black text-lg font-light transition"
+              className="text-[#176bb7] hover:text-[#176bb7] text-lg font-medium transition"
             >
               Register
             </Link>
@@ -56,16 +50,16 @@ function App() {
           backgroundImage: `url(${Background7})`,
         }}
       >
-        <section className="flex flex-col ml-50 mt-95">
+        <section className="flex flex-col ml-70 mt-95">
           <span
             style={{ fontFamily: "'Montserrat', sans-serif" }}
-            className="text-black text-9xl font-medium flex drop-shadow-lg w-5"
+            className="text-[#176bb7] text-9xl font-medium flex drop-shadow-lg w-5"
           >
             COST SMARTER
           </span>
           <p
             style={{ fontFamily: "'Montserrat', sans-serif" }}
-            className="text-black text-3xl font-light mt-3 drop-shadow-lg"
+            className="text-[#176bb7] text-2xl font-light mt-3 drop-shadow-sm"
           >
             Simulate your cost with AI before you build
           </p>
