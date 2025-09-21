@@ -21,6 +21,7 @@ import EstimatesTable from "./components/CostEstimates/EstimatesTable.jsx";
 import StudentDashboard from "./components/StudentDashboard/StudentDashboard.jsx";
 import Class from "./components/Class/Class.jsx";
 import ClassManagement from "./components/ClassManagement/ClassManagement.jsx";
+import CostEstimationChallengeDetails from "./components/StudentChallenges/CostEstimationChallengeDetails.jsx";
 
 
 createRoot(document.getElementById("root")).render(
@@ -57,6 +58,10 @@ createRoot(document.getElementById("root")).render(
         {/* Class Management Routes */}
         <Route path="/class-management" element={<ClassManagement />} />
         <Route path="/my-classes" element={<Class />} />
+
+        {/* Cost Estimation Challenge */}
+        <Route path="/cost-estimation-challenge-details" element={<CostEstimationChallengeDetails />} />
+
       </Routes>
     </BrowserRouter>
   </StrictMode>
