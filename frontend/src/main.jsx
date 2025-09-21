@@ -16,10 +16,12 @@ import ReadingMaterials from "./components/ReadingMaterials/ReadingMaterials.jsx
 import AddReadingMaterial from "./components/AddReadingMaterial/AddReadingMaterial.jsx";
 import UploadFile from "./components/CostEstimates/UploadChallenge.jsx";
 import Dashboard from "./components/TeacherDashboard/Dashboard.jsx";
+
 import EstimatesTable from "./components/CostEstimates/EstimatesTable.jsx";
 import StudentDashboard from "./components/StudentDashboard/StudentDashboard.jsx";
 import Class from "./components/Class/Class.jsx";
 import ClassManagement from "./components/ClassManagement/ClassManagement.jsx";
+
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -45,8 +47,9 @@ createRoot(document.getElementById("root")).render(
         <Route path="/add-reading-material" element={<AddReadingMaterial />} />
 
         {/* Module 1 - For Teachers Only */}
-        <Route path="/uploadChallenge" element={<UploadFile />} />
-        <Route path="/table" element={<EstimatesTable />} />
+
+        <Route path="/uploadChallenge" element= {<UploadFile />}/>
+
 
         {/* Module 1 - For Students Only */}
         <Route path="/student-dashboard" element={<StudentDashboard />} />

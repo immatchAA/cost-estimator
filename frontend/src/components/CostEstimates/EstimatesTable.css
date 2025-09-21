@@ -128,3 +128,18 @@
   background: #c8e6c9;
   font-weight: bold;
 }
+
+.cat-row td {
+  background: #f4f9ff;
+  border-top: 2px solid #dfe9f7;
+  font-weight: 600;
+}
+.subtotal-row td {
+  background: #eef7ea;
+  font-weight: 600;
+}
+.grand-footer td {
+  background: #dff1e0;
+  border-top: 2px solid #a7d0ad;
+  font-weight: 700;
+}

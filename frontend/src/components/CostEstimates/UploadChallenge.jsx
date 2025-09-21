@@ -1,8 +1,8 @@
-import React, { useState, useRef} from "react";
-import { useNavigate } from "react-router-dom";
+// UploadChallenge.jsx
+import React, { useState, useRef } from "react";
 import Sidebar from "../Sidebar/Sidebar";
-import '../CostEstimates/UploadFile.css';
 import EstimatesTable from "../CostEstimates/EstimatesTable";
+import "../CostEstimates/UploadChallenge.css";
 
 const UploadChallenge = () => {
   const [fileName, setFileName] = useState(null);
@@ -13,13 +13,19 @@ const UploadChallenge = () => {
   const [file, setFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const navigate = useNavigate();
+  const [estimating, setEstimating] = useState(false);
+  const [estimation, setEstimation] = useState(null);
+
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
       setFileName(selectedFile.name);
+
+      // reset input so reselecting the same file works
+      e.target.value = "";
     }
   };
 
@@ -32,9 +38,7 @@ const UploadChallenge = () => {
     }
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
+  const handleDragOver = (e) => e.preventDefault();
 
   const handleSubmit = async () => {
     if (!planName || !planDescription || !planInstructions || !file) {
@@ -42,9 +46,12 @@ const UploadChallenge = () => {
       return;
     }
 
+    setIsSubmitting(true);
+    setEstimation(null);
+
     const formData = new FormData();
     formData.append("challenge_name", planName);
-    formData.append("challenge_objectives", planDescription); 
+    formData.append("challenge_objectives", planDescription);
     formData.append("challenge_instructions", planInstructions);
     formData.append("file", file);
 
@@ -53,30 +60,58 @@ const UploadChallenge = () => {
         method: "POST",
         body: formData,
       });
-
       const data = await res.json();
 
-      if(!res.ok){
+      if (!res.ok) {
         alert("❌ Error: " + (data.detail || "Something went wrong"));
         setIsSubmitting(false);
         return;
       }
 
       const challengeId = data?.challenge_id;
+      const planFileUrl =
+        data?.plan_file_url || data?.file_url || data?.public_url;
 
-      if(!challengeId){
-        alert("Challenge published, but no challenge ID was returned. Please check the API response.");
+      if (!challengeId || !planFileUrl) {
+        alert("Challenge created but missing challenge_id or plan_file_url.");
         setIsSubmitting(false);
         return;
       }
 
-      alert("✅ Challenge published. Redirecting you to the AI Automated Structural Cost Estimation");
-        navigate(`/challenges/${challengeId}/estimate`, { replace: true });
+      // 2) Run AI estimate
+      setEstimating(true);
+      const estRes = await fetch(
+        `http://localhost:8000/api/challenges/${challengeId}/estimate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan_file_url: planFileUrl }),
+        }
+      );
+      const estData = await estRes.json();
+
+      if (!estRes.ok) {
+        alert("❌ Estimation failed: " + (estData.detail || "Unknown error"));
+        setIsSubmitting(false);
+        setEstimating(false);
+        return;
+      }
+
+      const payload = estData?.data || null;
+      if (payload) payload.challenge_id = challengeId;
+
+      setEstimation(payload);
+      setEstimating(false);
+      setIsSubmitting(false);
+
+      setSuccessMessage("✅ Successfully published! AI Cost Estimation generated.");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       console.error(err);
       alert("Failed to connect to server");
       setIsSubmitting(false);
-    }   
+      setEstimating(false);
+    }
   };
 
   return (
@@ -89,6 +124,10 @@ const UploadChallenge = () => {
             <p>Automated Floor Plan Analysis and Cost Estimates by AI</p>
           </header>
 
+          {successMessage && (
+            <div className="toast-success">{successMessage}</div>
+          )}
+
           <div className="upload-container">
             <h3 className="upload-title">Instructor Portal</h3>
             <p className="upload-description">
@@ -96,6 +135,7 @@ const UploadChallenge = () => {
               challenge.
             </p>
 
+            {/* Challenge Name */}
             <div className="challenge-details">
               <label htmlFor="planName">Challenge Name</label>
               <input
@@ -109,6 +149,7 @@ const UploadChallenge = () => {
               />
             </div>
 
+            {/* Project Objectives */}
             <div className="challenge-details">
               <label htmlFor="planDescription">Project Objectives</label>
               <textarea
@@ -119,9 +160,10 @@ const UploadChallenge = () => {
                 rows="4"
                 value={planDescription}
                 onChange={(e) => setPlanDescription(e.target.value)}
-              ></textarea>
+              />
             </div>
 
+            {/* Instructions */}
             <div className="challenge-details">
               <label htmlFor="planInstructions">Instructions</label>
               <textarea
@@ -132,9 +174,10 @@ const UploadChallenge = () => {
                 rows="6"
                 value={planInstructions}
                 onChange={(e) => setPlanInstructions(e.target.value)}
-              ></textarea>
+              />
             </div>
 
+            {/* Upload Box */}
             <div className="upload-flex-wrapper">
               <div
                 className="drag-drop-box"
@@ -153,18 +196,19 @@ const UploadChallenge = () => {
                   ref={fileInputRef}
                   style={{ display: "none" }}
                   onChange={handleFileSelect}
-                  accept=".pdf, .jpg, .jpeg, .png, .dwg"
+                  accept=".pdf,.jpg,.jpeg,.png,.dwg,.dxf"
                 />
 
                 {fileName && <p className="file-name">Selected: {fileName}</p>}
                 <button
+                  type="button"
                   className="select-btn"
                   onClick={() => fileInputRef.current.click()}
                 >
                   Select Floor Plan
                 </button>
                 <p className="supported-formats">
-                  Supported formats: PDF, JPG, PNG <br />
+                  Supported formats: PDF, JPG, PNG, DWG, DXF <br />
                   Maximum file size: 10MB
                 </p>
               </div>
@@ -190,15 +234,32 @@ const UploadChallenge = () => {
                 </ol>
               </div>
             </div>
+
+            {/* Publish Button with Spinner */}
+            <div className="publish-container">
+              <button
+                className="publish-btn"
+                onClick={handleSubmit}
+                disabled={isSubmitting || estimating}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner" /> Publishing...
+                  </>
+                ) : estimating ? (
+                  <>
+                    <span className="spinner" /> Generating AI Estimates...
+                  </>
+                ) : (
+                  "📢 Publish to Class"
+                )}
+              </button>
+            </div>
           </div>
 
-          <div className="publish-container">
-            <button className="publish-btn" onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Publishing... Generating AI Automated Structural Cost Estimation" : "📢 Publish to Class"}
-            </button>
+          <div style={{ marginTop: 24 }}>
+            <EstimatesTable data={estimation} />
           </div>
-
-          <EstimatesTable />
         </div>
       </div>
     </div>

@@ -40,10 +40,17 @@ class AICostEstimate(BaseModel):
 class CostEstimatesSummary(BaseModel):
     summary_id: Optional[UUID]
     analysis_id: UUID
-    subtotal_amount: float
-    contingency_percentage: Optional[float] = 0.1
-    contingency_amount: Optional[float]
-    total_amount: float
+    earthwork_amount: float
+    formwork_amount: float
+    masonry_amount: float
+    concrete_amount: float
+    steelwork_amount: float
+    carpentry_amount: float
+    roofing_amount: float
+    total_material_cost: float
+    labor_cost: float
+    contingencies_amount: float
+    grand_total_cost: float
     created_at: Optional[datetime]
 
 class EstimateItem(BaseModel):

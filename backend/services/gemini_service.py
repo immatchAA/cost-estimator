@@ -1,9 +1,5 @@
-# services/gemini_service.py
-import os
-import json
-import requests
+import os, json, requests
 from typing import List, Dict, Any
-
 
 class GeminiPriceSearch:
     def __init__(self):
@@ -23,40 +19,40 @@ class GeminiPriceSearch:
 
     def _safe_json_parse(self, text: str) -> Any:
         cleaned = text.strip()
+
         if cleaned.startswith("```"):
             cleaned = "\n".join(cleaned.split("\n")[1:-1])
+
+        import re
+        m = re.search(r"\[[\s\S]*\]", cleaned)
+        if m:
+            cleaned = m.group(0)
         return json.loads(cleaned)
 
-    # -------------------------
-    # STEP 1: Extract elements
-    # -------------------------
+
     def analyze_plan_extract_elements(self, plan_file_url: str) -> List[Dict]:
-        """
-        Calls Gemini to extract structural elements from a plan file.
-        """
         prompt = f"""
 You are an assistant that analyzes architectural floor plan or elevation drawings.
 
 Input: {plan_file_url}
 
 Task:
-1. Extract all structural elements (walls, slabs, beams, columns, doors, windows, roof, etc.).
-2. For each element, provide:
-   - element_type (string, e.g., wall, slab, beam, column, etc.)
-   - material_category (string, e.g., concrete, wood, steel, glass, etc.)
-   - dimensions (string, keep original format if available, e.g., "3m x 5m x 0.2m")
-   - coordinates (JSON with approximate x,y values if extractable; otherwise null)
+1) Extract structural elements (walls, slabs, beams, columns, doors, windows, roof, etc.).
+2) For each element provide:
+   - element_type (string)
+   - material_category (string)
+   - dimensions (string)
+   - coordinates (JSON or null)
 
-Output strictly as a JSON array.
+Output strictly as a JSON array only.
 """
         raw = self._call_gemini(prompt)
         return self._safe_json_parse(raw)
 
-    # -------------------------
-    # STEP 2: Generate BoQ
-    # -------------------------
+    # --- NEW / FIXED: signature + prompt with cheat-sheet + JSON guard ---
     def generate_cost_estimates(
         self,
+        *,
         elements: List[Dict],
         challenge_id: str,
         challenge_name: str,
@@ -66,23 +62,20 @@ Output strictly as a JSON array.
         site_location: str = "Cebu, Philippines",
     ) -> List[Dict]:
         prompt = f"""
-You are a senior structural cost estimator for low- to mid-rise buildings in Cebu, Philippines (metric units).
-Your task is to produce a categorized Bill of Quantities (BoQ) with realistic materials and quantities
-based on the provided challenge context and extracted structural elements. DO NOT include unit prices
-or amounts—another service will fetch live prices.
+Please act as a senior structural cost estimator.
 
-### Challenge context
+### Project details
 - Challenge ID: {challenge_id}
-- Name/Title: {challenge_name}
-- Objective/Notes: {challenge_objective}
+- Name: {challenge_name}
+- Objectives: {challenge_objective}
 - Instructions: {challenge_instructions}
-- Files: {", ".join(plan_file_urls)}
-- Site location (assume affects practices/vendors): {site_location}
+- Uploaded files: {", ".join(plan_file_urls)}
+- Site location (for practices/vendors): {site_location}
 
 ### Extracted structural elements (JSON)
 {json.dumps(elements, indent=2)}
 
-### Categories (use EXACT names):
+### Cost categories (use EXACT names)
 - EARTHWORK
 - FORMWORK & SCAFFOLDING
 - MASONRY WORK
@@ -91,84 +84,55 @@ or amounts—another service will fetch live prices.
 - CARPENTRY WORK
 - ROOFING WORK
 
-### Estimating rules to follow (PH/Cebu, metric):
+### Reference (PH practice—use unless plans/specs say otherwise)
+- EARTHWORK → excavation, backfill, gravel bedding, borrow fill.
+- FORMWORK & SCAFFOLDING → phenolic/marine plywood, coco lumber, tie wire, nails, GI pipes/H-frames.
+- MASONRY WORK → CHB 6", cement, sand, tie wire, small rebars (for CHB reinforcement).
+- CONCRETE WORK → cement, sand, gravel, water.
+- STEELWORK → deformed rebars (10/12/16/20mm × 6m), tie wire; structural steel if applicable.
+- CARPENTRY WORK → lumber (2×2/2×3/2×4), plywood (1/2" or 3/4"), screws/nails.
+- ROOFING WORK → pre-painted GI sheets (~0.4mm), C-purlins (2×3/2×4 × 6m), tek screws, ridge roll, flashings, sealant.
 
-1) EARTHWORK
-- Compute excavation volume for trenches/footings: V = L × W × D (m³) from footings/strip footings.
-- Backfill volume ≈ 0.8–0.9 × excavation volume after concrete volumes are placed.
-- Include borrowed fill (sand/gravel), water for compaction, and (if needed) hauling/disposal.
-- Units: m³ (soil, fill), truckloads (optional note), liters (water, optional).
+### Rules
+1) List realistic materials under the correct category.
+2) Provide approximate quantities and appropriate units (m³, m², pcs, bags, kg, sheet).
+3) DO NOT include labor. Materials only.
+4) DO NOT invent prices—set unit_price = null and amount = null.
+5) If the plan likely includes a roof (typical for the building type) but drawings don’t specify details, still include ROOFING WORK with reasonable assumptions (pre-painted GI sheets, C-purlins, screws, flashings).
+6) Output RAW JSON ARRAY ONLY (no markdown, no prose). Each item must follow:
 
-2) FORMWORK & SCAFFOLDING
-- Formwork area = surface area of concrete elements (columns, beams, slabs, walls), in m² contact area.
-- Translate to plywood sheets (4x8 ft ~ 1.22m × 2.44m), studs/walers (lumber lengths), nails/tie wire.
-- Include scaffolding (GI pipes or H-frames) estimated by wall heights/floor areas/element access.
-- Units: m² (formwork), pcs (plywood), m (lumber/GI pipe), kg or rolls (tie wire), sets (scaffold frames).
-
-3) MASONRY WORK
-- Wall area = Height × Length (m²) → CHB quantity by block size (commonly 6”).
-- Mortar volumes using typical mix (1:3 cement:sand); plastering if specified (e.g., 1:2:5).
-- Include reinforcement (vertical/horizontal bars) per standard details if present.
-- Units: m² (wall), pcs (CHB), bags (cement 40kg), m³ (sand), kg/pcs (rebars), kg/rolls (tie wire).
-
-4) CONCRETE WORK
-- Concrete volumes for footings, columns, beams, slabs, walls in m³.
-- Mix design references (e.g., 1:2:4) to express materials: bags cement (40kg), sand m³, gravel m³.
-- Do NOT include rebar here (that’s under STEELWORK).
-- Units: m³ (concrete), bags (cement), m³ (sand/gravel), liters (water optional).
-
-5) STEELWORK
-- Reinforcing steel from bar schedules; specify diameters (e.g., 10, 12, 16, 20 mm) and lengths/weights.
-- If structural steel is present (channels, angles, I-beams), compute by section and length.
-- Units: kg (preferred) or pcs × length (m) with diameter/section clearly stated; include tie wire (kg).
-
-6) CARPENTRY WORK (if applicable)
-- Include framing lumber, blocking, headers, sheathing as indicated in elements.
-- Units: m (length), pcs (for standard sizes), m² (sheathing/boards).
-
-7) ROOFING WORK
-- Roof area = plan area / cos(slope angle) if slope known; otherwise apply typical slope assumptions.
-- Materials: GI roofing sheets, purlins, screws, flashing, ridge rolls, sealants.
-- Units: m² (roof area), pcs/sheets (GI), m (flashing, purlins), sets (accessories).
-
-General:
-- Prefer metric units; include product forms typical in PH: 40kg cement bags, 6m rebar lengths, CHB 6".
-- Include reasonable waste: 5–10% for formwork & finishes, 3–5% for steel (offcuts), as applicable.
-- Base all quantities on the supplied elements and challenge context; if something is ambiguous, state a
-  conservative assumption in an "assumptions" field (string) on that row.
-- DO NOT invent unit prices. Set "unit_price" = null and "amount" = null for every row.
-
-### Output format (STRICT)
-Return a raw JSON array ONLY. Each item MUST match this schema:
 {{
-  "item_number": "<integer, sequence restarts at 1 inside each cost_category>",
-  "description": "<string>",
-  "quantity": "<number>",
-  "unit": "<string>",
-  "cost_category": "<one of the exact categories above>",
+  "item_number": <integer, restart at 1 per cost_category>,
+  "description": <string>,
+  "quantity": <number>,
+  "unit": <string>,
+  "cost_category": <one of the exact categories above>,
   "unit_price": null,
   "amount": null,
-  "assumptions": "<string | null>"
+  "assumptions": <string | null>
 }}
+
+Return ONLY the JSON array. Thank you.
 """
         raw = self._call_gemini(prompt)
         data = self._safe_json_parse(raw)
 
-        # Basic schema guard
-        filtered = []
-        ok_cats = {
+        # Light schema guard
+        ok = {
             "EARTHWORK","FORMWORK & SCAFFOLDING","MASONRY WORK",
             "CONCRETE WORK","STEELWORK","CARPENTRY WORK","ROOFING WORK"
         }
-        for row in data:
-            if row.get("cost_category") not in ok_cats:
+        out = []
+        for row in data if isinstance(data, list) else []:
+            if row.get("cost_category") not in ok:
                 continue
-            row.setdefault("unit_price", None)
-            row.setdefault("amount", None)
-            row.setdefault("assumptions", None)
+            # enforce numeric quantity; keep prices null
             try:
                 row["quantity"] = float(row.get("quantity", 0) or 0)
             except Exception:
                 row["quantity"] = 0.0
-            filtered.append(row)
-        return filtered
+            row["unit_price"] = None
+            row["amount"] = None
+            row.setdefault("assumptions", None)
+            out.append(row)
+        return out

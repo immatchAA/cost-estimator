@@ -13,11 +13,19 @@ class EstimationRequest(BaseModel):
 
 @router.post("/challenges/{challenge_id}/estimate")
 def run_estimation(challenge_id: str, request: EstimationRequest):
-    try:
-        result = run_ai_estimation(
-            challenge_id=challenge_id, 
-            plan_file_url=request.plan_file_url
-        )
-        return {"status": "success", "data": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+    result = run_ai_estimation(
+        challenge_id=challenge_id,
+        plan_file_url=request.plan_file_url
+    )
+    return {"status": "success", "data": result}
+    
+@router.post("/estimate")
+def estimate(payload: dict):
+    challenge_id = payload.get("challenge_id")
+    plan_file_url = payload.get("plan_file_url")
+
+    if not challenge_id or not plan_file_url:
+        return {"error": "challenge_id and plan_file_url are required"}
+
+    result = run_ai_estimation(challenge_id, plan_file_url)
+    return result 
