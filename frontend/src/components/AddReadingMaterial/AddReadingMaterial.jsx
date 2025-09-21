@@ -75,65 +75,47 @@ function AddReadingMaterial() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
+  try {
+    const slug = slugify(title);
 
-      if (!user) {
-        alert('You must be logged in to submit a reading material.');
-        return;
-      }
+    // ✅ if you don't have Supabase auth, generate a UUID
+    const userId = editMaterial?.user_id || crypto.randomUUID();
 
-      const slug = slugify(title);
-      let materialId;
+    const url = editMaterial
+      ? `http://localhost:8000/reading-materials/${editMaterial.id}` // PUT needs ID
+      : "http://localhost:8000/reading-materials";
 
-      if (editMaterial) {
-        const { error: updateError } = await supabase
-          .from('reading_materials')
-          .update({ title, slug, updated_at: new Date().toISOString() })
-          .eq('id', editMaterial.id);
+    const response = await fetch(url, {
+      method: editMaterial ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title,
+        slug,
+        user_id: userId,
+        sections,
+      }),
+    });
 
+    const result = await response.json();
 
-        if (updateError) throw updateError;
-        materialId = editMaterial.id;
-
-        await supabase
-          .from('reading_material_sections')
-          .delete()
-          .eq('reading_material_id', materialId);
-      } else {
-        const { data: materialData, error: insertError } = await supabase
-          .from('reading_materials')
-          .insert([{ title, slug, user_id: user.id }])
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        materialId = materialData.id;
-      }
-
-      const sectionData = sections.map((section) => ({
-        reading_material_id: materialId,
-        section_slug: section.section_slug,
-        content: section.content,
-      }));
-
-      const { error: sectionError } = await supabase
-        .from('reading_material_sections')
-        .insert(sectionData);
-
-      if (sectionError) throw sectionError;
-
-      alert(editMaterial ? 'Reading material updated!' : 'Reading material added!');
-      navigate('/reading-materials');
-    } catch (error) {
-      console.error('Submission failed:', error);
-      alert(`Error: ${error.message}`);
+    if (response.ok) {
+      alert(editMaterial ? "Reading material updated!" : "Reading material added!");
+      navigate("/reading-materials");
+    } else {
+      throw new Error(result.detail || "Something went wrong");
     }
-  };
+  } catch (error) {
+    console.error("Submission failed:", error);
+    alert(`Error: ${error.message}`);
+  }
+};
+
+
 
   return (
     <div className="readingmaterial-wrapper">

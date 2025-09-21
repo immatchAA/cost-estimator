@@ -16,7 +16,6 @@
 .dashboard-content {
   flex: 1;
   padding: 40px;
-  margin-left: 0; /* remove left margin to let .sidebar handle spacing */
 }
 
 .dashboard-header h1 {
@@ -38,10 +37,11 @@
 }
 
 .card {
+  position: relative;
   background: white;
-  padding: 30px;
+  padding: 20px;
   border-radius: 10px;
-  text-align: center;
+  text-align: left;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -51,9 +51,30 @@
   margin-bottom: 10px;
 }
 
-.card p {
+.card-title {
+  font-size: 0.95rem;
   color: #333;
-  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.card-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #176bb7;
+  margin: 0;
+}
+
+.card-value.green {
+  color: #2e7d32;
+}
+
+.card-value.orange {
+  color: #ef6c00;
+}
+
+.card-subtext {
+  font-size: 0.85rem;
+  color: #666;
 }
 
 .dashboard-row {
@@ -75,14 +96,12 @@
 .long-card h3 {
   font-size: 1.2rem;
   color: #176bb7;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .long-card p {
-  color: #333;
-  margin-bottom: 5px;
+  color: #333;     /* ✅ dark gray so it’s visible */
 }
-
 /* Right panel */
 .dashboard-right-panel {
   width: 280px;
@@ -117,18 +136,39 @@
   color: #333;
 }
 
-.challenge-table {
+/* Tables */
+.challenge-table,
+.student-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
   font-size: 0.95rem;
 }
 
 .challenge-table th,
-.challenge-table td {
+.challenge-table td,
+.student-table th {
+  background-color: #f5f7fb; /* light gray/blue background */
+  color: #176bb7; /* blue text */
+  font-weight: bold;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid #ddd;
+}
+.student-table td {
   padding: 12px 16px;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.student-table td:nth-child(4) {
+  color: #176bb7; /* blue for AI accuracy */
+  font-weight: 500;
+}
+
+.student-table td:nth-child(5) {
+  color: #176bb7; /* blue text for project name */
+  font-weight: 500;
 }
 
 .challenge-table th {
@@ -139,9 +179,110 @@
 .challenge-table tr:hover {
   background-color: #f0f8ff;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
-.clickable-row td {
-  font-weight: 500;
+/* Student controls */
+.student-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center; /* ✅ fix vertical gap */
+  gap: 10px;
+  margin-bottom: 10px;
 }
+
+.student-search {
+  width: 300px;
+  padding: 6px 10px; /* ✅ reduce padding */
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  background: white;
+}
+
+.student-search::placeholder {
+  color: #999; /* softer gray placeholder */
+}
+
+.student-filter {
+  padding: 6px 12px;
+  border: none;
+  background: #176bb7;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Student table rows */
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #666;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #333;
+}
+
+.streak {
+  background: #e6f4ea;
+  color: #2e7d32;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.green {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.red {
+  color: #c62828;
+  font-weight: bold;
+}
+
+.progress {
+  width: 100px;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress div {
+  height: 100%;
+  background: #176bb7;
+}
+
+.rank {
+  background: #2e7d32;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.view-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.student-header {
+  display: flex;
+  justify-content: space-between; /* title left, controls right */
+  align-items: center; /* align vertically */
+  margin-bottom: 15px;
+}
+
