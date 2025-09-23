@@ -67,9 +67,9 @@ function Class() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          class_key: classKey.trim(),
-          user_id: userId,
-        }),
+        class_key: classKey,
+        user_id: userId,
+      }),
       });
 
       const data = await response.json();

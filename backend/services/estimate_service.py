@@ -51,6 +51,7 @@ def run_ai_estimation(challenge_id: str, plan_file_url: str):
         supabase.table("structural_elements").insert({
             "element_id": str(uuid.uuid4()),
             "analysis_id": analysis_id,
+             "challenge_id": str(challenge_id),
             **e,
             "created_at": datetime.utcnow().isoformat()
         }).execute()
@@ -117,7 +118,9 @@ def run_ai_estimation(challenge_id: str, plan_file_url: str):
             unit_price = 0.0
             _listings = []
         else:
-            unit_price, _listings = price_service.get_unit_price(desc, unit, site_hint=site_location)
+            unit_price, _listings = price_service.get_unit_price(
+    desc, unit, site_hint=site_location, challenge_id=challenge_id
+)
 
         amount = round(qty * unit_price, 2) if unit_price else 0.0
 
@@ -130,6 +133,7 @@ def run_ai_estimation(challenge_id: str, plan_file_url: str):
         supabase.table("ai_cost_estimates").insert({
             "estimate_id": str(uuid.uuid4()),
             "analysis_id": analysis_id,
+            "challenge_id": str(challenge_id),
             "item_number": row.get("item_number"),
             "description": desc,
             "quantity": qty,

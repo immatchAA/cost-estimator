@@ -12,6 +12,7 @@ async def create_challenge(
     challenge_name: str = Form(...),
     challenge_objectives: str = Form(...),
     challenge_instructions: str = Form(...),
+    teacher_id: str = Form(...),
     file: UploadFile = File(...)
 ):
     
@@ -31,7 +32,8 @@ async def create_challenge(
             "challenge_name": challenge_name,
             "challenge_objectives": challenge_objectives,
             "challenge_instructions": challenge_instructions,
-            "file_url": public_url
+            "file_url": public_url,
+            "teacher_id": teacher_id
         }
 
         response = supabase_service.client.table("student_challenges")\

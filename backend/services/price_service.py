@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Tuple
 from datetime import datetime
 
 from services.gemini_service import GeminiPriceSearch
-from services.supabase_service import SupabaseClient  # your existing wrapper that has save_material_price()
+from services.supabase_service import SupabaseClient  
 
 def _to_number(price_str: str) -> float:
     return float(re.sub(r"[^\d.]", "", str(price_str))) if price_str is not None else 0.0
@@ -43,7 +43,7 @@ class PriceService:
         prices = [_to_number(x.get("price")) for x in listings if x.get("price")]
         return median(prices) if prices else 0.0
 
-    def get_unit_price(self, material: str, unit: str, site_hint: str = "Cebu, Philippines") -> Tuple[float, List[Dict[str, Any]]]:
+    def get_unit_price(self, material: str, unit: str, site_hint: str = "Cebu, Philippines", challenge_id=None) -> Tuple[float, List[Dict[str, Any]]]:
         listings = self.fetch_listings(material, unit, site_hint)
         self.persist_listings(listings)
         return self.pick_unit_price(listings), listings

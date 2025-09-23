@@ -1,57 +1,85 @@
 import React, { useEffect, useState } from "react";
-import "./Dashboard.css";
+import "./TeacherDashboard.css";
 import Sidebar from "../Sidebar/Sidebar";
 import ClassManagement from "../ClassManagement/ClassManagement";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
 
-function Dashboard() {
+function TeacherDashboard() {
   const [challenges, setChallenges] = useState([]);
   const [userId, setUserId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // 🔍 search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [newStudentsThisWeek, setNewStudentsThisWeek] = useState(0);
+  const [students, setStudents] = useState([]);
   const navigate = useNavigate();
 
-  // Mock student data
-  const students = [
-    {
-      initials: "AJ",
-      name: "Alex Johnson",
-      email: "alex.johnson@email.com",
-      streak: "9 5d streak",
-      avgAccuracy: "87% ↑",
-      aiAccuracy: "92%",
-      project: "Bridge Structural",
-      progress: 90,
-      rank: "#3",
-      trend: "green",
-    },
-    {
-      initials: "SC",
-      name: "Sarah Chen",
-      email: "sarah.chen@email.com",
-      streak: "12 8d streak",
-      avgAccuracy: "91% ↑",
-      aiAccuracy: "89%",
-      project: "Commercial Steel",
-      progress: 75,
-      rank: "#1",
-      trend: "green",
-    },
-    {
-      initials: "MR",
-      name: "Michael Rodriguez",
-      email: "michael.r@email.com",
-      streak: "7 2d streak",
-      avgAccuracy: "79% ↓",
-      aiAccuracy: "94%",
-      project: "Residential Foundation",
-      progress: 45,
-      rank: "#8",
-      trend: "red",
-    },
-  ];
 
-  // Filter students by search query
+  const fetchTotalStudents = async (teacherId) => {
+    const { data, error } = await supabase
+      .from("class_enrollments")
+      .select("student_id, created_at")
+      .eq("teacher_id", teacherId);
+
+    if (error) {
+      console.error("Error fetching students:", error.message);
+      return { total: 0, newThisWeek: 0 };
+    }
+
+    const uniqueStudents = new Set(data.map((row) => row.student_id));
+    const total = uniqueStudents.size;
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const newThisWeek = data.filter(
+      (enrollment) => new Date(enrollment.created_at) >= oneWeekAgo
+    ).length;
+
+    return { total, newThisWeek };
+  };
+
+const fetchStudentsForTeacher = async (teacherId) => {
+  const { data, error } = await supabase
+    .from("class_enrollments")
+    .select(
+      `
+      student_id,
+      users:users!class_enrollments_student_id_fkey (
+        id,
+        first_name,
+        last_name,
+        email
+      )
+    `
+    )
+    .eq("teacher_id", teacherId);
+
+  if (error) {
+    console.error("Error fetching students:", error.message);
+    return [];
+  }
+
+  return data.map((row) => {
+    const user = row.users;
+    const fullName = user
+      ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+      : "";
+
+    const initials = user
+      ? `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase()
+      : "";
+
+    return {
+      id: row.student_id,
+      name: fullName,
+      email: user?.email || "",
+      initials,
+    };
+  });
+};
+
+
   const filteredStudents = students.filter(
     (student) =>
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,7 +87,7 @@ function Dashboard() {
   );
 
   useEffect(() => {
-    const fetchChallenges = async () => {
+    const fetchData = async () => {
       const {
         data: { user },
         error,
@@ -72,19 +100,30 @@ function Dashboard() {
 
       setUserId(user.id);
 
-      const { data, error: challengeError } = await supabase
-        .from("design_plan")
-        .select("*")
+      // fetch challenges
+      const { data: challengesData, error: challengeError } = await supabase
+        .from("student_challenges")
+        .select(
+          "challenge_id, teacher_id, challenge_name, challenge_instructions, created_at"
+        )
         .eq("teacher_id", user.id);
 
       if (challengeError) {
         console.error("Error fetching challenges:", challengeError.message);
       } else {
-        setChallenges(data);
+        setChallenges(challengesData || []);
       }
+
+      // fetch students
+      const { total, newThisWeek } = await fetchTotalStudents(user.id);
+      setTotalStudents(total);
+      setNewStudentsThisWeek(newThisWeek);
+
+      const studentList = await fetchStudentsForTeacher(user.id);
+      setStudents(studentList);
     };
 
-    fetchChallenges();
+    fetchData();
   }, []);
 
   return (
@@ -94,20 +133,20 @@ function Dashboard() {
       <div className="dashboard-main">
         <div className="dashboard-content">
           <header className="dashboard-header">
-            <h1>Construction Cost Estimation - Teacher Dashboard</h1>
-            <p>
-              Monitor student progress, AI accuracy, and class performance
-              metrics
-            </p>
+            <h1>Archiquest - Teacher Dashboard</h1>
+            <p>Monitor student progress, AI accuracy, and class performance</p>
           </header>
 
           {/* 🟦 Summary Cards */}
           <div className="dashboard-grid">
+
             <div className="card">
               <div className="card-icon">👥</div>
               <p className="card-title">Total Students</p>
-              <h2 className="card-value">28</h2>
-              <span className="card-subtext">+2 from last week</span>
+              <h2 className="card-value">{totalStudents}</h2>
+              <span className="card-subtext">
+                +{newStudentsThisWeek} from last week
+              </span>
             </div>
 
             <div className="card">
@@ -127,9 +166,14 @@ function Dashboard() {
             <div className="card">
               <div className="card-icon">📂</div>
               <p className="card-title">Active Projects</p>
-              <h2 className="card-value">42</h2>
-              <span className="card-subtext">15 due this week</span>
+              <h2 className="card-value">{challenges.length}</h2>
+              <span className="card-subtext">
+                 {challenges.filter(
+                  (c) => new Date(c.created_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                ).length} due this week
+              </span>
             </div>
+
           </div>
 
           {/* Class Management Section */}
@@ -142,33 +186,29 @@ function Dashboard() {
           {/* 📋 Challenges Table */}
           <div className="dashboard-row">
             <div className="long-card">
-              <h3>Design Plans Created</h3>
+              <h3>Cost Estimates Challenge</h3>
               {challenges.length === 0 ? (
-                <p>No Design Plans created yet.</p>
+                <p>No challenges created yet.</p>
               ) : (
                 <table className="challenge-table">
                   <thead>
                     <tr>
                       <th>Title</th>
-                      <th>Description</th>
-                      <th>Budget</th>
-                      <th>Currency</th>
-                      <th>Created</th>
+                      <th>Instructions</th>
+                      <th>When Created</th>
                     </tr>
                   </thead>
                   <tbody>
                     {challenges.map((challenge) => (
                       <tr
-                        key={challenge.id}
+                        key={challenge.challenge_id}
                         className="clickable-row"
                         onClick={() =>
                           navigate("/createdesign", { state: { challenge } })
                         }
                       >
-                        <td>{challenge.plan_name}</td>
-                        <td>{challenge.description}</td>
-                        <td>₱{challenge.budget}</td>
-                        <td>{challenge.currency}</td>
+                        <td>{challenge.challenge_name}</td>
+                        <td>{challenge.challenge_instructions}</td>
                         <td>
                           {new Date(challenge.created_at).toLocaleDateString()}
                         </td>
@@ -201,18 +241,18 @@ function Dashboard() {
                 <thead>
                   <tr>
                     <th>Student</th>
-                    <th>Completed</th>
-                    <th>Avg Accuracy</th>
-                    <th>AI Accuracy</th>
-                    <th>Current Project</th>
-                    <th>Progress</th>
-                    <th>Rank</th>
+                    <th>Completed</th> 
+                    <th>Avg Accuracy</th> 
+                    <th>AI Accuracy</th> 
+                    <th>Current Project</th> 
+                    <th>Progress</th> 
+                    <th>Rank</th> 
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map((student, idx) => (
-                    <tr key={idx}>
+                  {filteredStudents.map((student) => (
+                    <tr key={student.id}>
                       <td>
                         <div className="student-info">
                           <div className="avatar">{student.initials}</div>
@@ -222,24 +262,13 @@ function Dashboard() {
                           </div>
                         </div>
                       </td>
-                      <td>
-                        <span className="streak">{student.streak}</span>
+                      <span className="streak">{student.streak}</span>
+                      <td className={student.trend}>{student.avgAccuracy} 
                       </td>
-                      <td className={student.trend}>{student.avgAccuracy}</td>
-                      <td>{student.aiAccuracy}</td>
+                      <td>{student.aiAccuracy}</td> 
                       <td>{student.project}</td>
-                      <td>
-                        <div className="progress">
-                          <div style={{ width: `${student.progress}%` }}></div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="rank">{student.rank}</span>
-                      </td>
-                      <td>
-                        <button className="view-btn">👁️</button>
-                      </td>
                     </tr>
+                    
                   ))}
                 </tbody>
               </table>
@@ -247,21 +276,9 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Right Panel stays as-is for now */}
-        <div className="dashboard-right-panel">
-          <div className="right-card">
-            <h3>Top-Performing Students</h3>
-            <ul>
-              <li>
-                <span>Ben Tennyson</span>
-                <strong>99</strong>
-              </li>
-            </ul>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
 
-export default Dashboard;
+export default TeacherDashboard;

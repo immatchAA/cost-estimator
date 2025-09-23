@@ -3,8 +3,10 @@ import React, { useState, useRef } from "react";
 import Sidebar from "../Sidebar/Sidebar";
 import EstimatesTable from "../CostEstimates/EstimatesTable";
 import "../CostEstimates/UploadChallenge.css";
-
+import { supabase } from "../../supabaseClient";
 const UploadChallenge = () => {
+
+
   const [fileName, setFileName] = useState(null);
   const fileInputRef = useRef();
   const [planName, setPlanName] = useState("");
@@ -17,6 +19,8 @@ const UploadChallenge = () => {
   const [estimation, setEstimation] = useState(null);
 
   const [successMessage, setSuccessMessage] = useState("");
+
+   
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files[0];
@@ -40,10 +44,18 @@ const UploadChallenge = () => {
 
   const handleDragOver = (e) => e.preventDefault();
 
+ 
+
   const handleSubmit = async () => {
     if (!planName || !planDescription || !planInstructions || !file) {
       alert("Please fill in all the fields and upload a file");
       return;
+    }
+
+    const { data: {user} } = await supabase.auth.getUser();
+    if (!user) {
+        alert("Please sign in first");
+        return;
     }
 
     setIsSubmitting(true);
@@ -53,6 +65,7 @@ const UploadChallenge = () => {
     formData.append("challenge_name", planName);
     formData.append("challenge_objectives", planDescription);
     formData.append("challenge_instructions", planInstructions);
+    formData.append("teacher_id", user.id);
     formData.append("file", file);
 
     try {
