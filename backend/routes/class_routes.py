@@ -49,18 +49,24 @@ async def create_class(request: ClassCreateRequest):
 
 @class_router.post("/join")
 async def join_class(request: ClassJoinRequest):
-    """Join a class using class key"""
     try:
-        result = await ClassService.join_class(
-            class_key=request.class_key,
-            student_id=request.user_id
-        )
-        
-        if result["success"]:
-            return result
-        else:
-            raise HTTPException(status_code=400, detail=result["message"])
-            
+        # 1. Find class by key
+        class_result = supabase.table("classes").select("id, teacher_id").eq("class_key", request.class_key).single().execute()
+        if not class_result.data:
+            raise HTTPException(status_code=404, detail="Class not found")
+
+        class_id = class_result.data["id"]
+        teacher_id = class_result.data["teacher_id"]
+
+
+        enroll_result = supabase.table("class_enrollments").insert({
+            "class_id": class_id,
+            "student_id": request.user_id,
+            "teacher_id": teacher_id
+        }).execute()
+
+        return {"success": True, "data": enroll_result.data}
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
