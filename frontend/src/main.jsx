@@ -22,6 +22,7 @@ import StudentDashboard from "./components/StudentDashboard/StudentDashboard.jsx
 import Class from "./components/Class/Class.jsx";
 import ClassManagement from "./components/ClassManagement/ClassManagement.jsx";
 import CostEstimationChallengeDetails from "./components/StudentChallenges/CostEstimationChallengeDetails.jsx";
+import CostEstimationChallenge from "./components/StudentChallenges/CostEstimationChallenge.jsx";
 
 
 createRoot(document.getElementById("root")).render(
@@ -61,6 +62,7 @@ createRoot(document.getElementById("root")).render(
 
         {/* Cost Estimation Challenge */}
         <Route path="/cost-estimation-challenge-details" element={<CostEstimationChallengeDetails />} />
+        <Route path="/cost-estimation-challenge" element={<CostEstimationChallenge />} />
 
       </Routes>
     </BrowserRouter>

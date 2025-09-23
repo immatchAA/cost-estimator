@@ -1,0 +1,238 @@
+/* Layout */
+.cec2-page {
+  display: flex;
+  background: #f3f8ff;
+  min-height: 100vh;
+}
+
+.cec2-wrapper {
+  flex: 1;
+  padding: 20px 30px;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Titles */
+.cec2-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 5px;
+  color: #176bb7;
+}
+
+.cec2-subtitle {
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  color: #555;
+}
+
+.cec2-section-title {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #176bb7;
+  margin-bottom: 20px;
+}
+
+/* Content Layout */
+.cec2-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* Left Column */
+.cec2-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  color: #333;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+}
+
+.cec2-card h4 {
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: large;
+    color: #176bb7;
+    text-align: center;
+}
+
+.cec2-confidence {
+  color: green;
+  font-weight: 600;
+  margin-top: 5px;
+  text-align: center;
+}
+
+/* Middle Table */
+.cec2-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+}
+
+.cec2-table th {
+  background: #e3eefc;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #ccc;
+}
+
+.cec2-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.cec2-subtotal {
+  background: #e3eefc;
+  font-weight: 600;
+  text-align: right;
+  padding: 10px;
+}
+
+.cec2-total {
+  background: #c8e6c9;
+  font-weight: 700;
+  text-align: right;
+  padding: 10px;
+}
+
+.cec2-right p {
+    text-align: center;
+    margin-top: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+/* Buttons */
+.cec2-actions {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.cec2-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cec2-btn.draft {
+  background: #e0e7ff;
+  color: #1a237e;
+}
+
+.cec2-btn.draft:hover {
+  background: #c5cae9;
+}
+
+.cec2-btn.submit {
+  background: #176bb7;
+  color: #fff;
+}
+
+.cec2-btn.submit:hover {
+  background: #0d4e8c;
+}
+
+/* Right Floorplan */
+.cec2-floorplan {
+  border: 2px solid #ccc;
+  height: 400px;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.cec2-floorplan p {
+    color: #888;
+    font-size: 1rem;
+}
+
+/* Modal */
+.cec2-modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+
+.cec2-modal-viewer {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cec2-modal-floorplan {
+  width: 80%;
+  height: 80%;
+  border: 2px solid #ccc;
+  background: #fdfdfd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.1s ease;
+  user-select: none;
+}
+
+.cec2-close-btn {
+  position: absolute;
+  top: 15px; right: 20px;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 50%;
+}
+
+.cec2-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: black
+}
+
+.cec2-progress-bar {
+  width: 100%;
+  height: 14px;
+  background: #e0e0e0;
+  border-radius: 7px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+.cec2-progress-fill {
+  width: 100%; /* you can make this dynamic later */
+  height: 100%;
+  background: #4caf50;
+  border-radius: 7px;
+}
