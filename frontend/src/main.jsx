@@ -19,13 +19,13 @@ import UploadFile from "./components/CostEstimates/UploadChallenge.jsx";
 import StudentDashboard from "./components/StudentDashboard/StudentDashboard.jsx";
 import Class from "./components/Class/Class.jsx";
 import ClassManagement from "./components/ClassManagement/ClassManagement.jsx";
-import CostEstimationChallengeDetails from "./components/StudentChallenges/CostEstimationChallengeDetails.jsx";
+
 
 import TeacherDashboard from "./components/TeacherDashboard/TeacherDashboard.jsx";
 import ProtectedRouteTeacher from "./components/ProtectedRoute/ProtectedRouteTeacher";
 import ProtectedRouteStudent from "./components/ProtectedRoute/ProtectedRouteStudent";
-
 import CostEstimationChallenge from "./components/StudentChallenges/CostEstimationChallenge.jsx";
+
 
 
 createRoot(document.getElementById("root")).render(
@@ -58,14 +58,13 @@ createRoot(document.getElementById("root")).render(
 
         {/* Module 1 - For Students Only */}
         <Route path="/student-dashboard" element={ <ProtectedRouteStudent> <StudentDashboard /> </ProtectedRouteStudent>} />
+        <Route path="/student-challenges" element={ <ProtectedRouteStudent> <CostEstimationChallenge /> </ProtectedRouteStudent>} />
+        <Route path="/student-challenges/:challengeId" element={<CostEstimationChallenge />} />
 
         {/* Class Management Routes */}
         <Route path="/class-management" element={<ClassManagement />} />
         <Route path="/my-classes" element={<Class />} />
 
-        {/* Cost Estimation Challenge */}
-        <Route path="/cost-estimation-challenge-details" element={<CostEstimationChallengeDetails />} />
-        <Route path="/cost-estimation-challenge" element={<CostEstimationChallenge />} />
 
       </Routes>
     </BrowserRouter>
