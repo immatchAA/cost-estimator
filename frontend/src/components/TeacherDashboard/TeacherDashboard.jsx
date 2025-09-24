@@ -262,7 +262,7 @@ const fetchStudentsForTeacher = async (teacherId) => {
                           </div>
                         </div>
                       </td>
-                      <span className="streak">{student.streak}</span>
+                      <td className="streak">{student.streak}</td>
                       <td className={student.trend}>{student.avgAccuracy} 
                       </td>
                       <td>{student.aiAccuracy}</td> 

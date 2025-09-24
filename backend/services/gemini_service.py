@@ -49,7 +49,6 @@ Output strictly as a JSON array only.
         raw = self._call_gemini(prompt)
         return self._safe_json_parse(raw)
 
-    # --- NEW / FIXED: signature + prompt with cheat-sheet + JSON guard ---
     def generate_cost_estimates(
         self,
         *,
@@ -126,7 +125,7 @@ Return ONLY the JSON array. Thank you.
         for row in data if isinstance(data, list) else []:
             if row.get("cost_category") not in ok:
                 continue
-            # enforce numeric quantity; keep prices null
+
             try:
                 row["quantity"] = float(row.get("quantity", 0) or 0)
             except Exception:

@@ -119,8 +119,8 @@ function Sidebar() {
               <FaHome className="custom-icon" /> Dashboard
             </Link>
 
-            <Link to="/student-dashboard" className="custom-nav-item">
-              <FaGraduationCap className="custom-icon" /> My Classes
+            <Link to="/student-challenges-details" className="custom-nav-item">
+              <FaGraduationCap className="custom-icon" /> All Challenges
             </Link>
 
             <Link to="/reading-materials" className="custom-nav-item">
