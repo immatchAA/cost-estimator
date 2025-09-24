@@ -3,9 +3,20 @@ from datetime import datetime
 from supabase import create_client, Client
 from models.estimate_model import EstimateItem, EstimateSummary
 from dotenv import load_dotenv
-from typing import List
+from typing import List, Optional
+from models.cost_estimation_model import CostEstimateItemIn
 
 load_dotenv()
+
+CAT_TO_NUM = {
+    "EARTHWORK": 1,
+    "FORMWORK & SCAFFOLDING": 2,
+    "MASONRY WORK": 3,
+    "CONCRETE WORK": 4,
+    "STEELWORK": 5,
+    "CARPENTRY WORK": 6,
+    "ROOFING WORK": 7,
+}
 
 class SupabaseClient:
     def __init__(self):
@@ -13,6 +24,100 @@ class SupabaseClient:
         key = os.getenv("SUPABASE_KEY")
         self.client = create_client(url, key)
         self.bucket_name = "student_challenge_files"
+
+
+    def upsert_cost_estimate(self, student_id: str, challenge_id: str, total_amount: float, submitted_at: Optional[str]):
+        res = self.client.table("student_cost_estimates") \
+            .select("studentsCostEstimatesID") \
+            .eq("student_id", student_id) \
+            .eq("challenge_id", challenge_id) \
+            .limit(1).execute()
+        existing = res.data[0]["studentsCostEstimatesID"] if res.data else None
+
+        if existing:
+            self.client.table("student_cost_estimates").update({
+                "total_amount": total_amount,
+                "submitted_at": submitted_at
+            }).eq("studentsCostEstimatesID", existing).execute()
+            return existing
+
+        ins = self.client.table("student_cost_estimates").insert({
+            "student_id": student_id,
+            "challenge_id": challenge_id,
+            "total_amount": total_amount,
+            "submitted_at": submitted_at
+        }, returning="representation").execute()
+        return ins.data[0]["studentsCostEstimatesID"]
+
+    def replace_estimate_items(self, est_id: str, items: List[CostEstimateItemIn]):
+        self.client.table("student_cost_estimate_items") \
+            .delete().eq("studentsCostEstimatesID", est_id).execute()
+
+        if not items:
+            return
+
+        rows = []
+        for i in items:
+            cat = (i.cost_category or "").upper().strip()
+            item_num = CAT_TO_NUM.get(cat, None)  
+            amount = round((i.quantity or 0) * (i.unit_price or 0), 2)
+            rows.append({
+                "studentsCostEstimatesID": est_id,
+                "cost_category": i.cost_category, 
+                "material_name": i.material_name,
+                "quantity": i.quantity,
+                "unit": i.unit,
+                "unit_price": i.unit_price,
+                "amount": amount,
+                "item_number": item_num or 0,     
+            })
+
+        self.client.table("student_cost_estimate_items").insert(rows).execute()
+
+    def upsert_estimate_summary(self, est_id: str, subtotal: float, pct: float,
+                            contingency: float, total: float, category_subtotals):
+        base = {
+            "studentsCostEstimatesID": est_id,
+            "subtotal_amount": subtotal,
+            "contingency_percentage": pct,
+            "contingency_amount": contingency,
+            "total_amount": total,
+            "category_subtotals": category_subtotals or []
+        }
+        sel = self.client.table("students_estimates_summary") \
+            .select("studentsEstimatesSummaryID") \
+            .eq("studentsCostEstimatesID", est_id) \
+            .limit(1).execute()
+        if sel.data:
+            self.client.table("students_estimates_summary").update(base) \
+                .eq("studentsEstimatesSummaryID", sel.data[0]["studentsEstimatesSummaryID"]).execute()
+        else:
+            self.client.table("students_estimates_summary").insert(base).execute()
+
+
+    def get_estimate_with_items(self, student_id: str, challenge_id: str):
+        hdr = self.client.table("student_cost_estimates") \
+            .select("*").eq("student_id", student_id) \
+            .eq("challenge_id", challenge_id).limit(1).execute()
+        if not hdr.data:
+            return None
+        est = hdr.data[0]
+        est_id = est["studentsCostEstimatesID"]
+
+        items = self.client.table("student_cost_estimate_items") \
+            .select("*") \
+            .eq("studentsCostEstimatesID", est_id) \
+            .order("item_number", desc=False) \
+            .order("material_name", desc=False) \
+            .execute().data
+
+        summary = self.client.table("students_estimates_summary") \
+            .select("*").eq("studentsCostEstimatesID", est_id) \
+            .limit(1).execute().data
+
+        est["items"] = items or []
+        est["summary"] = summary[0] if summary else None
+        return est
 
 
     def save_material_price(self, item: dict):
