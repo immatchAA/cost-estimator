@@ -3,6 +3,7 @@ import backgroundImage from "../../assets/bgbg.png";
 import googleIcon from "../../assets/google.png";
 import "../Register/Register.css";
 import { useNavigate } from "react-router-dom";
+import EmailVerification from "../EmailVerification/EmailVerification";
 
 function RegisterForm() {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ function RegisterForm() {
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // update input values
   const handleChange = (e) => {
@@ -41,18 +44,85 @@ function RegisterForm() {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const response = await fetch("http://127.0.0.1:8000/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-        }),
-      });
+      // First, send verification code
+      const verificationResponse = await fetch(
+        "http://127.0.0.1:8000/verification/send-code",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+          }),
+        }
+      );
+
+      if (!verificationResponse.ok) {
+        const data = await verificationResponse.json();
+        setError(data.detail || "Failed to send verification code");
+        return;
+      }
+
+      // Then, register user (without creating account yet)
+      const registerResponse = await fetch(
+        "http://127.0.0.1:8000/auth/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+          }),
+        }
+      );
+
+      if (!registerResponse.ok) {
+        const data = await registerResponse.json();
+        setError(data.detail || "Registration failed");
+        return;
+      }
+
+      const data = await registerResponse.json();
+      setSuccess("Verification code sent! Please check your email.");
+
+      // Show verification component
+      setTimeout(() => {
+        setShowVerification(true);
+      }, 1000);
+    } catch (err) {
+      setError("Server error. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Complete registration with verification
+  const handleVerificationComplete = async (verificationCode) => {
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/auth/register-with-verification",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+            verification_code: verificationCode,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -65,8 +135,29 @@ function RegisterForm() {
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setError("Server error. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Go back to registration form
+  const handleBackToRegister = () => {
+    setShowVerification(false);
+    setError("");
+    setSuccess("");
+  };
+
+  // Show verification component if verification step is active
+  if (showVerification) {
+    return (
+      <EmailVerification
+        email={formData.email}
+        onVerificationComplete={handleVerificationComplete}
+        onBack={handleBackToRegister}
+        registrationData={formData}
+      />
+    );
+  }
 
   return (
     <div
@@ -267,7 +358,9 @@ function RegisterForm() {
 
               {/* Submit */}
               <div className="actions">
-                <button type="submit">SIGN UP</button>
+                <button type="submit" disabled={isLoading}>
+                  {isLoading ? "SENDING CODE..." : "SIGN UP"}
+                </button>
               </div>
             </form>
 
