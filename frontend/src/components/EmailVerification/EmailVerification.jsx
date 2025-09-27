@@ -154,19 +154,53 @@ function EmailVerification({
         <div className="login-cards">
           {/* Left section */}
           <div className="left-card">
-            <span className="font-extralight text-2xl mb-4">
-              ARCHITECTURAL AI COST ESTIMATOR
-            </span>
-            <h2 className="register-title">EMAIL VERIFICATION</h2>
-            <p className="items-center flex justify-center">
-              Check your email for the verification code
-            </p>
-            <button
-              className="text-xl bg-white text-blue-600 rounded-lg mt-4 justify-center items-center flex w-50 h-12 hover:bg-blue-500 hover:text-white cursor-pointer transition-bg duration-300"
-              onClick={onBack}
-            >
-              BACK TO REGISTER
-            </button>
+            <div className="architectural-scene">
+              <div className="building-container">
+                <div className="modern-building">
+                  <div className="building-roof"></div>
+                  <div className="building-facade">
+                    <div className="window-grid">
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                    </div>
+                  </div>
+                  <div className="building-platform"></div>
+                </div>
+                <div className="water-reflection"></div>
+                <div className="warm-lights"></div>
+              </div>
+            </div>
+
+            <div className="brand-content">
+              <div className="logo-section">
+                <div className="logo-icon">🏗️</div>
+                <span className="logo-text">ArchiQuest</span>
+              </div>
+
+              <div className="main-title">
+                <span className="font-medium text-2xl mb-3">
+                  You're Almost There!
+                </span>
+                <span className="text-l font-light text-md mb-3">
+                  Secure your account with verification
+                </span>
+              </div>
+
+              <div className="action-section">
+                <button className="register-btn" onClick={onBack}>
+                  BACK TO REGISTER
+                </button>
+                <div className="progress-indicators">
+                  <div className="indicator"></div>
+                  <div className="indicator"></div>
+                  <div className="indicator active"></div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right section */}
@@ -196,7 +230,7 @@ function EmailVerification({
                   maxLength="6"
                   style={{
                     textAlign: "center",
-                    fontSize: "24px",
+                    fontSize: "16px",
                     letterSpacing: "8px",
                     fontFamily: "monospace",
                   }}
