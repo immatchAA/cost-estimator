@@ -168,19 +168,62 @@ function RegisterForm() {
         <div className="login-cards">
           {/* Left section */}
           <div className="left-card">
-            <span className="font-extralight text-2xl mb-4">
-              ARCHITECTURAL AI COST ESTIMATOR
-            </span>
-            <h2 className="register-title">REGISTER HERE</h2>
-            <p className="items-center flex justify-center  ">
-              Don't have an account?
-            </p>
-            <button
-              className="text-xl bg-white text-blue-600  rounded-lg mt-4 justify-center items-center flex w-50 h-12 hover:bg-blue-500 hover:text-white cursor-pointer transition-bg duration-300"
-              onClick={() => navigate("/login")}
-            >
-              LOGIN HERE
-            </button>
+            <div className="architectural-scene">
+              <div className="building-container">
+                <div className="modern-building">
+                  <div className="building-roof"></div>
+                  <div className="building-facade">
+                    <div className="window-grid">
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                    </div>
+                  </div>
+                  <div className="building-platform"></div>
+                </div>
+                <div className="water-reflection"></div>
+                <div className="warm-lights"></div>
+              </div>
+            </div>
+
+            <div className="brand-content">
+              <div className="logo-section">
+                <div className="logo-icon">🏗️</div>
+                <span className="logo-text">ArchiQuest</span>
+              </div>
+
+              <div className="main-title">
+                <span className="font-medium text-4xl mb-3">
+                  Start Your Journey Here
+                </span>
+
+                <span className="text-l font-light text-md mb-3">
+                  Plan smarter, save more, and make confident decisions with our
+                  guided tools.
+                </span>
+
+                <span className="text-m font-light text-md mb-3">
+                  With intelligent cost estimation
+                </span>
+              </div>
+
+              <div className="action-section">
+                <button
+                  className="register-btn"
+                  onClick={() => navigate("/login")}
+                >
+                  SIGN IN INSTEAD
+                </button>
+                <div className="progress-indicators">
+                  <div className="indicator"></div>
+                  <div className="indicator active"></div>
+                  <div className="indicator"></div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right section */}
