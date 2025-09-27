@@ -14,6 +14,7 @@ from routes.auth import auth_router
 from routes import estimate_route
 from routes import reading_materials
 from routes.class_routes import class_router
+from routes.verification import verification_router
 from pydantic import BaseModel
 from services.gemini_service import GeminiPriceSearch
 from services.supabase_service import SupabaseClient
@@ -33,6 +34,7 @@ app = FastAPI()
 app.include_router(challenges_router, prefix="/api")
 app.include_router(estimate_route.router, prefix="/api") 
 app.include_router(auth_router)
+app.include_router(verification_router)
 app.include_router(reading_materials.router)
 app.include_router(class_router, prefix="/api")
 app.include_router(cost_estimation_router)
