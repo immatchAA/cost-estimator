@@ -13,6 +13,7 @@ import MaterialSearch from "./components/MaterialSearch/MaterialSearch.jsx";
 import MaterialTable from "./components/MaterialSearch/MaterialTable.jsx";
 
 import ReadingMaterials from "./components/ReadingMaterials/ReadingMaterials.jsx";
+import ReadingMaterialView from "./components/ReadingMaterials/ReadingMaterialView.jsx";
 import AddReadingMaterial from "./components/AddReadingMaterial/AddReadingMaterial.jsx";
 import UploadFile from "./components/CostEstimates/UploadChallenge.jsx";
 
@@ -49,6 +50,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/material-table" element={<MaterialTable />} />
 
         <Route path="/reading-materials" element={<ReadingMaterials />} />
+        <Route path="/reading-materials/:id" element={<ReadingMaterialView />} />
         <Route path="/add-reading-material" element={<AddReadingMaterial />} />
 
         {/* Module 1 - For Teachers Only */}
