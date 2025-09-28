@@ -1,4 +1,4 @@
-# Database Schema for Class Management
+# Database Schema for Class Management and Challenges
 
 ## Required Tables
 
@@ -39,6 +39,51 @@ CREATE TABLE users (
     role VARCHAR(20) NOT NULL CHECK (role IN ('teacher', 'student')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 4. `student_challenges` table
+
+```sql
+CREATE TABLE student_challenges (
+    challenge_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    challenge_name VARCHAR(255) NOT NULL,
+    challenge_objectives TEXT,
+    challenge_instructions TEXT,
+    file_url TEXT,
+    teacher_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 5. `student_cost_estimates` table
+
+```sql
+CREATE TABLE student_cost_estimates (
+    "studentsCostEstimatesID" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    student_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    challenge_id UUID NOT NULL REFERENCES student_challenges(challenge_id) ON DELETE CASCADE,
+    total_amount DECIMAL(12,2),
+    submitted_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 6. `student_cost_estimate_items` table
+
+```sql
+CREATE TABLE student_cost_estimate_items (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    "studentsCostEstimatesID" UUID NOT NULL REFERENCES student_cost_estimates("studentsCostEstimatesID") ON DELETE CASCADE,
+    cost_category VARCHAR(100),
+    material_name VARCHAR(255),
+    quantity DECIMAL(10,3),
+    unit VARCHAR(50),
+    unit_price DECIMAL(10,2),
+    amount DECIMAL(12,2),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
