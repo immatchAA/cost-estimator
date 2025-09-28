@@ -27,12 +27,26 @@ const CAT_ORDER = [
 
 function roman(n) {
   const map = [
-    [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
-    [100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
-    [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"],
   ];
   let res = "";
-  for (const [v, s] of map) while (n >= v) { res += s; n -= v; }
+  for (const [v, s] of map)
+    while (n >= v) {
+      res += s;
+      n -= v;
+    }
   return res;
 }
 
@@ -67,18 +81,28 @@ export default function CostEstimationChallenge() {
     }))
   );
   const updateItem = (rid, field, value) =>
-    setItems((prev) => prev.map((it) => (it.rid === rid ? { ...it, [field]: value } : it)));
+    setItems((prev) =>
+      prev.map((it) => (it.rid === rid ? { ...it, [field]: value } : it))
+    );
   const addRow = (cat) =>
     setItems((prev) => [
       ...prev,
-      { rid: makeId(), cost_category: cat, description: "", quantity: "", unit: "", unit_price: "" },
+      {
+        rid: makeId(),
+        cost_category: cat,
+        description: "",
+        quantity: "",
+        unit: "",
+        unit_price: "",
+      },
     ]);
 
   // ===== derived subtotals (by category + grand) =====
   const grouped = CAT_ORDER.map((cat) => {
     const rows = items.filter((r) => r.cost_category === cat);
     const subtotal = rows.reduce(
-      (s, r) => s + (parseFloat(r.quantity) || 0) * (parseFloat(r.unit_price) || 0),
+      (s, r) =>
+        s + (parseFloat(r.quantity) || 0) * (parseFloat(r.unit_price) || 0),
       0
     );
     return { cat, rows, subtotal };
@@ -122,7 +146,7 @@ export default function CostEstimationChallenge() {
       student_id: user.id,
       challenge_id: challengeId,
       items: cleaned,
-      contingency_percentage: 0.10,
+      contingency_percentage: 0.1,
       submit,
       category_subtotals: catSubs,
     };
@@ -168,19 +192,25 @@ export default function CostEstimationChallenge() {
     }
   };
 
-  // ===== floor plan: not fetched yet =====
-  const floorplanImg = null;
+  // ===== floor plan: fetched from challenge =====
+  const [floorplanImg, setFloorplanImg] = useState(null);
 
-  // Load challenge details (name/instructions/objectives)
+  // Load challenge details (name/instructions/objectives/file_url)
   useEffect(() => {
     (async () => {
       setLoadingChallenge(true);
       const { data, error } = await supabase
         .from("student_challenges")
-        .select("challenge_name, challenge_instructions, challenge_objectives")
+        .select("*")
         .eq("challenge_id", challengeId)
         .single();
-      if (!error) setChallenge(data);
+      if (!error) {
+        setChallenge(data);
+        // Set the floor plan image URL if available
+        if (data.file_url) {
+          setFloorplanImg(data.file_url);
+        }
+      }
       setLoadingChallenge(false);
     })();
   }, [challengeId]);
@@ -236,7 +266,9 @@ export default function CostEstimationChallenge() {
   const handleWheel = (e) => {
     e.preventDefault();
     const step = 0.1;
-    setZoom((z) => Math.max(0.5, Math.min(3, z + (e.deltaY < 0 ? step : -step))));
+    setZoom((z) =>
+      Math.max(0.5, Math.min(3, z + (e.deltaY < 0 ? step : -step)))
+    );
   };
 
   const planTitle = challenge?.challenge_name || "—";
@@ -286,12 +318,15 @@ export default function CostEstimationChallenge() {
           </div>
 
           {/* Floor plan card (no file yet) */}
+          {/* Floor plan card */}
           <div className="cec3-card">
             <div className="cec3-card-header">
               <span>{planTitle}</span>
             </div>
             <div className="cec3-card-body">
-              <p className="cec3-muted">Reference for your structural cost estimates</p>
+              <p className="cec3-muted">
+                Reference for your structural cost estimates
+              </p>
 
               <div
                 className="cec3-floorplan-frame"
@@ -303,7 +338,47 @@ export default function CostEstimationChallenge() {
                 }}
               >
                 {floorplanImg ? (
-                  <img src={floorplanImg} alt="Floor plan" />
+                  (() => {
+                    const fileExtension = floorplanImg
+                      .split(".")
+                      .pop()
+                      ?.toLowerCase();
+                    if (fileExtension === "pdf") {
+                      return (
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            height: "100%",
+                            padding: "20px",
+                            textAlign: "center",
+                          }}
+                        >
+                          <div
+                            style={{ fontSize: "48px", marginBottom: "10px" }}
+                          >
+                            📄
+                          </div>
+                          <div style={{ fontWeight: 600, color: "#374151" }}>
+                            PDF Floor Plan
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "14px",
+                              color: "#6b7280",
+                              marginTop: "5px",
+                            }}
+                          >
+                            Click to view in full screen
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return <img src={floorplanImg} alt="Floor plan" />;
+                    }
+                  })()
                 ) : (
                   <div
                     style={{
@@ -318,8 +393,34 @@ export default function CostEstimationChallenge() {
                 )}
               </div>
 
+              {/* ✅ New Download/View Button */}
+              {floorplanImg && (
+                <div style={{ marginTop: "12px", textAlign: "center" }}>
+                  <a
+                    href={floorplanImg}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-block",
+                      padding: "8px 14px",
+                      background: "#176bb7",
+                      color: "#fff",
+                      borderRadius: "6px",
+                      fontWeight: "600",
+                      textDecoration: "none",
+                    }}
+                  >
+                    ⬇ View / Download File
+                  </a>
+                </div>
+              )}
+
               <div className="cec3-scale">
-                <span>0</span><span>5</span><span>10</span><span>15</span><span>20</span>
+                <span>0</span>
+                <span>5</span>
+                <span>10</span>
+                <span>15</span>
+                <span>20</span>
               </div>
             </div>
           </div>
@@ -328,7 +429,9 @@ export default function CostEstimationChallenge() {
         {/* LOWER: table + summary */}
         <div className="cec3-grid-lower">
           <div className="cec3-card">
-            <div className="cec3-card-header"><span>Structural Cost Estimates</span></div>
+            <div className="cec3-card-header">
+              <span>Structural Cost Estimates</span>
+            </div>
             <div className="cec3-card-body">
               <table className="cost-estimate-table">
                 <thead>
@@ -346,7 +449,9 @@ export default function CostEstimationChallenge() {
                     <React.Fragment key={g.cat}>
                       <tr className="cat-row">
                         <td colSpan={6}>
-                          <strong>{roman(gi + 1)}. {g.cat}</strong>
+                          <strong>
+                            {roman(gi + 1)}. {g.cat}
+                          </strong>
                           <button
                             className="add-row-btn"
                             onClick={() => addRow(g.cat)}
@@ -370,7 +475,13 @@ export default function CostEstimationChallenge() {
                                 type="text"
                                 value={r.description}
                                 placeholder="Material / Work description"
-                                onChange={(e) => updateItem(r.rid, "description", e.target.value)}
+                                onChange={(e) =>
+                                  updateItem(
+                                    r.rid,
+                                    "description",
+                                    e.target.value
+                                  )
+                                }
                                 disabled={submitted}
                               />
                             </td>
@@ -379,7 +490,9 @@ export default function CostEstimationChallenge() {
                                 type="number"
                                 min="0"
                                 value={r.quantity}
-                                onChange={(e) => updateItem(r.rid, "quantity", e.target.value)}
+                                onChange={(e) =>
+                                  updateItem(r.rid, "quantity", e.target.value)
+                                }
                                 disabled={submitted}
                               />
                             </td>
@@ -387,7 +500,9 @@ export default function CostEstimationChallenge() {
                               <input
                                 type="text"
                                 value={r.unit}
-                                onChange={(e) => updateItem(r.rid, "unit", e.target.value)}
+                                onChange={(e) =>
+                                  updateItem(r.rid, "unit", e.target.value)
+                                }
                                 disabled={submitted}
                               />
                             </td>
@@ -396,7 +511,13 @@ export default function CostEstimationChallenge() {
                                 type="number"
                                 min="0"
                                 value={r.unit_price}
-                                onChange={(e) => updateItem(r.rid, "unit_price", e.target.value)}
+                                onChange={(e) =>
+                                  updateItem(
+                                    r.rid,
+                                    "unit_price",
+                                    e.target.value
+                                  )
+                                }
                                 disabled={submitted}
                               />
                             </td>
@@ -406,15 +527,23 @@ export default function CostEstimationChallenge() {
                       })}
 
                       <tr className="subtotal-row">
-                        <td colSpan={5}><strong>Sub-Total</strong></td>
-                        <td><strong>{peso(g.subtotal)}</strong></td>
+                        <td colSpan={5}>
+                          <strong>Sub-Total</strong>
+                        </td>
+                        <td>
+                          <strong>{peso(g.subtotal)}</strong>
+                        </td>
                       </tr>
                     </React.Fragment>
                   ))}
 
                   <tr className="grand-footer">
-                    <td colSpan={5}><strong>Total (incl. 10% Contingency)</strong></td>
-                    <td><strong>{peso(grandTotal)}</strong></td>
+                    <td colSpan={5}>
+                      <strong>Total (incl. 10% Contingency)</strong>
+                    </td>
+                    <td>
+                      <strong>{peso(grandTotal)}</strong>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -451,51 +580,107 @@ export default function CostEstimationChallenge() {
 
           <div className="cec3-stack">
             <div className="cec3-card">
-              <div className="cec3-card-header"><span>Project Summary</span></div>
+              <div className="cec3-card-header">
+                <span>Project Summary</span>
+              </div>
               <div className="cec3-card-body">
                 <ul className="cec3-summary-list">
                   {grouped.map((g, i) => (
                     <li key={g.cat}>
-                      {roman(i + 1)}. {g.cat} — {g.subtotal > 0 ? peso(g.subtotal) : "–"}
+                      {roman(i + 1)}. {g.cat} —{" "}
+                      {g.subtotal > 0 ? peso(g.subtotal) : "–"}
                     </li>
                   ))}
                 </ul>
-                <p><strong>Total Material Cost (TC):</strong> {peso(grandSubtotal)}</p>
-                <p><strong>Contingencies (10%):</strong> {peso(grandTotal - grandSubtotal)}</p>
-                <p><strong>Grand Total Cost:</strong> {peso(grandTotal)}</p>
+                <p>
+                  <strong>Total Material Cost (TC):</strong>{" "}
+                  {peso(grandSubtotal)}
+                </p>
+                <p>
+                  <strong>Contingencies (10%):</strong>{" "}
+                  {peso(grandTotal - grandSubtotal)}
+                </p>
+                <p>
+                  <strong>Grand Total Cost:</strong> {peso(grandTotal)}
+                </p>
               </div>
             </div>
 
             <div className="cec3-card">
-              <div className="cec3-card-header"><span>💡 AI Suggestions</span></div>
+              <div className="cec3-card-header">
+                <span>💡 AI Suggestions</span>
+              </div>
               <div className="cec3-card-body">
-                <p>Consider double-checking measurements against structural plan for accuracy.</p>
+                <p>
+                  Consider double-checking measurements against structural plan
+                  for accuracy.
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* MODAL (kept off until you add floorplan) */}
+        {/* MODAL for floor plan viewing */}
         {isModalOpen && floorplanImg && (
-          <div className="cec2-modal-overlay" onClick={() => setIsModalOpen(false)}>
-            <div className="cec2-modal-viewer" onClick={(e) => e.stopPropagation()}>
-              <div
-                className="cec2-modal-floorplan"
-                style={{
-                  transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
-                  cursor: isDragging ? "grabbing" : "grab",
-                }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onWheel={handleWheel}
+          <div
+            className="cec2-modal-overlay"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <div
+              className="cec2-modal-viewer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {(() => {
+                const fileExtension = floorplanImg
+                  .split(".")
+                  .pop()
+                  ?.toLowerCase();
+                if (fileExtension === "pdf") {
+                  return (
+                    <div className="cec2-modal-pdf-container">
+                      <iframe
+                        src={floorplanImg}
+                        width="100%"
+                        height="100%"
+                        style={{ border: "none" }}
+                        title="Floor plan PDF"
+                      />
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div
+                      className="cec2-modal-floorplan"
+                      style={{
+                        transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+                        cursor: isDragging ? "grabbing" : "grab",
+                      }}
+                      onMouseDown={handleMouseDown}
+                      onMouseMove={handleMouseMove}
+                      onMouseUp={handleMouseUp}
+                      onMouseLeave={handleMouseUp}
+                      onWheel={handleWheel}
+                    >
+                      <img src={floorplanImg} alt="Floor plan enlarged" />
+                    </div>
+                  );
+                }
+              })()}
+              <button
+                className="cec2-close-btn"
+                onClick={() => setIsModalOpen(false)}
               >
-                <img src={floorplanImg} alt="Floor plan enlarged" />
-              </div>
-              <button className="cec2-close-btn" onClick={() => setIsModalOpen(false)}>✖</button>
+                ✖
+              </button>
               <div className="cec2-controls">
-                <button onClick={() => { setZoom(1); setPosition({ x: 0, y: 0 }); }}>🔄 Reset</button>
+                <button
+                  onClick={() => {
+                    setZoom(1);
+                    setPosition({ x: 0, y: 0 });
+                  }}
+                >
+                  🔄 Reset
+                </button>
               </div>
             </div>
           </div>

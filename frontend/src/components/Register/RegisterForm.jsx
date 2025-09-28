@@ -87,7 +87,7 @@ function RegisterForm() {
         return;
       }
 
-      const data = await registerResponse.json();
+      await registerResponse.json();
       setSuccess("Verification code sent! Please check your email.");
 
       // Show verification component
@@ -101,7 +101,7 @@ function RegisterForm() {
     }
   };
 
-  // Complete registration with verification
+  // ✅ Complete registration with verification
   const handleVerificationComplete = async (verificationCode) => {
     setIsLoading(true);
     setError("");
@@ -132,6 +132,23 @@ function RegisterForm() {
 
       const data = await response.json();
       setSuccess(data.message);
+
+      // ✅ After registration, auto-login to get tokens
+      const loginRes = await fetch("http://127.0.0.1:8000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        localStorage.setItem("access_token", loginData.session.access_token);
+        localStorage.setItem("refresh_token", loginData.session.refresh_token);
+      }
+
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setError("Server error. Please try again later.");
