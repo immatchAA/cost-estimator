@@ -1,0 +1,73 @@
+.readingmaterialview-wrapper {
+  display: flex;
+}
+
+.readingmaterialview-container {
+  position: relative; 
+  flex: 1;
+  padding: 20px;
+  background: #fafafa;
+  min-height: 100vh;
+}
+
+.preview-box, .readingmaterial-section-card {
+  white-space: pre-line;
+}
+
+.back-btn {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color:#fff;
+  background: #176bb7;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.back-btn:hover {
+  background-color: #145a99;
+}
+
+.readingmaterialview-title {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.readingmaterialview-meta {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.readingmaterialview-content {
+  font-size: 1rem;
+  line-height: 1.6;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  white-space: pre-wrap; /* keeps formatting */
+}
+
+.readingmaterialview-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.readingmaterialview-section-title {
+  margin-bottom: 8px;
+  font-size: 1.3rem;
+  color: #145a99;
+}
+
+.readingmaterialview-section-content {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+

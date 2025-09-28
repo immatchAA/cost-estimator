@@ -4,6 +4,8 @@ import Sidebar from "../Sidebar/Sidebar";
 import './AddReadingMaterial.css';
 import { supabase } from '../../supabaseClient';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 
 const slugify = (text) =>
   text
@@ -22,6 +24,7 @@ function AddReadingMaterial() {
   const [title, setTitle] = useState('');
   const [sections, setSections] = useState([{ section_slug: '', content: '' }]);
   const [showPreview, setShowPreview] = useState(true);
+  const [modal, setModal] = useState({ open: false, title: "", message: "", confirm: false, onConfirm: null });
 
   useEffect(() => {
     const loadMaterialData = async () => {
@@ -69,11 +72,18 @@ function AddReadingMaterial() {
     setSections(updated);
   };
 
-  const handleCancel = () => {
-    if (window.confirm('Discard changes and go back?')) {
-      navigate('/reading-materials');
+const handleCancel = () => {
+  setModal({
+    open: true,
+    message: "Discard changes and go back?",
+    confirm: true,
+    onConfirm: () => {
+      setModal({ open: false });
+      navigate("/reading-materials");
     }
-  };
+  });
+};
+
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -81,7 +91,6 @@ const handleSubmit = async (e) => {
   try {
     const slug = slugify(title);
 
-    // ✅ if you don't have Supabase auth, generate a UUID
     const userId = editMaterial?.user_id || crypto.randomUUID();
 
     const url = editMaterial
@@ -104,18 +113,25 @@ const handleSubmit = async (e) => {
     const result = await response.json();
 
     if (response.ok) {
-      alert(editMaterial ? "Reading material updated!" : "Reading material added!");
-      navigate("/reading-materials");
+      setModal({
+        open: true,
+        message: editMaterial ? "Reading material updated!" : "Reading material added!",
+        confirm: false
+      });
+      setTimeout(() => navigate("/reading-materials"), 1500);
     } else {
       throw new Error(result.detail || "Something went wrong");
     }
   } catch (error) {
-    console.error("Submission failed:", error);
-    alert(`Error: ${error.message}`);
-  }
+        console.error("Submission failed:", error);
+        setModal({
+          open: true,
+          title: "Error",
+          message: `Error: ${error.message}`,
+          confirm: false
+        });
+      }
 };
-
-
 
   return (
     <div className="readingmaterial-wrapper">
@@ -189,8 +205,11 @@ const handleSubmit = async (e) => {
                 <>
                   <label className="preview-label">Live Preview</label>
                   <div className="preview-box">
-                    <ReactMarkdown>{section.content}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {section.content}
+                    </ReactMarkdown>
                   </div>
+
                 </>
               )}
 
@@ -221,6 +240,40 @@ const handleSubmit = async (e) => {
             </button>
           </div>
         </form>
+
+        {modal.open && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>{modal.title}</h3>
+              <p>{modal.message}</p>
+              <div className="modal-actions">
+                {modal.confirm ? (
+                  <>
+                    <button
+                      onClick={modal.onConfirm}
+                      className="modal-btn confirm"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={() => setModal({ open: false })}
+                      className="modal-btn cancel"
+                    >
+                      No
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setModal({ open: false })}
+                    className="modal-btn"
+                  >
+                    OK
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
