@@ -9,6 +9,8 @@ function ReadingMaterials() {
   const [materials, setMaterials] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
+  const [modal, setModal] = useState({ open: false, title: "", message: "", confirm: false, onConfirm: null });
+
 
   // Get user role
   useEffect(() => {
@@ -60,26 +62,41 @@ function ReadingMaterials() {
     navigate('/add-reading-material', { state: { material } });
   };
 
-  const handleDelete = async (materialId) => {
-    const confirm = window.confirm('Are you sure you want to delete this material?');
-    if (!confirm) return;
+  const handleDelete = (materialId) => {
+    setModal({
+      open: true,
+      message: "Are you sure you want to delete this shi?",
+      confirm: true,
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`http://localhost:8000/reading-materials/${materialId}`, {
+            method: "DELETE",
+          });
 
-    try {
-      const response = await fetch(`http://localhost:8000/reading-materials/${materialId}`, {
-        method: "DELETE",
-      });
+          if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || "Delete failed");
+          }
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || "Delete failed");
+          setMaterials((prev) => prev.filter((m) => m.id !== materialId));
+
+          setModal({
+            open: true,
+            title: "Deleted",
+            message: "Reading material deleted successfully.",
+            confirm: false,
+          });
+        } catch (error) {
+          console.error("Error deleting material:", error);
+          setModal({
+            open: true,
+            title: "Error",
+            message: `Failed to delete: ${error.message}`,
+            confirm: false,
+          });
+        }
       }
-
-      setMaterials((prev) => prev.filter((m) => m.id !== materialId));
-      alert("Deleted successfully.");
-    } catch (error) {
-      console.error("Error deleting material:", error);
-      alert(`Failed to delete: ${error.message}`);
-    }
+    });
   };
 
   return (
@@ -144,6 +161,44 @@ function ReadingMaterials() {
             </div>
           ))
         )}
+
+        {modal.open && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>{modal.title}</h3>
+              <p>{modal.message}</p>
+              <div className="modal-actions">
+                {modal.confirm ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        modal.onConfirm();
+                        setModal({ open: false });
+                      }}
+                      className="modal-btn confirm"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={() => setModal({ open: false })}
+                      className="modal-btn cancel"
+                    >
+                      No
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setModal({ open: false })}
+                    className="modal-btn"
+                  >
+                    OK
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

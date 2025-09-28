@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
 import "./ReadingMaterialView.css";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from 'remark-gfm';
 import { supabase } from "../../supabaseClient";
 
 function ReadingMaterialView() {
@@ -78,8 +79,10 @@ function ReadingMaterialView() {
               {section.section_slug && (
                 <h2 className="readingmaterialview-section-title">{section.section_slug}</h2>
               )}
-              <div className="readingmaterialview-section-content">
-                <ReactMarkdown>{section.content}</ReactMarkdown>
+              <div className="readingmaterial-section-card">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {section.content}
+                </ReactMarkdown>
               </div>
             </div>
           ))
