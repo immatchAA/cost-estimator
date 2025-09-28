@@ -70,7 +70,6 @@ function Login() {
         } else {
           setError("Invalid user role. Please contact administrator.");
         }
-
       } else {
         setError("Login failed. Please try again.");
       }
@@ -88,16 +87,54 @@ function Login() {
       <div className="login-container">
         <div className="login-cards">
           <div className="left-card">
-            <span className="font-extralight text-2xl mb-4">
-              ARCHITECTURAL AI COST ESTIMATOR
-            </span>
-            <h2 className="instructor-title mt-10">LOGIN HERE</h2>
-            <button
-              className="register-btn"
-              onClick={() => navigate("/register")}
-            >
-              REGISTER HERE
-            </button>
+            <div className="architectural-scene">
+              <div className="building-container">
+                <div className="modern-building">
+                  <div className="building-roof"></div>
+                  <div className="building-facade">
+                    <div className="window-grid">
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                      <div className="window"></div>
+                    </div>
+                  </div>
+                  <div className="building-platform"></div>
+                </div>
+                <div className="water-reflection"></div>
+                <div className="warm-lights"></div>
+              </div>
+            </div>
+
+            <div className="brand-content">
+              <div className="logo-section">
+                <div className="logo-icon">🏗️</div>
+                <span className="logo-text">ArchiQuest</span>
+              </div>
+
+              <div className="main-title">
+                <span className="font-medium text-5xl mb-3">
+                  Transform Your Vision
+                </span>
+                <p>Bridging Design and Budget Seamlessly</p>
+              </div>
+
+              <div className="action-section">
+                <button
+                  className="register-btn"
+                  onClick={() => navigate("/register")}
+                >
+                  CREATE ACCOUNT
+                </button>
+                <div className="progress-indicators">
+                  <div className="indicator active"></div>
+                  <div className="indicator"></div>
+                  <div className="indicator"></div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="right-card">

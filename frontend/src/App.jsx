@@ -102,8 +102,19 @@ function InteractiveFlow() {
                 fill="none"
                 stroke="currentColor"
               >
-                <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth="1.5" />
-                <path d="M7 9h10M7 13h6" strokeWidth="1.5" strokeLinecap="round" />
+                <rect
+                  x="3"
+                  y="4"
+                  width="18"
+                  height="16"
+                  rx="2"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d="M7 9h10M7 13h6"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
               </svg>
             }
             title="Shareable estimates"
@@ -254,7 +265,10 @@ function App() {
           <>
             <div
               className="absolute inset-0 bg-cover bg-center scale-105"
-              style={{ backgroundImage: `url(${BackgroundHero})`, filter: "saturate(1.05)" }}
+              style={{
+                backgroundImage: `url(${BackgroundHero})`,
+                filter: "saturate(1.05)",
+              }}
               aria-hidden="true"
             />
             <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/30 to-transparent dark:from-black/60 dark:via-black/40 dark:to-black/20" />
@@ -297,7 +311,7 @@ function App() {
 
               <p
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
-                className="mt-5 md:mt-6 text-[#0f3d6a]/90 drop-shadow-sm text-lg sm:text-xl md:text-2xl font-light max-w-2xl
+                className="mt-5 md:mt-6 text-white text-lg sm:text-xl md:text-2xl font-light max-w-2xl
                            bg-white/40 dark:bg-black/30 backdrop-blur-sm rounded-2xl px-4 py-3 inline-block"
               >
                 Simulate your cost with AI before you build
@@ -328,7 +342,9 @@ function App() {
                   className="relative z-10 h-full w-full object-contain select-none"
                   draggable={false}
                   style={{
-                    transform: `translate3d(${tilt.tx * 0.4}px, ${tilt.ty * 0.4}px, 30px)`,
+                    transform: `translate3d(${tilt.tx * 0.4}px, ${
+                      tilt.ty * 0.4
+                    }px, 30px)`,
                     transition: "transform 140ms ease-out",
                   }}
                 />
@@ -336,8 +352,7 @@ function App() {
               <p
                 className="mt-3 text-center text-sm text-[#0f3d6a]/70"
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
-              >
-              </p>
+              ></p>
             </div>
           </div>
         </section>
