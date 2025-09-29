@@ -12,7 +12,6 @@ function Class() {
 
   useEffect(() => {
     const fetchUserAndClasses = async () => {
-      // Get current user
       const {
         data: { user },
         error: sessionError,
@@ -24,8 +23,6 @@ function Class() {
       }
 
       setUserId(user.id);
-
-      // Fetch student's classes
       await fetchStudentClasses(user.id);
     };
 
@@ -63,29 +60,26 @@ function Class() {
     try {
       const response = await fetch(`http://localhost:8000/api/classes/join`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-        class_key: classKey,
-        user_id: userId,
-      }),
+          class_key: classKey,
+          user_id: userId,
+        }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setMessage("Successfully joined the class!");
+        setMessage("Request sent! Waiting for teacher approval.");
         setClassKey("");
         setShowJoinForm(false);
-        // Refresh the classes list
         await fetchStudentClasses(userId);
       } else {
-        setMessage(data.message || "Failed to join class");
+        setMessage(data.message || "Failed to send request");
       }
     } catch (error) {
       console.error("Error joining class:", error);
-      setMessage("Error joining class");
+      setMessage("Error sending request");
     } finally {
       setLoading(false);
     }
@@ -133,7 +127,7 @@ function Class() {
       {message && (
         <div
           className={`message ${
-            message.includes("Successfully") ? "success" : "error"
+            message.includes("Request sent") ? "success" : "error"
           }`}
         >
           {message}
@@ -161,9 +155,13 @@ function Class() {
                   <span className="teacher">
                     Teacher: {classItem.teacher_name}
                   </span>
-                  <span className="joined-date">
-                    Joined: {formatDate(classItem.joined_at)}
-                  </span>
+                  {classItem.status === "accepted" ? (
+                    <span className="joined-date">
+                      Joined: {formatDate(classItem.joined_at)}
+                    </span>
+                  ) : (
+                    <span className="joined-date">Pending approval</span>
+                  )}
                 </div>
               </div>
               <div className="class-actions">
