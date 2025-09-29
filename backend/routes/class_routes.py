@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
 from services.class_service import ClassService
-from models.class_model import ClassCreate, ClassJoin, ClassResponse, StudentClassResponse
+from models.class_model import ClassCreate, ClassJoin
 
 class ClassCreateRequest(BaseModel):
     class_name: str
@@ -22,12 +22,6 @@ class_router = APIRouter(prefix="/classes")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-def get_current_user_id():
-    """Extract user ID from request headers or session"""
-    # This is a simplified version - in production, you'd validate JWT tokens
-    # For now, we'll expect the user_id to be passed in the request
-    pass
 
 @class_router.post("/create")
 async def create_class(request: ClassCreateRequest):
@@ -49,24 +43,18 @@ async def create_class(request: ClassCreateRequest):
 
 @class_router.post("/join")
 async def join_class(request: ClassJoinRequest):
+    """Student requests to join a class"""
     try:
-        # 1. Find class by key
-        class_result = supabase.table("classes").select("id, teacher_id").eq("class_key", request.class_key).single().execute()
-        if not class_result.data:
-            raise HTTPException(status_code=404, detail="Class not found")
+        result = await ClassService.join_class(
+            class_key=request.class_key,
+            student_id=request.user_id
+        )
+        
+        if result["success"]:
+            return result
+        else:
+            raise HTTPException(status_code=400, detail=result["message"])
 
-        class_id = class_result.data["id"]
-        teacher_id = class_result.data["teacher_id"]
-
-
-        enroll_result = supabase.table("class_enrollments").insert({
-            "class_id": class_id,
-            "student_id": request.user_id,
-            "teacher_id": teacher_id
-        }).execute()
-
-        return {"success": True, "data": enroll_result.data}
-    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
@@ -105,12 +93,64 @@ async def get_class_by_key(class_key: str):
         result = supabase.table("classes").select("*").eq("class_key", class_key).execute()
         
         if result.data:
-            return {
-                "success": True,
-                "class": result.data[0]
-            }
+            return {"success": True, "class": result.data[0]}
         else:
             raise HTTPException(status_code=404, detail="Class not found")
             
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+# 🔹 FIXED: safer request fetch (no broken Supabase join)
+@class_router.get("/{class_id}/requests")
+async def get_class_requests(class_id: str):
+    """Get pending student requests for a class"""
+    try:
+        # get pending enrollments
+        enrollments = supabase.table("class_enrollments")\
+            .select("id, student_id, created_at")\
+            .eq("class_id", class_id).eq("status", "pending").execute()
+
+        if not enrollments.data:
+            return {"success": True, "requests": []}
+
+        requests = []
+        for e in enrollments.data:
+            # fetch student profile
+            user_res = supabase.table("users")\
+                .select("first_name, last_name")\
+                .eq("id", e["student_id"]).single().execute()
+
+            student_name = "Unknown"
+            if user_res.data:
+                student_name = f"{user_res.data['first_name']} {user_res.data['last_name']}"
+
+            requests.append({
+                "id": e["id"],
+                "student_id": e["student_id"],
+                "student_name": student_name,
+                "created_at": e["created_at"]
+            })
+
+        return {"success": True, "requests": requests}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+@class_router.post("/requests/{request_id}/approve")
+async def approve_request(request_id: str):
+    """Approve student request"""
+    try:
+        result = supabase.table("class_enrollments")\
+            .update({"status": "accepted"}).eq("id", request_id).execute()
+        return {"success": True, "message": "Request approved"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+@class_router.post("/requests/{request_id}/reject")
+async def reject_request(request_id: str):
+    """Reject student request"""
+    try:
+        supabase.table("class_enrollments").delete().eq("id", request_id).execute()
+        return {"success": True, "message": "Request rejected"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")

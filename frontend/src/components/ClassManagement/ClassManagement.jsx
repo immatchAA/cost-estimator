@@ -13,9 +13,11 @@ function ClassManagement() {
     description: "",
   });
 
+  const [requests, setRequests] = useState([]);
+  const [activeClassId, setActiveClassId] = useState(null);
+
   useEffect(() => {
     const fetchUserAndClasses = async () => {
-      // Get current user
       const {
         data: { user },
         error: sessionError,
@@ -27,8 +29,6 @@ function ClassManagement() {
       }
 
       setUserId(user.id);
-
-      // Fetch teacher's classes
       await fetchTeacherClasses(user.id);
     };
 
@@ -53,6 +53,46 @@ function ClassManagement() {
     }
   };
 
+  const fetchRequests = async (classId) => {
+    setActiveClassId(classId);
+    const res = await fetch(
+      `http://localhost:8000/api/classes/${classId}/requests`
+    );
+    const data = await res.json();
+    if (data.success) {
+      setRequests(data.requests);
+    }
+  };
+
+  const approveRequest = async (requestId) => {
+    const res = await fetch(
+      `http://localhost:8000/api/classes/requests/${requestId}/approve`,
+      {
+        method: "POST",
+      }
+    );
+    const data = await res.json();
+    if (data.success) {
+      setMessage("Request approved!");
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+      await fetchTeacherClasses(userId);
+    }
+  };
+
+  const rejectRequest = async (requestId) => {
+    const res = await fetch(
+      `http://localhost:8000/api/classes/requests/${requestId}/reject`,
+      {
+        method: "POST",
+      }
+    );
+    const data = await res.json();
+    if (data.success) {
+      setMessage("Request rejected.");
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -74,9 +114,7 @@ function ClassManagement() {
     try {
       const response = await fetch(`http://localhost:8000/api/classes/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           class_name: formData.class_name.trim(),
           description: formData.description.trim(),
@@ -92,7 +130,6 @@ function ClassManagement() {
         );
         setFormData({ class_name: "", description: "" });
         setShowCreateForm(false);
-        // Refresh the classes list
         await fetchTeacherClasses(userId);
       } else {
         setMessage(data.message || "Failed to create class");
@@ -165,7 +202,9 @@ function ClassManagement() {
       {message && (
         <div
           className={`message ${
-            message.includes("successfully") || message.includes("copied")
+            message.toLowerCase().includes("successfully") ||
+            message.toLowerCase().includes("copied") ||
+            message.toLowerCase().includes("approved")
               ? "success"
               : "error"
           }`}
@@ -212,12 +251,45 @@ function ClassManagement() {
               </div>
               <div className="class-actions">
                 <button className="view-class-btn">View Students</button>
-                <button className="manage-class-btn">Manage Class</button>
+                <button
+                  className="manage-class-btn"
+                  onClick={() => fetchRequests(classItem.id)}
+                >
+                  Manage Requests
+                </button>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {activeClassId && (
+        <div className="requests-list">
+          <h3>Pending Requests</h3>
+          {requests.length === 0 ? (
+            <p>No pending requests.</p>
+          ) : (
+            requests.map((r) => (
+              <div key={r.id} className="request-card">
+                {/* ✅ Use student_name instead of r.users.first_name / last_name */}
+                <p>{r.student_name || "Unknown student"}</p>
+                <button
+                  onClick={() => approveRequest(r.id)}
+                  className="submit-btn"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => rejectRequest(r.id)}
+                  className="manage-class-btn"
+                >
+                  Reject
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

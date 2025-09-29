@@ -12,6 +12,7 @@ function TeacherDashboard() {
   const [totalStudents, setTotalStudents] = useState(0);
   const [newStudentsThisWeek, setNewStudentsThisWeek] = useState(0);
   const [students, setStudents] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]); // NEW
   const navigate = useNavigate();
 
   const fetchTotalStudents = async (teacherId) => {
@@ -52,7 +53,8 @@ function TeacherDashboard() {
       )
     `
       )
-      .eq("teacher_id", teacherId);
+      .eq("teacher_id", teacherId)
+      .eq("status", "accepted"); // ✅ only accepted students
 
     if (error) {
       console.error("Error fetching students:", error.message);
@@ -78,6 +80,60 @@ function TeacherDashboard() {
         initials,
       };
     });
+  };
+
+  // 🔹 Fetch pending requests for all teacher's classes
+  const fetchPendingRequests = async (teacherId) => {
+    try {
+      const { data: classes } = await supabase
+        .from("classes")
+        .select("id, class_name")
+        .eq("teacher_id", teacherId);
+
+      let allRequests = [];
+      for (const c of classes || []) {
+        const res = await fetch(
+          `http://localhost:8000/api/classes/${c.id}/requests`
+        );
+        const json = await res.json();
+        if (json.success && json.requests.length > 0) {
+          const mapped = json.requests.map((r) => ({
+            ...r,
+            class_name: c.class_name,
+          }));
+          allRequests = [...allRequests, ...mapped];
+        }
+      }
+      setPendingRequests(allRequests);
+    } catch (err) {
+      console.error("Error fetching pending requests:", err);
+    }
+  };
+
+  // 🔹 Approve request
+  const approveRequest = async (requestId) => {
+    const res = await fetch(
+      `http://localhost:8000/api/classes/requests/${requestId}/approve`,
+      { method: "POST" }
+    );
+    const data = await res.json();
+    if (data.success) {
+      setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+      const studentList = await fetchStudentsForTeacher(userId);
+      setStudents(studentList);
+    }
+  };
+
+  // 🔹 Reject request
+  const rejectRequest = async (requestId) => {
+    const res = await fetch(
+      `http://localhost:8000/api/classes/requests/${requestId}/reject`,
+      { method: "POST" }
+    );
+    const data = await res.json();
+    if (data.success) {
+      setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+    }
   };
 
   const filteredStudents = students.filter(
@@ -119,6 +175,9 @@ function TeacherDashboard() {
 
       const studentList = await fetchStudentsForTeacher(user.id);
       setStudents(studentList);
+
+      // fetch pending join requests
+      await fetchPendingRequests(user.id);
     };
 
     fetchData();
