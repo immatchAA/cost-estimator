@@ -21,8 +21,8 @@ class CostEstimateCreate(BaseModel):
     items: Annotated[list[CostEstimateItemIn], conlist(CostEstimateItemIn, min_length=1)]
     contingency_percentage: float = 0.10
     submit: bool = False
-
     category_subtotals: List[CategorySubtotalIn] = []
+    status: Optional[str] = None
 
 class CostEstimateOut(BaseModel):
     studentsCostEstimatesID: UUID
@@ -36,6 +36,7 @@ class CostEstimateOut(BaseModel):
     contingencies_amount: float
     grand_total_cost: float
     category_subtotals: List[CategorySubtotalIn] = []
+    status: str
 
 
     

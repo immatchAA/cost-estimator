@@ -67,6 +67,8 @@ export default function CostEstimationChallenge() {
 
   const [saving, setSaving] = useState(false);
 
+  const [suggestion, setSuggestion] = useState ("AI is ready to assist.")
+
   // ===== items state (frontend-only rows) =====
   const idRef = useRef(1);
   const makeId = () => idRef.current++;
@@ -111,7 +113,7 @@ export default function CostEstimationChallenge() {
   const contingencyPct = 10;
   const grandTotal = grandSubtotal * (1 + contingencyPct / 100);
 
-  // ===== payload builder (uses grouped) =====
+
   const buildPayload = async (submit = false) => {
     const {
       data: { user },
@@ -149,10 +151,11 @@ export default function CostEstimationChallenge() {
       contingency_percentage: 0.1,
       submit,
       category_subtotals: catSubs,
+      status: submit ? "submitted" : "draft" 
     };
   };
 
-  // ===== actions =====
+
   const handleSaveDraft = async () => {
     try {
       setSaving(true);
@@ -215,44 +218,77 @@ export default function CostEstimationChallenge() {
     })();
   }, [challengeId]);
 
-  // Check if already submitted -> lock UI
+  
   useEffect(() => {
     (async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setLoadingExisting(false);
           return;
         }
 
-        const { data: est } = await supabase
-          .from("student_cost_estimates")
-          .select("submitted_at")
-          .eq("student_id", user.id)
-          .eq("challenge_id", challengeId)
-          .maybeSingle();
+        const res = await fetch(`${API_BASE}/cost-estimates/student/${user.id}/challenge/${challengeId}`);
+        if (res.ok) {
+          const est = await res.json();
 
-        setSubmitted(Boolean(est?.submitted_at));
+          if (est.items && est.items.length > 0) {
+            setItems(est.items.map((it) => ({
+            rid: makeId(),
+            cost_category: it.cost_category,
+            description: it.material_name,   
+            quantity: it.quantity,
+            unit: it.unit,
+            unit_price: it.unit_price,
+          })));
+          }
+
+          setSubmitted(est.status === "submitted");
+        }
+      } catch (err) {
+        console.error("Failed to fetch existing estimate", err);
       } finally {
         setLoadingExisting(false);
       }
     })();
   }, [challengeId]);
 
-  // modal / zoom handlers
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") setIsModalOpen(false);
-      if (e.key.toLowerCase() === "r") {
-        setZoom(1);
-        setPosition({ x: 0, y: 0 });
-      }
-    };
-    if (isModalOpen) window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isModalOpen]);
+  const handler = setTimeout(async () => {
+    try {
+      const body = {
+        challenge_id: challengeId,
+        challenge_name: challenge?.challenge_name,
+        challenge_instructions: challenge?.challenge_instructions,
+        challenge_objectives: challenge?.challenge_objectives,
+        file_url: challenge?.file_url,
+        items: items.map((r) => ({
+          cost_category: r.cost_category,
+          description: r.description || "",
+          quantity: parseFloat(r.quantity || 0),
+          unit: r.unit || null,
+          unit_price: parseFloat(r.unit_price || 0),
+        })),
+      };
+
+      const res = await fetch(`${API_BASE}/ai-suggestions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+
+      const data = await res.json();
+      setSuggestion(data.suggestion || "No suggestions right now.");
+    } catch (err) {
+      setSuggestion("⚠️ AI suggestions unavailable.");
+    }
+  }, 1500);
+
+  return () => clearTimeout(handler);
+}, [items, challenge]);
+
 
   const handleMouseDown = (e) => {
     setIsDragging(true);
@@ -317,81 +353,11 @@ export default function CostEstimationChallenge() {
             </div>
           </div>
 
-          {/* Floor plan card (no file yet) */}
-          {/* Floor plan card */}
-          <div className="cec3-card">
-            <div className="cec3-card-header">
-              <span>{planTitle}</span>
-            </div>
+      
+    
+          
             <div className="cec3-card-body">
-              <p className="cec3-muted">
-                Reference for your structural cost estimates
-              </p>
-
-              <div
-                className="cec3-floorplan-frame"
-                onClick={() => {
-                  if (!floorplanImg) return;
-                  setIsModalOpen(true);
-                  setZoom(1);
-                  setPosition({ x: 0, y: 0 });
-                }}
-              >
-                {floorplanImg ? (
-                  (() => {
-                    const fileExtension = floorplanImg
-                      .split(".")
-                      .pop()
-                      ?.toLowerCase();
-                    if (fileExtension === "pdf") {
-                      return (
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            height: "100%",
-                            padding: "20px",
-                            textAlign: "center",
-                          }}
-                        >
-                          <div
-                            style={{ fontSize: "48px", marginBottom: "10px" }}
-                          >
-                            📄
-                          </div>
-                          <div style={{ fontWeight: 600, color: "#374151" }}>
-                            PDF Floor Plan
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "14px",
-                              color: "#6b7280",
-                              marginTop: "5px",
-                            }}
-                          >
-                            Click to view in full screen
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      return <img src={floorplanImg} alt="Floor plan" />;
-                    }
-                  })()
-                ) : (
-                  <div
-                    style={{
-                      padding: 60,
-                      textAlign: "center",
-                      color: "#94a3b8",
-                      fontWeight: 600,
-                    }}
-                  >
-                    No floor plan yet
-                  </div>
-                )}
-              </div>
+            
 
               {/* ✅ New Download/View Button */}
               {floorplanImg && (
@@ -410,19 +376,10 @@ export default function CostEstimationChallenge() {
                       textDecoration: "none",
                     }}
                   >
-                    ⬇ View / Download File
+                    ⬇ Click Here to view uploaded plans for reference.
                   </a>
                 </div>
               )}
-
-              <div className="cec3-scale">
-                <span>0</span>
-                <span>5</span>
-                <span>10</span>
-                <span>15</span>
-                <span>20</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -611,16 +568,19 @@ export default function CostEstimationChallenge() {
                 <span>💡 AI Suggestions</span>
               </div>
               <div className="cec3-card-body">
-                <p>
-                  Consider double-checking measurements against structural plan
-                  for accuracy.
-                </p>
+                {suggestion
+                .split(/\d+\./) 
+                .filter((s) => s.trim() !== "")
+                .map((s, i) => (
+                  <div key={i} style={{ marginBottom: "12px" }}>
+                    <strong>{i + 1}.</strong> {s.trim()}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        {/* MODAL for floor plan viewing */}
         {isModalOpen && floorplanImg && (
           <div
             className="cec2-modal-overlay"

@@ -15,11 +15,14 @@ class CostEstimationService:
     def save_estimation(self, payload: CostEstimateCreate) -> CostEstimateOut:
         subtotal, contingency_amount, total = self._totals(payload.items, payload.contingency_percentage)
 
+        status = "submitted" if payload.submit else "draft"
+
         est_id = self.db.upsert_cost_estimate(
             student_id=str(payload.student_id),
             challenge_id=str(payload.challenge_id),
             total_amount=total,
             submitted_at=datetime.utcnow().isoformat() if payload.submit else None,
+            status=status,
         )
 
         self.db.replace_estimate_items(est_id, payload.items)
@@ -46,8 +49,10 @@ class CostEstimationService:
             contingencies_amount=contingency_amount,
             grand_total_cost=total,
             category_subtotals=payload.category_subtotals or [],
+            status=status,
         )
 
     def get_estimation(self, student_id, challenge_id):
         return self.db.get_estimate_with_items(str(student_id), str(challenge_id))
+
 

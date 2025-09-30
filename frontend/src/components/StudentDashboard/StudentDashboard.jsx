@@ -14,14 +14,13 @@ function StudentDashboard() {
 
   useEffect(() => {
     (async () => {
-      // 1) current user
+
       const {
         data: { user },
         error: sessionError,
       } = await supabase.auth.getUser();
       if (sessionError || !user) return;
 
-      // 2) profile
       const { data: profile } = await supabase
         .from("users")
         .select("first_name, last_name")

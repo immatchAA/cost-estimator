@@ -12,7 +12,7 @@ function TeacherDashboard() {
   const [totalStudents, setTotalStudents] = useState(0);
   const [newStudentsThisWeek, setNewStudentsThisWeek] = useState(0);
   const [students, setStudents] = useState([]);
-  const [pendingRequests, setPendingRequests] = useState([]); // NEW
+  const [pendingRequests, setPendingRequests] = useState([]); 
   const navigate = useNavigate();
 
   const fetchTotalStudents = async (teacherId) => {
@@ -264,7 +264,7 @@ function TeacherDashboard() {
                         key={challenge.challenge_id}
                         className="clickable-row"
                         onClick={() =>
-                          navigate("/createdesign", { state: { challenge } })
+                          navigate(`/teacher-challenges/${challenge.challenge_id}`)
                         }
                       >
                         <td>{challenge.challenge_name}</td>

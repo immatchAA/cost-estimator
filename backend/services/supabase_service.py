@@ -25,19 +25,23 @@ class SupabaseClient:
         self.client = create_client(url, key)
         self.bucket_name = "student_challenge_files"
 
-
-    def upsert_cost_estimate(self, student_id: str, challenge_id: str, total_amount: float, submitted_at: Optional[str]):
-        res = self.client.table("student_cost_estimates") \
-            .select("studentsCostEstimatesID") \
-            .eq("student_id", student_id) \
-            .eq("challenge_id", challenge_id) \
-            .limit(1).execute()
+    def upsert_cost_estimate(self, student_id: str, challenge_id: str, total_amount: float, submitted_at: Optional[str], status: str):
+   
+        res = (
+            self.client.table("student_cost_estimates")
+            .select("studentsCostEstimatesID")
+            .eq("student_id", student_id)
+            .eq("challenge_id", challenge_id)
+            .limit(1)
+            .execute()
+        )
         existing = res.data[0]["studentsCostEstimatesID"] if res.data else None
 
         if existing:
             self.client.table("student_cost_estimates").update({
                 "total_amount": total_amount,
-                "submitted_at": submitted_at
+                "submitted_at": submitted_at,
+                "status": status
             }).eq("studentsCostEstimatesID", existing).execute()
             return existing
 
@@ -45,9 +49,12 @@ class SupabaseClient:
             "student_id": student_id,
             "challenge_id": challenge_id,
             "total_amount": total_amount,
-            "submitted_at": submitted_at
+            "submitted_at": submitted_at,
+            "status": status
         }, returning="representation").execute()
+
         return ins.data[0]["studentsCostEstimatesID"]
+    
 
     def replace_estimate_items(self, est_id: str, items: List[CostEstimateItemIn]):
         self.client.table("student_cost_estimate_items") \
@@ -96,24 +103,38 @@ class SupabaseClient:
 
 
     def get_estimate_with_items(self, student_id: str, challenge_id: str):
-        hdr = self.client.table("student_cost_estimates") \
-            .select("*").eq("student_id", student_id) \
-            .eq("challenge_id", challenge_id).limit(1).execute()
+        hdr = (
+            self.client.table("student_cost_estimates")
+            .select("studentsCostEstimatesID, status, total_amount, submitted_at")
+            .eq("student_id", student_id)
+            .eq("challenge_id", challenge_id)
+            .limit(1)
+            .execute()
+        )
         if not hdr.data:
             return None
+
         est = hdr.data[0]
         est_id = est["studentsCostEstimatesID"]
 
-        items = self.client.table("student_cost_estimate_items") \
-            .select("*") \
-            .eq("studentsCostEstimatesID", est_id) \
-            .order("item_number", desc=False) \
-            .order("material_name", desc=False) \
-            .execute().data
+        items = (
+            self.client.table("student_cost_estimate_items")
+            .select("*")
+            .eq("studentsCostEstimatesID", est_id)
+            .order("item_number", desc=False)
+            .order("material_name", desc=False)
+            .execute()
+            .data
+        )
 
-        summary = self.client.table("students_estimates_summary") \
-            .select("*").eq("studentsCostEstimatesID", est_id) \
-            .limit(1).execute().data
+        summary = (
+            self.client.table("students_estimates_summary")  
+            .select("*")
+            .eq("studentsCostEstimatesID", est_id)
+            .limit(1)
+            .execute()
+            .data
+        )
 
         est["items"] = items or []
         est["summary"] = summary[0] if summary else None

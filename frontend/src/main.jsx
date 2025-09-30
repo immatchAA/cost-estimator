@@ -26,6 +26,7 @@ import TeacherDashboard from "./components/TeacherDashboard/TeacherDashboard.jsx
 import ProtectedRouteTeacher from "./components/ProtectedRoute/ProtectedRouteTeacher";
 import ProtectedRouteStudent from "./components/ProtectedRoute/ProtectedRouteStudent";
 import CostEstimationChallenge from "./components/StudentChallenges/CostEstimationChallenge.jsx";
+import TeacherChallengeView from "./components/CostEstimates/TeacherChallengeView.jsx";
 
 
 
@@ -56,6 +57,7 @@ createRoot(document.getElementById("root")).render(
         {/* Module 1 - For Teachers Only */}
 
         <Route path="/uploadChallenge" element= { <ProtectedRouteTeacher> <UploadFile /> </ProtectedRouteTeacher>}/>
+        <Route path="/teacher-challenges/:challengeId" element={<TeacherChallengeView />} />
 
 
         {/* Module 1 - For Students Only */}
