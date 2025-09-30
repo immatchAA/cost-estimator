@@ -117,8 +117,9 @@ function InteractiveFlow() {
                 />
               </svg>
             }
-            title="Shareable estimates"
-            body="Get line items, quantities, and totals. Export to PDF/CSV or invite teammates."
+            title="Real-World Scenarios
+"
+            body="Practice on sample projects like canteens, health centers, and classrooms to gain experience with industry-relevant estimation tasks."
           />
         </div>
       </div>
@@ -230,7 +231,7 @@ function App() {
                        bg-gradient-to-r from-[#176bb7] via-[#2786e3] to-[#176bb7]
                        bg-clip-text text-transparent"
           >
-            ARCHITECTURAL AI COST ESTIMATOR
+            Interactive Web Platform for Smarter Cost Estimation Practice
           </Link>
 
           <nav className="flex items-center gap-6">
@@ -305,7 +306,7 @@ function App() {
                            text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl tracking-tight"
               >
                 <span className="bg-gradient-to-r from-[#176bb7] via-[#2a7fd0] to-[#64b5f6] bg-clip-text text-transparent">
-                  COST SMARTER
+                  ARCHIQUEST
                 </span>
               </span>
 
@@ -314,7 +315,7 @@ function App() {
                 className="mt-5 md:mt-6 text-white text-lg sm:text-xl md:text-2xl font-light max-w-2xl
                            bg-white/40 dark:bg-black/30 backdrop-blur-sm rounded-2xl px-4 py-3 inline-block"
               >
-                Simulate your cost with AI before you build
+                Learn Construction Cost Estimation the Smart Way
               </p>
 
               <div className="mt-6 h-1.5 w-40 sm:w-56 rounded-full bg-gradient-to-r from-[#176bb7] via-[#2a7fd0] to-transparent" />
