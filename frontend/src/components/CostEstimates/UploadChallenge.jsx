@@ -15,7 +15,7 @@ const UploadChallenge = () => {
 
   const [estimating, setEstimating] = useState(false);
   const [estimation, setEstimation] = useState(null);
-
+  const [dueDate, setDueDate] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleFileSelect = (e) => {
@@ -24,7 +24,6 @@ const UploadChallenge = () => {
       setFile(selectedFile);
       setFileName(selectedFile.name);
 
-      // reset input so reselecting the same file works
       e.target.value = "";
     }
   };
@@ -63,6 +62,10 @@ const UploadChallenge = () => {
     formData.append("challenge_instructions", planInstructions);
     formData.append("teacher_id", user.id);
     formData.append("file", file);
+
+    if (dueDate) {
+      formData.append("due_date", dueDate);
+    }
 
     try {
       const res = await fetch("http://localhost:8000/api/challenges", {
@@ -185,6 +188,18 @@ const UploadChallenge = () => {
                 rows="6"
                 value={planInstructions}
                 onChange={(e) => setPlanInstructions(e.target.value)}
+              />
+            </div>
+
+            <div className="challenge-details">
+              <label htmlFor="dueDate">Set Due Date</label>
+              <input
+                type="datetime-local"
+                id="dueDate"
+                name="dueDate"
+                className="challenge-input"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
 

@@ -34,7 +34,8 @@ class CostEstimationService:
             pct=payload.contingency_percentage,
             contingency=contingency_amount,
             total=total,
-            category_subtotals=[s.dict() for s in payload.category_subtotals] if payload.category_subtotals else []
+            category_subtotals=[s.dict() for s in payload.category_subtotals] if payload.category_subtotals else [],
+            challenge_id=str(payload.challenge_id)
         )
 
         return CostEstimateOut(

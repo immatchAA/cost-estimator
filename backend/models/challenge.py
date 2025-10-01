@@ -6,5 +6,6 @@ class ChallengeCreate(BaseModel):
     challenge_instructions: str
     file_url: str
     teacher_id: str
+    due_date: str
 
 

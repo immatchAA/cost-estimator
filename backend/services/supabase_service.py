@@ -82,14 +82,15 @@ class SupabaseClient:
         self.client.table("student_cost_estimate_items").insert(rows).execute()
 
     def upsert_estimate_summary(self, est_id: str, subtotal: float, pct: float,
-                            contingency: float, total: float, category_subtotals):
+                            contingency: float, total: float, category_subtotals, challenge_id:str):
         base = {
             "studentsCostEstimatesID": est_id,
             "subtotal_amount": subtotal,
             "contingency_percentage": pct,
             "contingency_amount": contingency,
             "total_amount": total,
-            "category_subtotals": category_subtotals or []
+            "category_subtotals": category_subtotals or [],
+            "challenge_id": challenge_id
         }
         sel = self.client.table("students_estimates_summary") \
             .select("studentsEstimatesSummaryID") \
@@ -139,6 +140,13 @@ class SupabaseClient:
         est["items"] = items or []
         est["summary"] = summary[0] if summary else None
         return est
+    
+    def get_summary_by_analysis(self, analysis_id: str):
+        res = self.client.table("cost_estimates_summary") \
+            .select("*") \
+            .eq("analysis_id", analysis_id) \
+            .limit(1).execute()
+        return res.data[0] if res.data else None
 
 
     def save_material_price(self, item: dict):

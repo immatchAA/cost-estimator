@@ -136,6 +136,20 @@
   background: #0d4e8c;
 }
 
+.cost-estimate-table input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.cost-estimate-table input:focus {
+  border-color: #176bb7;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(23, 107, 183, 0.12);
+}
+
 /* ===== Modal (kept for later use) ===== */
 .cec2-modal-overlay {
   position: fixed;

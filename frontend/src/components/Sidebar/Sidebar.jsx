@@ -89,10 +89,6 @@ function Sidebar() {
               <FaHome className="custom-icon" /> Dashboard
             </Link>
 
-            <Link to="/classkey" className="custom-nav-item">
-              <FaTasks className="custom-icon" /> Class Keys
-            </Link>
-
             <Link to="/student-progress" className="custom-nav-item">
               <FaChartLine className="custom-icon" /> Student Progress
             </Link>
