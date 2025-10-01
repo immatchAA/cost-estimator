@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from supabase import create_client
 from dotenv import load_dotenv
+from fastapi import HTTPException
 
 from services.gemini_service import GeminiPriceSearch
 from services.supabase_service import SupabaseService
@@ -211,3 +212,99 @@ def run_ai_estimation(challenge_id: str, plan_file_url: str):
             "grand_total_cost": grand_total
         }
     }
+
+import uuid
+from datetime import datetime
+from .supabase_service import SupabaseService
+
+supasvc = SupabaseService()
+supabase = supasvc.client
+
+def save_teacher_estimates(challenge_id: str, analysis_id: str, items: list[dict], summary: dict):
+    # 1. Collect ids to keep
+    keep_ids = [str(i["estimate_id"]) for i in items if i.get("estimate_id")]
+
+
+    if not analysis_id:
+        res = supabase.table("ai_analysis") \
+            .select("analysis_id") \
+            .eq("challenge_id", challenge_id) \
+            .order("created_at", desc=True) \
+            .limit(1) \
+            .execute()
+        if res.data:
+            analysis_id = res.data[0]["analysis_id"]
+        else:
+            raise HTTPException(status_code=400, detail="No analysis_id found for this challenge")
+
+    # 2. Delete rows not in keep_ids
+    if keep_ids:
+        supabase.table("ai_cost_estimates") \
+            .delete() \
+            .eq("challenge_id", challenge_id) \
+            .not_.in_("estimate_id", keep_ids) \
+            .execute()
+    else:
+        supabase.table("ai_cost_estimates").delete().eq("challenge_id", challenge_id).execute()
+
+    # 3. Insert or update rows
+    for row in items:
+        if row.get("estimate_id"):
+            # Update existing
+            supabase.table("ai_cost_estimates").update({
+                "analysis_id": analysis_id,
+                "description": row["description"],
+                "quantity": row["quantity"],
+                "unit": row["unit"],
+                "unit_price": row["unit_price"],
+                "amount": row["amount"],
+                "cost_category": row["cost_category"],
+                "updated_at": datetime.utcnow().isoformat()
+            }).eq("estimate_id", row["estimate_id"]).execute()
+        else:
+            # Insert new
+            supabase.table("ai_cost_estimates").insert({
+                "estimate_id": str(uuid.uuid4()),
+                "analysis_id": analysis_id,
+                "challenge_id": challenge_id,
+                "item_number": row.get("item_number", 0),
+                "description": row["description"],
+                "quantity": row["quantity"],
+                "unit": row["unit"],
+                "unit_price": row["unit_price"],
+                "amount": row["amount"],
+                "cost_category": row["cost_category"],
+                "created_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat()
+            }).execute()
+
+    # 4. Upsert project summary
+    existing = supabase.table("cost_estimates_summary") \
+        .select("summary_id") \
+        .eq("challenge_id", challenge_id) \
+        .limit(1).execute()
+
+    base = {
+        "analysis_id": analysis_id,
+        "challenge_id": challenge_id,
+        "earthwork_amount": summary["earthwork_amount"],
+        "formwork_amount": summary["formwork_amount"],
+        "masonry_amount": summary["masonry_amount"],
+        "concrete_amount": summary["concrete_amount"],
+        "steelwork_amount": summary["steelwork_amount"],
+        "carpentry_amount": summary["carpentry_amount"],
+        "roofing_amount": summary["roofing_amount"],
+        "total_material_cost": summary["total_material_cost"],
+        "labor_cost": summary["labor_cost"],
+        "contingencies_amount": summary["contingencies_amount"],
+        "grand_total_cost": summary["grand_total_cost"],
+        "updated_at": datetime.utcnow().isoformat()
+    }
+
+    if existing.data:
+        supabase.table("cost_estimates_summary").update(base) \
+            .eq("summary_id", existing.data[0]["summary_id"]).execute()
+    else:
+        base["summary_id"] = str(uuid.uuid4())
+        base["created_at"] = datetime.utcnow().isoformat()
+        supabase.table("cost_estimates_summary").insert(base).execute()

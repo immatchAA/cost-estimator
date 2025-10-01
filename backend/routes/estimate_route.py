@@ -1,15 +1,12 @@
 from fastapi import APIRouter, HTTPException
-from services.estimate_service import run_ai_estimation
-from services.gemini_service import GeminiPriceSearch
+from services.estimate_service import run_ai_estimation, save_teacher_estimates
 import uuid
 from pydantic import BaseModel
 
-
-router = APIRouter()
+router = APIRouter(prefix="/cost-estimates", tags=["Cost Estimates"]) 
 
 class EstimationRequest(BaseModel):
     plan_file_url: str
-
 
 @router.post("/challenges/{challenge_id}/estimate")
 def run_estimation(challenge_id: str, request: EstimationRequest):
@@ -18,7 +15,7 @@ def run_estimation(challenge_id: str, request: EstimationRequest):
         plan_file_url=request.plan_file_url
     )
     return {"status": "success", "data": result}
-    
+
 @router.post("/estimate")
 def estimate(payload: dict):
     challenge_id = payload.get("challenge_id")
@@ -29,3 +26,21 @@ def estimate(payload: dict):
 
     result = run_ai_estimation(challenge_id, plan_file_url)
     return result 
+
+
+@router.post("/save")
+def save_estimates(payload: dict):
+    try:
+        challenge_id = payload.get("challenge_id")
+        analysis_id = payload.get("analysis_id")
+        items = payload.get("items", [])
+        summary = payload.get("summary", {})
+
+        if not challenge_id:
+            raise HTTPException(status_code=400, detail="challenge_id required")
+
+        save_teacher_estimates(challenge_id, analysis_id, items, summary)
+        return {"status": "success"}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

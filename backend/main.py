@@ -20,6 +20,7 @@ from services.gemini_service import GeminiPriceSearch
 from services.supabase_service import SupabaseClient
 from routes.cost_estimation_route import router as cost_estimation_router
 from routes import ai_suggestion_route
+from routes import estimate_route
 
 
 
@@ -40,6 +41,7 @@ app.include_router(reading_materials.router)
 app.include_router(class_router, prefix="/api")
 app.include_router(cost_estimation_router)
 app.include_router(ai_suggestion_route.router)
+app.include_router(estimate_route.router)
 
 # CORS
 app.add_middleware(

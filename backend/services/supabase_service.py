@@ -238,3 +238,77 @@ class SupabaseService:
             "contingency_amount": summary.contingency_amount,
             "total_amount": summary.total_amount,
         }).execute()
+
+    def update_estimate(self, item: dict):
+        """Update an existing ai_cost_estimates row"""
+        self.client.table("ai_cost_estimates").update({
+            "description": item["description"],
+            "quantity": item["quantity"],
+            "unit": item["unit"],
+            "unit_price": item["unit_price"],
+            "amount": item["amount"],
+            "cost_category": item["cost_category"],
+            "updated_at": datetime.utcnow().isoformat()
+        }).eq("estimate_id", str(item["estimate_id"])).execute()
+
+    def insert_estimate(self, challenge_id: str, analysis_id: str, item: dict):
+        """Insert new ai_cost_estimates row"""
+        self.client.table("ai_cost_estimates").insert({
+            "estimate_id": str(uuid.uuid4()),
+            "analysis_id": analysis_id,
+            "challenge_id": challenge_id,
+            "item_number": item.get("item_number", 0),
+            "description": item["description"],
+            "quantity": item["quantity"],
+            "unit": item["unit"],
+            "unit_price": item["unit_price"],
+            "amount": item["amount"],
+            "cost_category": item["cost_category"],
+            "created_at": datetime.utcnow().isoformat()
+        }).execute()
+
+    def delete_missing_estimates(self, challenge_id: str, keep_ids: list[str]):
+        """Delete estimates not in keep_ids for given challenge"""
+        if keep_ids:
+            self.client.table("ai_cost_estimates") \
+                .delete() \
+                .eq("challenge_id", challenge_id) \
+                .not_.in_("estimate_id", keep_ids) \
+                .execute()
+        else:
+            self.client.table("ai_cost_estimates") \
+                .delete() \
+                .eq("challenge_id", challenge_id) \
+                .execute()
+
+    def upsert_summary(self, challenge_id: str, analysis_id: str, summary: dict):
+        """Update or insert cost_estimates_summary"""
+        existing = self.client.table("cost_estimates_summary") \
+            .select("summary_id") \
+            .eq("challenge_id", challenge_id) \
+            .limit(1).execute()
+
+        base = {
+            "analysis_id": analysis_id,
+            "challenge_id": challenge_id,
+            "earthwork_amount": summary["earthwork_amount"],
+            "formwork_amount": summary["formwork_amount"],
+            "masonry_amount": summary["masonry_amount"],
+            "concrete_amount": summary["concrete_amount"],
+            "steelwork_amount": summary["steelwork_amount"],
+            "carpentry_amount": summary["carpentry_amount"],
+            "roofing_amount": summary["roofing_amount"],
+            "total_material_cost": summary["total_material_cost"],
+            "labor_cost": summary["labor_cost"],
+            "contingencies_amount": summary["contingencies_amount"],
+            "grand_total_cost": summary["grand_total_cost"],
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+        if existing.data:
+            self.client.table("cost_estimates_summary").update(base) \
+                .eq("summary_id", existing.data[0]["summary_id"]).execute()
+        else:
+            base["summary_id"] = str(uuid.uuid4())
+            base["created_at"] = datetime.utcnow().isoformat()
+            self.client.table("cost_estimates_summary").insert(base).execute()

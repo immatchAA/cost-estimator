@@ -12,46 +12,55 @@ export default function TeacherChallengeView() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingDueDate, setEditingDueDate] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   const handleItemChange = (index, field, value) => {
+    setIsDirty(true);
+
     setAiEstimates((prev) =>
-      prev.map((item, idx) =>
-        idx === index ? { ...item, [field]: value } : item
-      )
+      prev.map((item, idx) => {
+        if (idx !== index) return item;
+
+        const updated = { ...item, [field]: value };
+        if (field === "quantity" || field === "unit_price") {
+          updated.amount = (updated.quantity || 0) * (updated.unit_price || 0);
+        }
+
+        return updated;
+      })
     );
   };
 
   const calculateSummary = () => {
-  // Group by category
-  const grouped = aiEstimates.reduce((acc, row) => {
-    const subtotal = (row.quantity || 0) * (row.unit_price || 0);
-    if (!acc[row.cost_category]) acc[row.cost_category] = { rows: [], subtotal: 0 };
-    acc[row.cost_category].rows.push(row);
-    acc[row.cost_category].subtotal += subtotal;
-    return acc;
-  }, {});
+    const grouped = aiEstimates.reduce((acc, row, idx) => {
+      const subtotal = (row.quantity || 0) * (row.unit_price || 0);
+      if (!acc[row.cost_category])
+        acc[row.cost_category] = { rows: [], subtotal: 0 };
 
-  // Total material cost
-  const totalMaterial = Object.values(grouped).reduce(
-    (sum, g) => sum + g.subtotal,
-    0
-  );
+      acc[row.cost_category].rows.push({ ...row, _originalIndex: idx });
+      acc[row.cost_category].subtotal += subtotal;
+      return acc;
+    }, {});
 
-  // Labor & contingencies
-  const laborCost = totalMaterial * 0.4;
-  const contingencies = (totalMaterial + laborCost) * 0.05;
-  const grandTotal = totalMaterial + laborCost + contingencies;
+    const totalMaterial = Object.values(grouped).reduce(
+      (sum, g) => sum + g.subtotal,
+      0
+    );
 
-  return { grouped, totalMaterial, laborCost, contingencies, grandTotal };
-};
+    const laborCost = totalMaterial * 0.4;
+    const contingencies = (totalMaterial + laborCost) * 0.05;
+    const grandTotal = totalMaterial + laborCost + contingencies;
 
-
+    return { grouped, totalMaterial, laborCost, contingencies, grandTotal };
+  };
 
   useEffect(() => {
     (async () => {
       setLoading(true);
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
         return;
@@ -65,14 +74,12 @@ export default function TeacherChallengeView() {
         .single();
       setChallenge(challengeData);
 
-      // ✅ Fetch AI-generated estimates
       const { data: aiData } = await supabase
         .from("ai_cost_estimates")
         .select("*")
         .eq("challenge_id", challengeId);
       setAiEstimates(aiData || []);
 
-      // ✅ Fetch AI summary
       const { data: summaryData } = await supabase
         .from("cost_estimates_summary")
         .select("*")
@@ -110,43 +117,116 @@ export default function TeacherChallengeView() {
     );
   }
 
-  // Group AI estimates by category
-  const grouped = aiEstimates.reduce((acc, row) => {
-    if (!acc[row.cost_category]) acc[row.cost_category] = [];
-    acc[row.cost_category].push(row);
-    return acc;
-  }, {});
+  const liveSummary = calculateSummary();
+
+  const summaryToDisplay = isDirty
+    ? liveSummary
+    : summary
+    ? {
+        grouped: {
+          EARTHWORK: { subtotal: summary.earthwork_amount, rows: [] },
+          "FORMWORK & SCAFFOLDING": {
+            subtotal: summary.formwork_amount,
+            rows: [],
+          },
+          "MASONRY WORK": { subtotal: summary.masonry_amount, rows: [] },
+          "CONCRETE WORK": { subtotal: summary.concrete_amount, rows: [] },
+          STEELWORK: { subtotal: summary.steelwork_amount, rows: [] },
+          "CARPENTRY WORK": { subtotal: summary.carpentry_amount, rows: [] },
+          "ROOFING WORK": { subtotal: summary.roofing_amount, rows: [] },
+        },
+        totalMaterial: summary.total_material_cost,
+        laborCost: summary.labor_cost,
+        contingencies: summary.contingencies_amount,
+        grandTotal: summary.grand_total_cost,
+      }
+    : liveSummary;
 
   return (
     <div className="cec2-page">
       <Sidebar />
       <div className="cec2-wrapper">
         <h1 className="cec3-title">Challenge Details</h1>
-        <h2 className="cec3-subtitle">{challenge.challenge_name}</h2>
-
+        <p>Challenge ID: {challenge.challenge_id}</p>
         <div className="cec3-grid-top">
           <div className="cec3-stack">
             <div className="cec3-card">
+              <div className="cec3-card-header">📘 Challenge Name</div>
+              <div className="cec3-card-body">
+                <textarea
+                  value={challenge.challenge_name || ""}
+                  onChange={(e) =>
+                    setChallenge((prev) => ({
+                      ...prev,
+                      challenge_name: e.target.value,
+                    }))
+                  }
+                  rows="4"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #cbd5e1",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="cec3-card">
               <div className="cec3-card-header">📘 Instructions</div>
               <div className="cec3-card-body">
-                <p>{challenge.challenge_instructions}</p>
+                <textarea
+                  value={challenge.challenge_instructions || ""}
+                  onChange={(e) =>
+                    setChallenge((prev) => ({
+                      ...prev,
+                      challenge_instructions: e.target.value,
+                    }))
+                  }
+                  rows="4"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #cbd5e1",
+                  }}
+                />
               </div>
             </div>
 
             <div className="cec3-card">
               <div className="cec3-card-header">🎯 Objectives</div>
               <div className="cec3-card-body">
-                <p>{challenge.challenge_objectives}</p>
+                <textarea
+                  value={challenge.challenge_objectives || ""}
+                  onChange={(e) =>
+                    setChallenge((prev) => ({
+                      ...prev,
+                      challenge_objectives: e.target.value,
+                    }))
+                  }
+                  rows="4"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #cbd5e1",
+                  }}
+                />
               </div>
 
               <div style={{ textAlign: "center", marginBottom: "18px" }}>
-                <label style={{ color: "#64748b", fontWeight: 600 }}>Due Date: </label>
+                <label style={{ color: "#64748b", fontWeight: 600 }}>
+                  Due Date:{" "}
+                </label>
                 <input
                   type="datetime-local"
                   value={
                     editingDueDate ||
                     (challenge.due_date
-                      ? new Date(challenge.due_date).toISOString().slice(0, 16)
+                      ? new Date(challenge.due_date)
+                          .toISOString()
+                          .slice(0, 16)
                       : "")
                   }
                   onChange={(e) => setEditingDueDate(e.target.value)}
@@ -157,42 +237,54 @@ export default function TeacherChallengeView() {
                     marginLeft: "8px",
                   }}
                 />
-                <button
-                  onClick={async () => {
-                    if (!editingDueDate) return;
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!window.confirm("⚠️ Update challenge details?")) return;
+
+                  try {
                     const { error } = await supabase
                       .from("student_challenges")
-                      .update({ due_date: editingDueDate })
+                      .update({
+                        challenge_name: challenge.challenge_name,
+                        challenge_instructions:
+                          challenge.challenge_instructions,
+                        challenge_objectives: challenge.challenge_objectives,
+                        due_date: editingDueDate || challenge.due_date,
+                      })
                       .eq("challenge_id", challenge.challenge_id);
 
                     if (error) {
-                      alert("❌ Failed to update due date: " + error.message);
+                      alert("❌ Failed to update challenge: " + error.message);
                     } else {
-                      alert("✅ Due date updated!");
-                      setChallenge({ ...challenge, due_date: editingDueDate });
+                      alert("✅ Challenge details updated!");
+                      setChallenge((prev) => ({
+                        ...prev,
+                        due_date: editingDueDate || prev.due_date,
+                      }));
                     }
-                  }}
-                  style={{
-                    marginLeft: "10px",
-                    padding: "6px 12px",
-                    background: "#176bb7",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                  }}
-                >
-                  Save
-                </button>
-              </div>
-
-
+                  } catch (err) {
+                    console.error(err);
+                    alert("❌ Unexpected error: " + err.message);
+                  }
+                }}
+                style={{
+                  marginLeft: "10px",
+                  padding: "6px 12px",
+                  background: "#176bb7",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                Update Challenge Details
+              </button>
             </div>
           </div>
         </div>
-
-      
 
         {challenge.file_url && (
           <div style={{ marginTop: "20px", textAlign: "center" }}>
@@ -215,118 +307,252 @@ export default function TeacherChallengeView() {
           </div>
         )}
 
-        {/* ✅ AI Cost Estimates Table */}
-          <div className="cec3-grid-lower" style={{ marginTop: "30px" }}>
+        {/* AI Cost Estimates Table */}
+        <div className="cec3-grid-lower" style={{ marginTop: "30px" }}>
           <div className="cec3-card">
             <div className="cec3-card-header">AI Cost Estimates</div>
             <div className="cec3-card-body">
-                <table className="cost-estimate-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: 50 }}>#</th>
-                      <th>Description</th>
-                      <th style={{ width: 110 }}>Quantity</th>
-                      <th style={{ width: 90 }}>Unit</th>
-                      <th style={{ width: 130 }}>Unit Price</th>
-                      <th style={{ width: 140 }}>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                        {Object.entries(calculateSummary().grouped).map(([cat, data], i) => (
-                          <React.Fragment key={cat}>
-                            <tr className="cat-row">
-                              <td colSpan={6}>
-                                <strong>{cat}</strong>
-                              </td>
-                            </tr>
+              <table className="cost-estimate-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 50 }}>#</th>
+                    <th>Description</th>
+                    <th style={{ width: 110 }}>Quantity</th>
+                    <th style={{ width: 90 }}>Unit</th>
+                    <th style={{ width: 130 }}>Unit Price</th>
+                    <th style={{ width: 140 }}>Amount</th>
+                    <th style={{ width: 140 }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(liveSummary.grouped).map(([cat, data], i) => (
+                    <React.Fragment key={cat}>
+                      <tr className="cat-row">
+                        <td colSpan={6}>
+                          <strong>{cat}</strong>
+                        </td>
+                      </tr>
 
-                            {data.rows.map((r, idx) => {
-                              const globalIndex = aiEstimates.indexOf(r); // 🔑 correct row index
-                              return (
-                                <tr key={r.id || globalIndex}>
-                                  <td>{idx + 1}</td>
-                                  <td>
-                                    <input
-                                      type="text"
-                                      value={r.description || ""}
-                                      onChange={(e) =>
-                                        handleItemChange(globalIndex, "description", e.target.value)
-                                      }
-                                    />
-                                  </td>
-                                  <td>
-                                    <input
-                                      type="number"
-                                      value={r.quantity || ""}
-                                      onChange={(e) =>
-                                        handleItemChange(globalIndex, "quantity", parseFloat(e.target.value) || 0)
-                                      }
-                                    />
-                                  </td>
-                                  <td>
-                                    <input
-                                      type="text"
-                                      value={r.unit || ""}
-                                      onChange={(e) =>
-                                        handleItemChange(globalIndex, "unit", e.target.value)
-                                      }
-                                    />
-                                  </td>
-                                  <td>
-                                    <input
-                                      type="number"
-                                      value={r.unit_price || ""}
-                                      onChange={(e) =>
-                                        handleItemChange(globalIndex, "unit_price", parseFloat(e.target.value) || 0)
-                                      }
-                                    />
-                                  </td>
-                                  <td>
-                                    ₱{((r.quantity || 0) * (r.unit_price || 0)).toLocaleString()}
-                                  </td>
-                                </tr>
-                              );
-                            })}
+                      {data.rows.map((r, idx) => (
+                        <tr key={r.id || r._originalIndex}>
+                          <td>{idx + 1}</td>
+                          <td>
+                            <input
+                              type="text"
+                              value={r.description || ""}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  r._originalIndex,
+                                  "description",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              value={r.quantity || ""}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  r._originalIndex,
+                                  "quantity",
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="text"
+                              value={r.unit || ""}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  r._originalIndex,
+                                  "unit",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              value={r.unit_price || ""}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  r._originalIndex,
+                                  "unit_price",
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            ₱
+                            {(
+                              (r.quantity || 0) * (r.unit_price || 0)
+                            ).toLocaleString()}
+                          </td>
 
-                            {/* Subtotal per category */}
-                            <tr className="subtotal-row">
-                              <td colSpan={5}>
-                                <strong>Sub-Total</strong>
-                              </td>
-                              <td>
-                                <strong>₱{data.subtotal.toLocaleString()}</strong>
-                              </td>
-                            </tr>
-                          </React.Fragment>
-                        ))}
-                  </tbody>
+                          <td>
+                            <button
+                              style={{
+                                color: "red",
+                                border: "none",
+                                background: "transparent",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                if (
+                                  window.confirm(
+                                    "Are you sure you want to delete this row?"
+                                  )
+                                ) {
+                                  setIsDirty(true);
+                                  setAiEstimates((prev) =>
+                                    prev.filter(
+                                      (_, idx) => idx !== r._originalIndex
+                                    )
+                                  );
+                                }
+                              }}
+                            >
+                              ❌
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+
+                      <tr>
+                        <td colSpan={7}>
+                          <button
+                            className="add-row-btn"
+                            onClick={() => {
+                              setIsDirty(true);
+                              const newRow = {
+                                id: Date.now(),
+                                challenge_id: challengeId,
+                                cost_category: cat,
+                                description: "",
+                                quantity: 0,
+                                unit: "",
+                                unit_price: 0,
+                              };
+                              setAiEstimates((prev) => [...prev, newRow]);
+                            }}
+                          >
+                            + Add Material
+                          </button>
+                        </td>
+                      </tr>
+
+                      <tr className="subtotal-row">
+                        <td colSpan={5}>
+                          <strong>Sub-Total</strong>
+                        </td>
+                        <td>
+                          <strong>₱{data.subtotal.toLocaleString()}</strong>
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  ))}
+                </tbody>
               </table>
             </div>
           </div>
-          
-              {/* ✅ Project Summary Box */}
-             {summary && (
-             <div className="cec3-card">
-                <div className="cec3-card-header">📊 Project Summary</div>
-                <div className="cec3-card-body">
-                  <ul className="cec3-summary-list">
-                    {Object.entries(calculateSummary().grouped).map(([cat, data]) => (
+
+          {/* Project Summary */}
+          {summaryToDisplay && (
+            <div className="cec3-card">
+              <div className="cec3-card-header">📊 Project Summary</div>
+              <div className="cec3-card-body">
+                <ul className="cec3-summary-list">
+                  {Object.entries(summaryToDisplay.grouped).map(
+                    ([cat, data]) => (
                       <li key={cat}>
-                        {cat}: ₱{data.subtotal.toLocaleString()}
+                        {cat}: ₱{(data.subtotal || 0).toLocaleString()}
                       </li>
-                    ))}
-                  </ul>
-                  <hr style={{ margin: "12px 0" }} />
-                  <p><strong>Total Material Cost (TC):</strong> ₱{calculateSummary().totalMaterial.toLocaleString()}</p>
-                  <p><strong>Labor Cost (LC 40%):</strong> ₱{calculateSummary().laborCost.toLocaleString()}</p>
-                  <p><strong>Contingencies (5% of TC+LC):</strong> ₱{calculateSummary().contingencies.toLocaleString()}</p>
-                  <p style={{ fontSize: "1.1rem", fontWeight: "700", marginTop: "10px" }}>
-                    Grand Total: ₱{calculateSummary().grandTotal.toLocaleString()}
-                  </p>
-                </div>
+                    )
+                  )}
+                </ul>
+                <hr style={{ margin: "12px 0" }} />
+                <p>
+                  <strong>Total Material Cost (TC):</strong> ₱
+                  {summaryToDisplay.totalMaterial.toLocaleString()}
+                </p>
+                <p>
+                  <strong>Labor Cost (LC 40%):</strong> ₱
+                  {summaryToDisplay.laborCost.toLocaleString()}
+                </p>
+                <p>
+                  <strong>Contingencies (5% of TC+LC):</strong> ₱
+                  {summaryToDisplay.contingencies.toLocaleString()}
+                </p>
+                <p
+                  style={{
+                    fontSize: "1.1rem",
+                    fontWeight: "700",
+                    marginTop: "10px",
+                  }}
+                >
+                  Grand Total: ₱
+                  {summaryToDisplay.grandTotal.toLocaleString()}
+                </p>
               </div>
-            )}
+            </div>
+          )}
         </div>
+
+        <div style={{ marginTop: "20px", textAlign: "right" }}>
+              <button
+                onClick={async () => {
+                  if (!window.confirm("⚠️ All changes will be updated, are you sure?")) return;
+
+                  try {
+                    const response = await fetch("http://localhost:8000/cost-estimates/save", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        challenge_id: challengeId,
+                        analysis_id: summary?.analysis_id || null, 
+                        items: aiEstimates.map((row, idx) => ({
+                          estimate_id: row.estimate_id || null, 
+                          description: row.description,
+                          quantity: row.quantity || 0,
+                          unit: row.unit || "",
+                          unit_price: row.unit_price || 0,
+                          amount: (row.quantity || 0) * (row.unit_price || 0),
+                          cost_category: row.cost_category,
+                          item_number: idx + 1,
+                          challenge_id: challengeId,
+                        })),
+                        summary: calculateSummary(), 
+                      }),
+                    });
+
+                    if (!response.ok) {
+                      alert("❌ Failed to save changes: " + response.statusText);
+                    } else {
+                      alert("✅ Changes saved successfully!");
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    alert("❌ Failed to save changes: " + err.message);
+                  }
+                }}
+                style={{
+                  padding: "10px 18px",
+                  background: "#176bb7",
+                  color: "#fff",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                💾 Save Changes
+              </button>
+            </div>
       </div>
     </div>
   );

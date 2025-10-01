@@ -21,3 +21,4 @@ def get_cost_estimate(student_id: UUID, challenge_id: UUID):
     if not data:
         raise HTTPException(status_code=404, detail="No estimate found")
     return data
+
