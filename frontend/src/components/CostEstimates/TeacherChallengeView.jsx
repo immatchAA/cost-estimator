@@ -147,8 +147,7 @@ export default function TeacherChallengeView() {
       <Sidebar />
       <div className="cec2-wrapper">
         <h1 className="cec3-title">Challenge Details</h1>
-        <p>Challenge ID: {challenge.challenge_id}</p>
-        <div className="cec3-grid-top">
+        <p className="cec3-psub">Challenge ID: {challenge.challenge_id}</p>
           <div className="cec3-stack">
             <div className="cec3-card">
               <div className="cec3-card-header">📘 Challenge Name</div>
@@ -164,6 +163,7 @@ export default function TeacherChallengeView() {
                   rows="4"
                   style={{
                     width: "100%",
+                    height: "45px",
                     padding: "8px",
                     borderRadius: "6px",
                     border: "1px solid #cbd5e1",
@@ -186,6 +186,7 @@ export default function TeacherChallengeView() {
                   rows="4"
                   style={{
                     width: "100%",
+                    height: "250px",
                     padding: "8px",
                     borderRadius: "6px",
                     border: "1px solid #cbd5e1",
@@ -208,6 +209,7 @@ export default function TeacherChallengeView() {
                   rows="4"
                   style={{
                     width: "100%",
+                    height: "200px",
                     padding: "8px",
                     borderRadius: "6px",
                     border: "1px solid #cbd5e1",
@@ -284,31 +286,23 @@ export default function TeacherChallengeView() {
               </button>
             </div>
           </div>
-        </div>
 
         {challenge.file_url && (
-          <div style={{ marginTop: "20px", textAlign: "center" }}>
-            <a
-              href={challenge.file_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-block",
-                padding: "10px 16px",
-                background: "#176bb7",
-                color: "#fff",
-                borderRadius: "8px",
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              ⬇ View Uploaded Plans
-            </a>
-          </div>
-        )}
+            <div className="cec3-file-box">
+              <div className="cec3-file-title">View Uploaded Floor Plan Model</div>
+              <a
+                href={challenge.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cec3-file-btn"
+              >
+                ⬇ View Uploaded Plans
+              </a>
+            </div>
+          )}
 
         {/* AI Cost Estimates Table */}
-        <div className="cec3-grid-lower" style={{ marginTop: "30px" }}>
+        <div style={{ marginTop: "30px"}}>
           <div className="cec3-card">
             <div className="cec3-card-header">AI Cost Estimates</div>
             <div className="cec3-card-body">
@@ -418,7 +412,7 @@ export default function TeacherChallengeView() {
                                 }
                               }}
                             >
-                              ❌
+                              ❌ Remove
                             </button>
                           </td>
                         </tr>
@@ -463,45 +457,50 @@ export default function TeacherChallengeView() {
           </div>
 
           {/* Project Summary */}
-          {summaryToDisplay && (
-            <div className="cec3-card">
-              <div className="cec3-card-header">📊 Project Summary</div>
-              <div className="cec3-card-body">
-                <ul className="cec3-summary-list">
-                  {Object.entries(summaryToDisplay.grouped).map(
-                    ([cat, data]) => (
-                      <li key={cat}>
-                        {cat}: ₱{(data.subtotal || 0).toLocaleString()}
-                      </li>
-                    )
-                  )}
-                </ul>
-                <hr style={{ margin: "12px 0" }} />
-                <p>
-                  <strong>Total Material Cost (TC):</strong> ₱
-                  {summaryToDisplay.totalMaterial.toLocaleString()}
-                </p>
-                <p>
-                  <strong>Labor Cost (LC 40%):</strong> ₱
-                  {summaryToDisplay.laborCost.toLocaleString()}
-                </p>
-                <p>
-                  <strong>Contingencies (5% of TC+LC):</strong> ₱
-                  {summaryToDisplay.contingencies.toLocaleString()}
-                </p>
-                <p
-                  style={{
-                    fontSize: "1.1rem",
-                    fontWeight: "700",
-                    marginTop: "10px",
-                  }}
-                >
-                  Grand Total: ₱
-                  {summaryToDisplay.grandTotal.toLocaleString()}
-                </p>
+            {summaryToDisplay && (
+              <div className="cec3-card" style={{ marginTop: "30px" }}>
+                <div className="cec3-card-header">📊 Project Summary</div>
+                <div className="cec3-card-body">
+                  <table className="cec3-summary-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Amount (₱)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(summaryToDisplay.grouped).map(([cat, data]) => (
+                        <tr key={cat}>
+                          <td>{cat}</td>
+                          <td>{(data.subtotal || 0).toLocaleString()}</td>
+                        </tr>
+                      ))}
+
+                      <tr className="cec3-summary-divider">
+                        <td colSpan="2"></td>
+                      </tr>
+
+                      <tr>
+                        <td><strong>Total Material Cost (TC)</strong></td>
+                        <td><strong>{summaryToDisplay.totalMaterial.toLocaleString()}</strong></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Labor Cost (LC 40%)</strong></td>
+                        <td><strong>{summaryToDisplay.laborCost.toLocaleString()}</strong></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Contingencies (5% of TC+LC)</strong></td>
+                        <td><strong>{summaryToDisplay.contingencies.toLocaleString()}</strong></td>
+                      </tr>
+                      <tr className="cec3-summary-grand">
+                        <td><strong>Grand Total</strong></td>
+                        <td><strong>₱{summaryToDisplay.grandTotal.toLocaleString()}</strong></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
 
         <div style={{ marginTop: "20px", textAlign: "right" }}>
