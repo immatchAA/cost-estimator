@@ -1,4 +1,5 @@
 import React from "react";
+import "./ComparisonTable.css";
 
 
 const peso = (v) => {
@@ -20,7 +21,7 @@ const CAT_ORDER = [
   "ROOFING WORK",
 ];
 
-// 🔹 Compute summary (used by both Student & AI)
+// 🔹 Compute summary
 function computeSummary(items = []) {
   const catSubs = CAT_ORDER.map((cat) => {
     const subtotal = items
@@ -43,13 +44,40 @@ function computeSummary(items = []) {
   };
 }
 
-export default function ComparisonTable({ title, data }) {
+function calculateAccuracy(studentData, aiData) {
+  if (!studentData || !aiData) return null;
+
+  const sum = (items = []) =>
+    items.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+
+  const sTotal = sum(studentData.estimates || studentData.items || []);
+  const aiTotal = sum(aiData.estimates || []);
+
+  if (!sTotal || !aiTotal) return null;
+
+  const diff = Math.abs(sTotal - aiTotal);
+  const accuracy = Math.max(0, 100 - (diff / aiTotal) * 100);
+
+  let conclusion = "";
+  if (accuracy >= 85) conclusion = "Very close to AI estimate — excellent accuracy!";
+  else if (accuracy >= 70) conclusion = "Fairly accurate compared to AI’s estimation.";
+  else if (accuracy >= 50) conclusion = "Somewhat aligned but significant differences exist.";
+  else conclusion = "Low alignment with AI — major differences in estimation.";
+
+  return { accuracy: accuracy.toFixed(2), conclusion };
+}
+
+
+export default function ComparisonTable({ title, data, studentData, aiData }) {
   const estimates = data?.estimates || data?.items || [];
 
   // 🔹 Always compute summary from items
   const summary = computeSummary(estimates);
 
-  // Group estimates by category
+  // 🔹 Accuracy
+  const accuracyResult = calculateAccuracy(studentData, aiData);
+
+  // 🔹 Group estimates by category
   const grouped = CAT_ORDER.map((cat) => ({
     cat,
     rows: estimates.filter((r) => r.cost_category === cat),
@@ -136,6 +164,8 @@ export default function ComparisonTable({ title, data }) {
           </tbody>
         </table>
       </div>
+
+
     </div>
   );
 }

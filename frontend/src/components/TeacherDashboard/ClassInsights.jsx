@@ -162,30 +162,59 @@ export default function ClassInsights() {
         </div>
 
         {/* Comparison Modal */}
-        {comparisonOpen && selectedStudent && (
-          <div className="tcv-modal-overlay">
-            <div className="tcv-modal">
-              <div className="tcv-modal-header">
-                <h2>Cost Estimate Comparison</h2>
-                <button onClick={() => setComparisonOpen(false)}>✖</button>
-              </div>
+        {/* Comparison Modal */}
+{comparisonOpen && selectedStudent && (
+  <div className="tcv-modal-overlay">
+    <div className="tcv-modal">
+      <div className="tcv-modal-header">
+        <h2>Cost Estimate Comparison</h2>
+        <button onClick={() => setComparisonOpen(false)}>✖</button>
+      </div>
 
-              <p>
-                {selectedStudent.name} • {selectedStudent.challengeName}
-             </p>
+      <p>
+        {selectedStudent.name} • {selectedStudent.challengeName}
+      </p>
 
- 
-              <div className="tcv-comparison-grid">
-                <div className="tcv-comparison-col">
-                    <ComparisonTable title="📘 Student Estimates" data={studentData} />
-                </div>
-                <div className="tcv-comparison-col">
-                    <ComparisonTable title="🤖 AI Estimates" data={aiData} />
-                </div>
-                </div>
+      <div className="tcv-comparison-grid">
+        <div className="tcv-comparison-col">
+          <ComparisonTable title="📘 Student Estimates" data={studentData} />
+        </div>
+        <div className="tcv-comparison-col">
+          <ComparisonTable title="🤖 AI Estimates" data={aiData} />
+        </div>
+      </div>
+
+      {/* 🔹 Accuracy Section */}
+      {studentData && aiData && (() => {
+            const sum = (items = []) =>
+            items.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+
+            const sTotal = sum(studentData.estimates || studentData.items || []);
+            const aiTotal = sum(aiData.estimates || []);
+
+            if (!sTotal || !aiTotal) return null;
+
+            const diff = Math.abs(sTotal - aiTotal);
+            const accuracy = Math.max(0, 100 - (diff / aiTotal) * 100);
+
+            let conclusion = "";
+            if (accuracy >= 85) conclusion = "Very close to AI estimate — excellent accuracy!";
+            else if (accuracy >= 70) conclusion = "Fairly accurate compared to AI’s estimation.";
+            else if (accuracy >= 50) conclusion = "Somewhat aligned but significant differences exist.";
+            else conclusion = "Low alignment with AI — major differences in estimation.";
+
+            return (
+            <div className="accuracy-section" style={{ marginTop: "20px", textAlign: "center" }}>
+                <h4>Accuracy Percentage</h4>
+                <p><strong>{accuracy.toFixed(2)}%</strong></p>
+                <p>{conclusion}</p>
             </div>
-          </div>
+            );
+        })()}
+            </div>
+        </div>
         )}
+
       </div>
     </div>
   );
