@@ -125,8 +125,10 @@
   border-radius: 10px;
   padding: 20px;
   width: 90%;
-  max-width: 1000px;
+  max-width: 1500px;
   max-height: 90vh;
+  min-height: 800px;
+  margin: auto;
   overflow-y: auto;
   box-shadow: 0 5px 20px rgba(0,0,0,0.2);
 }

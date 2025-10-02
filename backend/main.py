@@ -40,6 +40,7 @@ app.include_router(verification_router)
 app.include_router(reading_materials.router)
 app.include_router(class_router, prefix="/api")
 app.include_router(cost_estimation_router)
+app.include_router(cost_estimation_router, prefix="/api")
 app.include_router(ai_suggestion_route.router)
 app.include_router(estimate_route.router)
 

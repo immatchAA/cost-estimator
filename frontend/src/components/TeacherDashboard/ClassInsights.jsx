@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./ClassInsights.css";
 import Sidebar from "../Sidebar/Sidebar";
 import { supabase } from "../../supabaseClient";
+import ComparisonTable from "./ComparisonTable";
 
 export default function ClassInsights() {
   const [openClass, setOpenClass] = useState(null);
@@ -9,6 +10,9 @@ export default function ClassInsights() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [aiData, setAiData] = useState(null);
+  const [studentData, setStudentData] = useState(null);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -41,10 +45,44 @@ export default function ClassInsights() {
 
   if (loading) return <p>Loading...</p>;
 
-  const handleOpenComparison = (student, cls) => {
-    setSelectedStudent({ ...student, className: cls.class_name });
+
+    const handleOpenComparison = async (student, cls) => {
+    setSelectedStudent({ 
+        ...student, 
+        challengeId: cls.challenge?.challenge_id,
+        challengeName: cls.challenge?.challenge_name ?? "No Challenge" 
+    });
     setComparisonOpen(true);
-  };
+
+    if (cls.challenge?.challenge_id) {
+        try {
+        const res = await fetch(
+            `${import.meta.env.VITE_API_URL}/cost-estimates/ai/${cls.challenge.challenge_id}`
+        );
+        const result = await res.json();
+        if (result.success) {
+            setAiData(result);
+        }
+        } catch (err) {
+        console.error("AI fetch error:", err);
+        }
+    }
+
+    if (student.id && cls.challenge?.challenge_id) {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/cost-estimates/student/${student.id}/challenge/${cls.challenge.challenge_id}`
+      );
+      if (res.ok) {
+        const result = await res.json();
+        setStudentData(result); 
+      }
+    } catch (err) {
+      console.error("Student fetch error:", err);
+    }
+  }
+    };
+
 
   return (
     <div className="class-insights-page">
@@ -78,7 +116,7 @@ export default function ClassInsights() {
                         <h3>{cls.challenge.challenge_name}</h3>
                         <p>
                         {cls.challenge.challenge_instructions.length > 100
-                            ? cls.challenge.challenge_instructions.substring(0, 100) + "..."
+                            ? cls.challenge.challenge_instructions.substring(0, 150) + "..."
                             : cls.challenge.challenge_instructions}
                         </p>
 
@@ -131,21 +169,20 @@ export default function ClassInsights() {
                 <h2>Cost Estimate Comparison</h2>
                 <button onClick={() => setComparisonOpen(false)}>✖</button>
               </div>
-              <p>
-                {selectedStudent.name} • {selectedStudent.className}
-              </p>
 
-              {/* Placeholder tables until you wire up estimates */}
+              <p>
+                {selectedStudent.name} • {selectedStudent.challengeName}
+             </p>
+
+ 
               <div className="tcv-comparison-grid">
                 <div className="tcv-comparison-col">
-                  <h3>📘 Student Estimates</h3>
-                  <p>Student estimate data here...</p>
+                    <ComparisonTable title="📘 Student Estimates" data={studentData} />
                 </div>
                 <div className="tcv-comparison-col">
-                  <h3>🤖 AI Estimates</h3>
-                  <p>AI estimate data here...</p>
+                    <ComparisonTable title="🤖 AI Estimates" data={aiData} />
                 </div>
-              </div>
+                </div>
             </div>
           </div>
         )}
