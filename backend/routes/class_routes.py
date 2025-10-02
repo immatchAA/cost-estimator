@@ -154,3 +154,39 @@ async def reject_request(request_id: str):
         return {"success": True, "message": "Request rejected"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+@class_router.get("/teacher/{teacher_id}/with-students")
+async def get_teacher_classes_with_students(teacher_id: str):
+    try:
+        classes_res = supabase.table("classes")\
+            .select("id, class_name, description, class_key, teacher_id, created_at")\
+            .eq("teacher_id", teacher_id).execute()
+
+        classes_with_students = []
+
+        for cls in classes_res.data:
+            students_res = supabase.table("class_enrollments")\
+                .select("student_id, created_at")\
+                .eq("class_id", cls["id"])\
+                .eq("status", "accepted").execute()
+
+            students = []
+            for s in students_res.data:
+                user = supabase.table("users")\
+                    .select("first_name, last_name, email")\
+                    .eq("id", s["student_id"]).single().execute()
+
+                if user.data:
+                    students.append({
+                        "id": s["student_id"],
+                        "name": f"{user.data['first_name']} {user.data['last_name']}",
+                        "email": user.data["email"],
+                        "joined_at": s["created_at"]
+                    })
+
+            cls["students"] = students
+            classes_with_students.append(cls)
+
+        return {"success": True, "classes": classes_with_students}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")

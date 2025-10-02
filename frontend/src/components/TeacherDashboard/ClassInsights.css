@@ -1,0 +1,177 @@
+.tcv-page {
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.tcv-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #176bb7;
+}
+
+.tcv-subtitle {
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.tcv-class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tcv-class-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.tcv-class-header {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  background: #f8fafc;
+}
+
+.tcv-class-key {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.tcv-class-body {
+  padding: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.tcv-challenge-box {
+  margin-bottom: 16px;
+  background: #eaf4fb;
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 4px solid #176bb7;
+}
+
+.tcv-student-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tcv-student-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tcv-student-name {
+  font-weight: 600;
+}
+
+.tcv-student-email {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.tcv-status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tcv-status.submitted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.tcv-status.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.tcv-status.late {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.tcv-view-btn {
+  margin-left: 10px;
+  padding: 6px 12px;
+  background: #176bb7;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tcv-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tcv-modal {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.tcv-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tcv-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.tcv-comparison-col h3 {
+  margin-bottom: 10px;
+  color: #176bb7;
+}
+
+.tcv-comparison-col table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tcv-comparison-col th,
+.tcv-comparison-col td {
+  border: 1px solid #e2e8f0;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.category-row td {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.class-insights-page {
+  display: flex; 
+}
+
+.class-insights-wrapper {
+  flex: 1;
+  padding: 20px;
+}
