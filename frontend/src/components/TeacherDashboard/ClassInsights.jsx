@@ -14,7 +14,9 @@ export default function ClassInsights() {
     const fetchClasses = async () => {
       try {
         // 1. get logged-in teacher
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) throw new Error("Not logged in");
         const teacherId = user.id;
 
@@ -49,12 +51,13 @@ export default function ClassInsights() {
       <Sidebar />
 
       <div className="class-insights-wrapper">
-        <h1 className="tcv-title">📘 Teacher Dashboard</h1>
+        <h1 className="tcv-title">📘 Class Overview</h1>
         <p className="tcv-subtitle">Manage your classes and enrolled students</p>
 
         <div className="tcv-class-list">
           {classes.map((cls) => (
             <div key={cls.id} className="tcv-class-card">
+              {/* Class Header */}
               <div
                 className="tcv-class-header"
                 onClick={() => setOpenClass(openClass === cls.id ? null : cls.id)}
@@ -66,34 +69,57 @@ export default function ClassInsights() {
                 <span>{openClass === cls.id ? "▲" : "▼"}</span>
               </div>
 
-              {openClass === cls.id && (
+              {/* Expanded Class Body */}
+              {openClass === cls.id && (   
                 <div className="tcv-class-body">
-                  <h4>👩‍🎓 Enrolled Students</h4>
-                  <ul className="tcv-student-list">
-                    {cls.students.length === 0 ? (
-                      <li>No accepted students yet.</li>
+                    {/* Challenge Box */}
+                    {cls.challenge ? (
+                    <div className="tcv-challenge-box">
+                        <h3>{cls.challenge.challenge_name}</h3>
+                        <p>
+                        {cls.challenge.challenge_instructions.length > 100
+                            ? cls.challenge.challenge_instructions.substring(0, 100) + "..."
+                            : cls.challenge.challenge_instructions}
+                        </p>
+
+                        <p>
+                        Due:{" "}
+                        {cls.challenge.due_date
+                            ? new Date(cls.challenge.due_date).toLocaleDateString()
+                            : "No due date"}
+                        </p>
+                    </div>
                     ) : (
-                      cls.students.map((student) => (
+                    <p>No challenge created yet.</p>
+                    )}
+
+                    {/* Students */}
+                    <h4>👩‍🎓 Enrolled Students</h4>
+                    <ul className="tcv-student-list">
+                    {cls.students.length === 0 ? (
+                        <li>No accepted students yet.</li>
+                    ) : (
+                        cls.students.map((student) => (
                         <li key={student.id} className="tcv-student-row">
-                          <div>
+                            <div>
                             <p className="tcv-student-name">{student.name}</p>
                             <p className="tcv-student-email">{student.email}</p>
-                          </div>
-                          <div className="tcv-student-actions">
+                            </div>
+                            <div className="tcv-student-actions">
                             <button
-                              className="tcv-view-btn"
-                              onClick={() => handleOpenComparison(student, cls)}
+                                className="tcv-view-btn"
+                                onClick={() => handleOpenComparison(student, cls)}
                             >
-                              👁 View Comparison
+                                👁 View Comparison
                             </button>
-                          </div>
+                            </div>
                         </li>
-                      ))
+                        ))
                     )}
-                  </ul>
+                    </ul>
                 </div>
-              )}
-            </div>
+                )}
+                            </div>
           ))}
         </div>
 

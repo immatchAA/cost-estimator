@@ -162,9 +162,10 @@ async def get_teacher_classes_with_students(teacher_id: str):
             .select("id, class_name, description, class_key, teacher_id, created_at")\
             .eq("teacher_id", teacher_id).execute()
 
-        classes_with_students = []
+        classes_with_data = []
 
         for cls in classes_res.data:
+
             students_res = supabase.table("class_enrollments")\
                 .select("student_id, created_at")\
                 .eq("class_id", cls["id"])\
@@ -175,7 +176,6 @@ async def get_teacher_classes_with_students(teacher_id: str):
                 user = supabase.table("users")\
                     .select("first_name, last_name, email")\
                     .eq("id", s["student_id"]).single().execute()
-
                 if user.data:
                     students.append({
                         "id": s["student_id"],
@@ -184,9 +184,18 @@ async def get_teacher_classes_with_students(teacher_id: str):
                         "joined_at": s["created_at"]
                     })
 
-            cls["students"] = students
-            classes_with_students.append(cls)
+            challenge_res = supabase.table("student_challenges")\
+                .select("challenge_id, challenge_name, challenge_instructions, due_date")\
+                .eq("teacher_id", teacher_id).execute()
 
-        return {"success": True, "classes": classes_with_students}
+            challenge = challenge_res.data[0] if challenge_res.data else None
+
+            cls["students"] = students
+            cls["challenge"] = challenge
+            classes_with_data.append(cls)
+
+        return {"success": True, "classes": classes_with_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+
