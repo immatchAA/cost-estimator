@@ -223,7 +223,7 @@ function App() {
     <>
       {/* Header (kept) */}
       <header className="sticky top-0 z-50 bg-white/60 dark:bg-black/30 backdrop-blur-md border-b border-white/30 dark:border-white/10">
-        <div className="max-w-7xl mx-auto h-20 px-6 md:px-10 flex items-center justify-between">
+        <div className="mx-auto h-20 px-6 pr-6 md:px-10 flex items-center justify-between ">
           <Link
             to="/"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
@@ -234,24 +234,33 @@ function App() {
             Interactive Web Platform for Smarter Cost Estimation Practice
           </Link>
 
-          <nav className="flex items-center gap-6">
+          <nav className="flex items-center gap-8 pr-80 text-lg">
             <Link
               to="/"
-              className="text-[#176bb7]/90 hover:text-[#176bb7] transition-colors"
+              className="relative text-[#176bb7]/90   transition-colors duration-300 px-4 py-2 rounded-xl
+                   after:content-[''] after:absolute after:left-0 after:bottom-0 
+                   after:w-0 after:h-[2px] after:bg-[#176bb7] after:transition-all after:duration-300 
+                   hover:after:w-full"
               style={{ fontFamily: "'Montserrat', sans-serif" }}
             >
               Home
             </Link>
             <Link
               to="/login"
-              className="text-[#176bb7]/90 hover:text-[#176bb7] transition-colors"
+              className="relative text-[#176bb7]/90   transition-colors duration-300 px-4 py-2 rounded-xl
+                   after:content-[''] after:absolute after:left-0 after:bottom-0 
+                   after:w-0 after:h-[2px] after:bg-[#176bb7] after:transition-all after:duration-300 
+                   hover:after:w-full"
               style={{ fontFamily: "'Montserrat', sans-serif" }}
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="text-white bg-[#176bb7] hover:bg-[#0d5a9f] transition-colors px-4 py-2 rounded-xl"
+              className="relative text-[#176bb7]/90   transition-colors duration-300 px-4 py-2 rounded-xl
+                   after:content-[''] after:absolute after:left-0 after:bottom-0 
+                   after:w-0 after:h-[2px] after:bg-[#176bb7] after:transition-all after:duration-300 
+                   hover:after:w-full"
               style={{ fontFamily: "'Montserrat', sans-serif" }}
             >
               Register
@@ -296,8 +305,8 @@ function App() {
           aria-hidden="true"
         />
 
-        <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-10 flex min-h-[calc(100vh-5rem)]">
-          <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 content-center">
+        <section className="relative mx-auto px-6 md:px-10 flex min-h-[calc(100vh-5rem)]">
+          <div className="w-full pl-50 grid lg:grid-cols-2 gap-8 content-center">
             {/* Left: headline */}
             <div className="self-center">
               <span
@@ -309,16 +318,14 @@ function App() {
                   ARCHIQUEST
                 </span>
               </span>
-
               <p
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
-                className="mt-5 md:mt-6 text-white text-lg sm:text-xl md:text-2xl font-light max-w-2xl
+                className="mt-5 md:mt-6 text-[#176bb7] text-lg sm:text-xl md:text-2xl font-light max-w-2xl
                            bg-white/40 dark:bg-black/30 backdrop-blur-sm rounded-2xl px-4 py-3 inline-block"
               >
                 Learn Construction Cost Estimation the Smart Way
               </p>
-
-              <div className="mt-6 h-1.5 w-40 sm:w-56 rounded-full bg-gradient-to-r from-[#176bb7] via-[#2a7fd0] to-transparent" />
+              <div className="mt-6 h-1.5 w-40 sm:w-56 rounded-full bg-gradient-to-r from-[#176bb7] via-[#2a7fd0] to-transparent" />{" "}
             </div>
 
             {/* Right: interactive floor plan */}
