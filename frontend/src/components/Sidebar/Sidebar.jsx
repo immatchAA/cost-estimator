@@ -17,7 +17,11 @@ import { supabase } from "../../supabaseClient";
 function Sidebar() {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [userProfile, setUserProfile] = useState({ name: "", role: "" });
+  const [userProfile, setUserProfile] = useState({
+    name: "",
+    role: "",
+    profile_image: "",
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -27,28 +31,54 @@ function Sidebar() {
       } = await supabase.auth.getUser();
 
       if (sessionError || !user) {
-        console.error("Failed to get user: ", sessionError?.message);
+        console.error("Failed to get user:", sessionError?.message);
         navigate("/login");
         return;
       }
 
+      // ✅ Correct column match: auth_id (not id)
       const { data: profile, error: profileError } = await supabase
         .from("users")
-        .select("first_name, last_name, role")
-        .eq("id", user.id)
-        .single();
+        .select("first_name, last_name, role, profile_image")
+        .eq("auth_id", user.id)
+        .maybeSingle();
 
       if (profileError) {
-        console.error("Failed to fetch user profile: ", profileError.message);
-      } else {
+        console.error("Failed to fetch user profile:", profileError.message);
+      } else if (profile) {
         setUserProfile({
-          name: `${profile.first_name} ${profile.last_name}`,
+          name: `${profile.first_name || ""} ${profile.last_name || ""}`.trim(),
           role: profile.role || "Unknown",
+          profile_image: profile.profile_image || "",
         });
       }
     };
 
     fetchUserData();
+
+    // 🔁 Optional: re-fetch profile when user updates AccountE
+    const channel = supabase
+      .channel("profile-updates")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "users" },
+        (payload) => {
+          const updated = payload.new;
+          setUserProfile((prev) => ({
+            ...prev,
+            name: `${updated.first_name || ""} ${
+              updated.last_name || ""
+            }`.trim(),
+            role: updated.role || prev.role,
+            profile_image: updated.profile_image || prev.profile_image,
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [navigate]);
 
   const handleLogout = async () => {
@@ -66,7 +96,20 @@ function Sidebar() {
       {/* Profile Section */}
       <div className="custom-profile">
         <div className="custom-profile-pic">
-          <FaUser className="profile-icon" />
+          {userProfile.profile_image ? (
+            <img
+              src={`${userProfile.profile_image}?t=${Date.now()}`}
+              alt="Profile"
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <FaUser className="profile-icon" />
+          )}
         </div>
         <div className="custom-profile-info">
           <h3>{userProfile.name}</h3>
@@ -88,23 +131,18 @@ function Sidebar() {
             <Link to="/teacher-dashboard" className="custom-nav-item">
               <FaHome className="custom-icon" /> Dashboard
             </Link>
-
             <Link to="/class-insights" className="custom-nav-item">
               <FaChartLine className="custom-icon" /> Class Insights
             </Link>
-
             <Link to="/uploadChallenge" className="custom-nav-item">
               <FaPencilRuler className="custom-icon" /> Create Challenge
             </Link>
-
             <Link to="/reading-materials" className="custom-nav-item">
               <FaBook className="custom-icon" /> Reading Materials
             </Link>
-
             <Link to="/material-search" className="custom-nav-item">
               <FaStore className="custom-icon" /> Virtual Store
             </Link>
-
             <Link to="/AccountE" className="custom-nav-item">
               <FaUser className="custom-icon" /> Account
             </Link>
@@ -114,19 +152,15 @@ function Sidebar() {
             <Link to="/student-dashboard" className="custom-nav-item">
               <FaHome className="custom-icon" /> Dashboard
             </Link>
-
             <Link to="/student-challenges-details" className="custom-nav-item">
               <FaGraduationCap className="custom-icon" /> All Challenges
             </Link>
-
             <Link to="/reading-materials" className="custom-nav-item">
               <FaBook className="custom-icon" /> Reading Materials
             </Link>
-
             <Link to="/material-search" className="custom-nav-item">
               <FaStore className="custom-icon" /> Virtual Store
             </Link>
-
             <Link to="/AccountE" className="custom-nav-item">
               <FaUser className="custom-icon" /> Account
             </Link>
