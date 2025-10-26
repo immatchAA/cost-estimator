@@ -10,6 +10,7 @@ class CostEstimateItemIn(BaseModel):
     unit: Optional[str] = None
     unit_price: float = Field(..., ge=0)
     cost_category: str
+    challenge_id: str
 
 class CategorySubtotalIn(BaseModel):
     cost_category: str

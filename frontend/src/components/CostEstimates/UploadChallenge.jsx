@@ -69,9 +69,9 @@ const UploadChallenge = () => {
 
     try {
       const res = await fetch("http://localhost:8000/api/challenges", {
-        method: "POST",
-        body: formData,
-      });
+      method: "POST",
+      body: formData,
+    });
       const data = await res.json();
 
       if (!res.ok) {
@@ -93,7 +93,7 @@ const UploadChallenge = () => {
       // 2) Run AI estimate
       setEstimating(true);
       const estRes = await fetch(
-        `http://localhost:8000/api/challenges/${challengeId}/estimate`,
+        `http://localhost:8000/api/cost-estimates/challenges/${challengeId}/estimate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -36,11 +36,10 @@ function Sidebar() {
         return;
       }
 
-      // ✅ Correct column match: auth_id (not id)
       const { data: profile, error: profileError } = await supabase
         .from("users")
         .select("first_name, last_name, role, profile_image")
-        .eq("auth_id", user.id)
+        .eq("id", user.id)
         .maybeSingle();
 
       if (profileError) {

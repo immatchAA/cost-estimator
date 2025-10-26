@@ -13,7 +13,7 @@ const peso = (v) => {
   })}`;
 };
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://127.0.0.1:8000/api";
 
 const CAT_ORDER = [
   "EARTHWORK",
@@ -128,6 +128,7 @@ export default function CostEstimationChallenge() {
           Number(r.unit_price)
       )
       .map((r) => ({
+        challenge_id: challengeId, 
         cost_category: r.cost_category,
         material_name: r.description?.trim() || "Item",
         quantity: parseFloat(r.quantity || 0),
@@ -257,7 +258,7 @@ export default function CostEstimationChallenge() {
   const handler = setTimeout(async () => {
     try {
       const body = {
-        challenge_id: challengeId,
+        challenge_id: challenge?.challenge_id,
         challenge_name: challenge?.challenge_name,
         challenge_instructions: challenge?.challenge_instructions,
         challenge_objectives: challenge?.challenge_objectives,

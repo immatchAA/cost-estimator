@@ -6,28 +6,42 @@ class GeminiPriceSearch:
         self.api_key = os.getenv("GEMINI_API_KEY")
         self.url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
-            "gemini-2.5-pro:generateContent"
+            "gemini-2.5-flash-lite:generateContent"
         )
 
     def _call_gemini(self, prompt: str) -> str:
         headers = {"Content-Type": "application/json"}
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
         resp = requests.post(f"{self.url}?key={self.api_key}", json=payload, headers=headers)
+
         if resp.status_code != 200:
+            print("⚠️ Gemini API error:", resp.text)
             raise Exception(f"Gemini API error: {resp.text}")
-        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
 
-    def _safe_json_parse(self, text: str) -> Any:
-        cleaned = text.strip()
+        data = resp.json()
+        try:
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+        except (KeyError, IndexError, TypeError):
+            print("⚠️ Unexpected Gemini response:", json.dumps(data, indent=2))
+            return ""  
 
+    def _safe_json_parse(self, cleaned):
+        if not cleaned or not cleaned.strip():
+            print("⚠️ Empty response received from Gemini API.")
+            return {"error": "Empty or invalid response from Gemini API"}
+
+        # Remove Markdown-style JSON fences
+        cleaned = cleaned.strip()
         if cleaned.startswith("```"):
-            cleaned = "\n".join(cleaned.split("\n")[1:-1])
+            cleaned = cleaned.strip("`")
+            cleaned = cleaned.replace("json", "", 1).strip()
 
-        import re
-        m = re.search(r"\[[\s\S]*\]", cleaned)
-        if m:
-            cleaned = m.group(0)
-        return json.loads(cleaned)
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError as e:
+            print("⚠️ JSON decode error:", e)
+            print("Raw content received (first 500 chars):", cleaned[:500])
+            return {"error": "Invalid JSON format", "raw": cleaned}
 
 
     def analyze_plan_extract_elements(self, plan_file_url: str) -> List[Dict]:

@@ -12,43 +12,70 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const [submittedMap, setSubmittedMap] = useState({});
 
-  useEffect(() => {
-    (async () => {
+ useEffect(() => {
+  (async () => {
+    const {
+      data: { user },
+      error: sessionError,
+    } = await supabase.auth.getUser();
+    if (sessionError || !user) return;
 
-      const {
-        data: { user },
-        error: sessionError,
-      } = await supabase.auth.getUser();
-      if (sessionError || !user) return;
+    // Fetch student name
+    const { data: profile } = await supabase
+      .from("users")
+      .select("first_name, last_name")
+      .eq("id", user.id)
+      .single();
+    if (profile) setUserName(`${profile.first_name} ${profile.last_name}`);
 
-      const { data: profile } = await supabase
-        .from("users")
-        .select("first_name, last_name")
-        .eq("id", user.id)
-        .single();
-      if (profile) setUserName(`${profile.first_name} ${profile.last_name}`);
+    setLoadingChallenges(true);
 
-      setLoadingChallenges(true);
-      const { data: rows } = await supabase
-        .from("student_challenges")
-        .select("*")
-        .order("created_at", { ascending: false });
+    const { data: enrolled, error: enrollErr } = await supabase
+      .from("class_enrollments")
+      .select("teacher_id")
+      .eq("student_id", user.id);
 
-      setChallenges(rows || []);
+    if (enrollErr) {
+      console.error("Error fetching enrollments:", enrollErr);
+      setChallenges([]);
       setLoadingChallenges(false);
+      return;
+    }
 
-      const { data: est } = await supabase
-        .from("student_cost_estimates")
-        .select("challenge_id, submitted_at")
-        .eq("student_id", user.id);
+    const teacherIds = (enrolled || []).map((e) => e.teacher_id);
 
-      const map = {};
-      (est || []).forEach((e) => {
-        if (e.submitted_at) map[e.challenge_id] = true;
-      });
-      setSubmittedMap(map);
-    })();
-  }, []);
+    if (teacherIds.length === 0) {
+      setChallenges([]);
+      setLoadingChallenges(false);
+      return;
+    }
+
+
+    const { data: rows, error: challengeErr } = await supabase
+      .from("student_challenges")
+      .select("*")
+      .in("teacher_id", teacherIds)
+      .order("created_at", { ascending: false });
+
+    if (challengeErr) {
+      console.error("Error fetching challenges:", challengeErr);
+    }
+
+    setChallenges(rows || []);
+    setLoadingChallenges(false);
+
+    const { data: est } = await supabase
+      .from("student_cost_estimates")
+      .select("challenge_id, submitted_at")
+      .eq("student_id", user.id);
+
+    const map = {};
+    (est || []).forEach((e) => {
+      if (e.submitted_at) map[e.challenge_id] = true;
+    });
+    setSubmittedMap(map);
+  })();
+}, []);
 
   const truncate = (s, n = 160) =>
     s ? (s.length > n ? s.slice(0, n) + "…" : s) : "—";

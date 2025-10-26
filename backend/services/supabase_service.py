@@ -70,6 +70,7 @@ class SupabaseClient:
             amount = round((i.quantity or 0) * (i.unit_price or 0), 2)
             rows.append({
                 "studentsCostEstimatesID": est_id,
+                "challenge_id": i.challenge_id, 
                 "cost_category": i.cost_category, 
                 "material_name": i.material_name,
                 "quantity": i.quantity,

@@ -11,7 +11,6 @@ from supabase import create_client, Client
 
 from routes.challenges import router as challenges_router
 from routes.auth import auth_router
-from routes import estimate_route
 from routes import reading_materials
 from routes.class_routes import class_router
 from routes.verification import verification_router
@@ -39,10 +38,12 @@ app.include_router(auth_router)
 app.include_router(verification_router)
 app.include_router(reading_materials.router)
 app.include_router(class_router, prefix="/api")
-app.include_router(cost_estimation_router)
 app.include_router(cost_estimation_router, prefix="/api")
-app.include_router(ai_suggestion_route.router)
-app.include_router(estimate_route.router)
+app.include_router(ai_suggestion_route.router, prefix="/api")
+
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "API running successfully"}
 
 # CORS
 app.add_middleware(

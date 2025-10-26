@@ -53,11 +53,5 @@ def get_ai_estimates(challenge_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
     
-@router.get("/student/{student_id}/challenge/{challenge_id}")
-def get_cost_estimate(student_id: UUID, challenge_id: UUID):
-    data = svc.get_estimation(student_id, challenge_id)
-    if not data:
-        raise HTTPException(status_code=404, detail="No estimate found")
-    return data
 
 

@@ -25,9 +25,13 @@ class CostEstimationService:
             status=status,
         )
 
+ 
+        for item in payload.items:
+            item.challenge_id = str(payload.challenge_id)
+        print("Items to save:", [i.dict() for i in payload.items])
+
         self.db.replace_estimate_items(est_id, payload.items)
 
-        # pass category_subtotals into summary
         self.db.upsert_estimate_summary(
             est_id=est_id,
             subtotal=subtotal,
@@ -52,6 +56,8 @@ class CostEstimationService:
             category_subtotals=payload.category_subtotals or [],
             status=status,
         )
+
+
 
     def get_estimation(self, student_id, challenge_id):
         return self.db.get_estimate_with_items(str(student_id), str(challenge_id))
