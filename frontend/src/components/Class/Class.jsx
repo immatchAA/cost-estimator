@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Class.css";
 import { supabase } from "../../supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 function Class() {
   const [classes, setClasses] = useState([]);
@@ -9,6 +10,7 @@ function Class() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [userId, setUserId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserAndClasses = async () => {
@@ -165,7 +167,12 @@ function Class() {
                 </div>
               </div>
               <div className="class-actions">
-                <button className="view-class-btn">View Class</button>
+                <button
+                  className="view-class-btn"
+                  onClick={() => navigate(`/class/${classItem.id}`)}
+                >
+                  View Class
+                </button>
               </div>
             </div>
           ))
