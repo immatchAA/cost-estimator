@@ -256,45 +256,101 @@ async def get_student_all_challenges(student_id: str):
 
 @class_router.get("/teacher/{teacher_id}/with-students")
 async def get_teacher_classes_with_students(teacher_id: str):
+    """
+    Get all classes created by a teacher.
+    Includes:
+      - accepted students per class
+      - all challenges created by that teacher
+      - only students who submitted each challenge
+    """
     try:
-        classes_res = supabase.table("classes")\
-            .select("id, class_name, description, class_key, teacher_id, created_at")\
-            .eq("teacher_id", teacher_id).execute()
+        print("🟦 FETCHING CLASSES FOR TEACHER:", teacher_id)
+
+        # Get all classes created by teacher
+        classes_res = (
+            supabase.table("classes")
+            .select("id, class_name, description, class_key, teacher_id, created_at")
+            .eq("teacher_id", teacher_id)
+            .execute()
+        )
+
+        # Get all challenges by teacher
+        challenges_res = (
+            supabase.table("student_challenges")
+            .select("challenge_id, challenge_name, challenge_instructions, due_date, created_at")
+            .eq("teacher_id", teacher_id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        all_challenges = challenges_res.data or []
+        print(f"🟩 Found {len(all_challenges)} challenges")
 
         classes_with_data = []
 
         for cls in classes_res.data:
+            class_id = cls["id"]
 
-            students_res = supabase.table("class_enrollments")\
-                .select("student_id, created_at")\
-                .eq("class_id", cls["id"])\
-                .eq("status", "accepted").execute()
+            # Fetch all accepted students in this class
+            enrollments_res = (
+                supabase.table("class_enrollments")
+                .select("student_id, status, created_at")
+                .eq("class_id", class_id)
+                .eq("status", "accepted")
+                .execute()
+            )
 
             students = []
-            for s in students_res.data:
-                user = supabase.table("users")\
-                    .select("first_name, last_name, email")\
-                    .eq("id", s["student_id"]).single().execute()
-                if user.data:
+            for e in enrollments_res.data:
+                user_res = (
+                    supabase.table("users")
+                    .select("first_name, last_name, email")
+                    .eq("id", e["student_id"])
+                    .single()
+                    .execute()
+                )
+                if user_res.data:
                     students.append({
-                        "id": s["student_id"],
-                        "name": f"{user.data['first_name']} {user.data['last_name']}",
-                        "email": user.data["email"],
-                        "joined_at": s["created_at"]
+                        "id": e["student_id"],
+                        "name": f"{user_res.data['first_name']} {user_res.data['last_name']}",
+                        "email": user_res.data["email"],
+                        "joined_at": e["created_at"],
                     })
 
-            challenge_res = supabase.table("student_challenges")\
-                .select("challenge_id, challenge_name, challenge_instructions, due_date")\
-                .eq("teacher_id", teacher_id).execute()
+            # Fetch each challenge’s student submissions
+            challenges_with_submissions = []
+            for ch in all_challenges:
+                submissions_res = (
+                    supabase.table("student_cost_estimates")
+                    .select("student_id, total_amount, submitted_at, status")
+                    .eq("challenge_id", ch["challenge_id"])
+                    .eq("status", "submitted")
+                    .execute()
+                )
 
-            challenge = challenge_res.data[0] if challenge_res.data else None
+                submitted_students = []
+                for s in submissions_res.data:
+                    student_info = next(
+                        (st for st in students if st["id"] == s["student_id"]),
+                        None,
+                    )
+                    if student_info:
+                        submitted_students.append({
+                            **student_info,
+                            "submitted_at": s.get("submitted_at"),
+                            "total_amount": s.get("total_amount"),
+                        })
+
+                challenges_with_submissions.append({
+                    **ch,
+                    "submissions": submitted_students,
+                })
 
             cls["students"] = students
-            cls["challenge"] = challenge
+            cls["challenges"] = challenges_with_submissions
             classes_with_data.append(cls)
 
         return {"success": True, "classes": classes_with_data}
+
     except Exception as e:
+        print("❌ Error fetching teacher classes:", e)
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
-
-

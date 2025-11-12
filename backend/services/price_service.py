@@ -7,8 +7,18 @@ from datetime import datetime
 from services.gemini_service import GeminiPriceSearch
 from services.supabase_service import SupabaseClient  
 
-def _to_number(price_str: str) -> float:
-    return float(re.sub(r"[^\d.]", "", str(price_str))) if price_str is not None else 0.0
+
+def _to_number(price_str):
+    """Safely convert price strings like '₱1,200.50' or '' to float."""
+    if not price_str or str(price_str).strip() == "":
+        return 0.0
+
+    try:
+        clean = re.sub(r"[^\d.]", "", str(price_str))
+        return float(clean) if clean else 0.0
+    except (ValueError, TypeError):
+        return 0.0
+
 
 class PriceService:
     def __init__(self):

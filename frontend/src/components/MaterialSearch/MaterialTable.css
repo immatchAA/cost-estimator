@@ -1,62 +1,92 @@
 .table-wrapper {
-  background-color: #f5f9ff;
-  border-radius: 10px;
-  padding: 20px;
-  margin: 20px;
-  width: 100%; 
-  box-sizing: border-box; 
-}
-
-.table-controls {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.search-input {
-  padding: 8px 12px;
-  width: 250px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.add-btn {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  overflow-x: auto;
 }
 
 .material-table {
-  overflow-y: auto;
-  max-height: 1000px;
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-  border-collapse: collapse;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  font-family: "Inter", sans-serif;
 }
 
 .material-table th,
 .material-table td {
-  padding: 15px;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
-  gap: 15px;
-  text-align: justify;
-  
+  padding: 12px 10px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .material-table th {
-  background-color: #e9f1ff;
-  color: #333;
+  background-color: #f0f7ff;
+  color: #176bb7;
   font-weight: 600;
 }
 
 .material-table tr:hover {
-  background-color: #f1f7ff;
+  background-color: #f9fafb;
+}
+
+/* INPUTS FOR EDIT MODE */
+.material-table input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 14px;
+}
+
+/* BUTTONS */
+.edit-btn,
+.delete-btn,
+.save-btn,
+.cancel-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 5px;
+  font-size: 13px;
+  transition: 0.2s ease;
+}
+
+.edit-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.save-btn {
+  background-color: #16a34a;
+  color: white;
+}
+
+.cancel-btn {
+  background-color: #94a3b8;
+  color: white;
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.edit-btn:hover { background-color: #2563eb; }
+.save-btn:hover { background-color: #15803d; }
+.cancel-btn:hover { background-color: #64748b; }
+.delete-btn:hover { background-color: #dc2626; }
+
+.placeholder {
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+  padding: 20px 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .material-table th,
+  .material-table td {
+    font-size: 13px;
+    padding: 8px;
+  }
 }

@@ -1,9 +1,9 @@
-// UploadChallenge.jsx
 import React, { useState, useRef } from "react";
 import Sidebar from "../Sidebar/Sidebar";
 import EstimatesTable from "../CostEstimates/EstimatesTable";
-import "../CostEstimates/UploadChallenge.css";
+import "./UploadChallenge.css";
 import { supabase } from "../../supabaseClient";
+
 const UploadChallenge = () => {
   const [fileName, setFileName] = useState(null);
   const fileInputRef = useRef();
@@ -12,7 +12,6 @@ const UploadChallenge = () => {
   const [planInstructions, setPlanInstructions] = useState("");
   const [file, setFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [estimating, setEstimating] = useState(false);
   const [estimation, setEstimation] = useState(null);
   const [dueDate, setDueDate] = useState("");
@@ -23,7 +22,6 @@ const UploadChallenge = () => {
     if (selectedFile) {
       setFile(selectedFile);
       setFileName(selectedFile.name);
-
       e.target.value = "";
     }
   };
@@ -62,16 +60,13 @@ const UploadChallenge = () => {
     formData.append("challenge_instructions", planInstructions);
     formData.append("teacher_id", user.id);
     formData.append("file", file);
-
-    if (dueDate) {
-      formData.append("due_date", dueDate);
-    }
+    if (dueDate) formData.append("due_date", dueDate);
 
     try {
       const res = await fetch("http://localhost:8000/api/challenges", {
-      method: "POST",
-      body: formData,
-    });
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
 
       if (!res.ok) {
@@ -90,7 +85,6 @@ const UploadChallenge = () => {
         return;
       }
 
-      // 2) Run AI estimate
       setEstimating(true);
       const estRes = await fetch(
         `http://localhost:8000/api/cost-estimates/challenges/${challengeId}/estimate`,
@@ -115,10 +109,7 @@ const UploadChallenge = () => {
       setEstimation(payload);
       setEstimating(false);
       setIsSubmitting(false);
-
-      setSuccessMessage(
-        "✅ Successfully published! AI Cost Estimation generated."
-      );
+      setSuccessMessage("✅ Successfully published! AI Cost Estimation generated.");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       console.error(err);
@@ -131,164 +122,118 @@ const UploadChallenge = () => {
   return (
     <div className="dashboard-wrapper">
       <Sidebar />
-      <div className="page-main">
-        <div className="page-content">
-          <header className="page-header">
-            <h1>ArchiQuest</h1>
-            <p>Automated Floor Plan Analysis and Cost Estimates by AI</p>
-          </header>
+      <div className="upload-main">
+        <div className="upload-header">
+          <h1>Create New Challenge</h1>
+          <p>Upload architectural plans and details to create a new student challenge.</p>
+        </div>
 
-          {successMessage && (
-            <div className="toast-success">{successMessage}</div>
-          )}
+        {successMessage && <div className="toast-success">{successMessage}</div>}
 
-          <div className="upload-container">
-            <h3 className="upload-title">Instructor Portal</h3>
-            <p className="upload-description">
-              Upload architectural plans and details to create a new student
-              challenge.
-            </p>
-
-            {/* Challenge Name */}
-            <div className="challenge-details">
-              <label htmlFor="planName">Challenge Name</label>
+        <div className="upload-grid">
+          {/* LEFT SIDE */}
+          <div className="left-column">
+            <div className="form-card">
+              <label>Challenge Name</label>
               <input
                 type="text"
-                id="planName"
-                name="planName"
-                className="challenge-input"
-                placeholder="Residential Bungalow..."
+                placeholder="e.g. Residential Bungalow Design"
                 value={planName}
                 onChange={(e) => setPlanName(e.target.value)}
               />
             </div>
 
-            {/* Project Objectives */}
-            <div className="challenge-details">
-              <label htmlFor="planDescription">Project Objectives</label>
+            <div className="form-card">
+              <label>Project Objectives</label>
               <textarea
-                id="planDescription"
-                name="planDescription"
-                className="challenge-textarea"
-                placeholder="Based on the uploaded floor plan and elevation drawing..."
                 rows="4"
+                placeholder="Based on the uploaded floor plan and elevation drawing..."
                 value={planDescription}
                 onChange={(e) => setPlanDescription(e.target.value)}
               />
             </div>
 
-            {/* Instructions */}
-            <div className="challenge-details">
-              <label htmlFor="planInstructions">Instructions</label>
+            <div className="form-card">
+              <label>Instructions</label>
               <textarea
-                id="planInstructions"
-                name="planInstructions"
-                className="challenge-textarea"
+                rows="5"
                 placeholder="Put instructions here"
-                rows="6"
                 value={planInstructions}
                 onChange={(e) => setPlanInstructions(e.target.value)}
               />
             </div>
 
-            <div className="challenge-details">
-              <label htmlFor="dueDate">Set Due Date</label>
+            <div className="form-card">
+              <label>Set Due Date</label>
               <input
                 type="datetime-local"
-                id="dueDate"
-                name="dueDate"
-                className="challenge-input"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
+          </div>
 
-            {/* Upload Box */}
-            <div className="upload-flex-wrapper">
-              <div
-                className="drag-drop-box"
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
+          {/* RIGHT SIDE */}
+          <div className="right-column">
+            <div
+              className="upload-box"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onClick={() => fileInputRef.current.click()}
+            >
+              <div className="upload-icon">⬆️</div>
+              <p className="upload-text">
+                Drag & Drop Floor Plan <br />
+                <span>or Click to Browse Files</span>
+              </p>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleFileSelect}
+                accept=".pdf,.jpg,.jpeg,.png,.dwg,.dxf"
+              />
+              {fileName && <p className="file-name">Selected: {fileName}</p>}
+              <button
+                type="button"
+                className="select-btn"
                 onClick={() => fileInputRef.current.click()}
               >
-                <div className="upload-icon">⬆️</div>
-                <p className="drag-text">
-                  Drag & Drop Floor Plan <br />
-                  <span className="or-text">or Click to browse files</span>
-                </p>
-
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  onChange={handleFileSelect}
-                  accept=".pdf,.jpg,.jpeg,.png,.dwg,.dxf"
-                />
-
-                {fileName && <p className="file-name">Selected: {fileName}</p>}
-                <button
-                  type="button"
-                  className="select-btn"
-                  onClick={() => fileInputRef.current.click()}
-                >
-                  Select Floor Plan
-                </button>
-                <p className="supported-formats">
-                  Supported formats: PDF, JPG, PNG, DWG, DXF <br />
-                  Maximum file size: 10MB
-                </p>
-              </div>
-
-              <div className="right-container">
-                <h3>How it Works</h3>
-                <ol className="how-it-works-list">
-                  <li>
-                    <strong>Upload Floor Plan</strong>
-                    <br />
-                    <span>Select and upload your architectural drawing</span>
-                  </li>
-                  <li>
-                    <strong>AI Analysis</strong>
-                    <br />
-                    <span>
-                      Our AI extracts structural elements automatically
-                    </span>
-                  </li>
-                  <li>
-                    <strong>Generate Cost Estimates</strong>
-                    <br />
-                    <span>Receive detailed cost estimates</span>
-                  </li>
-                </ol>
-              </div>
-            </div>
-
-            {/* Publish Button with Spinner */}
-            <div className="publish-container">
-              <button
-                className="publish-btn"
-                onClick={handleSubmit}
-                disabled={isSubmitting || estimating}
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className="spinner" /> Publishing...
-                  </>
-                ) : estimating ? (
-                  <>
-                    <span className="spinner" /> Generating AI Estimates...
-                  </>
-                ) : (
-                  "📢 Publish to Class"
-                )}
+                Select Floor Plan
               </button>
+              <p className="supported-formats">
+                Supported formats: PDF, JPG, PNG, DWG, DXF <br />
+                Max size: 10MB
+              </p>
             </div>
-          </div>
 
-          <div style={{ marginTop: 24 }}>
-            <EstimatesTable data={estimation} />
+            <div className="how-it-works">
+              <h3>How It Works</h3>
+              <ol>
+                <li><strong>Upload Floor Plan</strong> — Select and upload your architectural drawing.</li>
+                <li><strong>AI Analysis</strong> — Our AI extracts structural elements automatically.</li>
+                <li><strong>Generate Estimates</strong> — Receive detailed cost estimates.</li>
+              </ol>
+            </div>
+
+            <button
+              className="publish-btn"
+              onClick={handleSubmit}
+              disabled={isSubmitting || estimating}
+            >
+              {isSubmitting
+                ? "Publishing..."
+                : estimating
+                ? "Generating AI Estimates..."
+                : "📢 Publish to Class"}
+            </button>
           </div>
         </div>
+
+        <div className="estimates-section">
+        <h3>Cost Estimates Preview</h3>
+        <EstimatesTable data={estimation || {}} />
+      </div>
       </div>
     </div>
   );

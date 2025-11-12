@@ -26,18 +26,14 @@ export default function ClassInsights() {
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        // 1. get logged-in teacher
         const {
           data: { user },
         } = await supabase.auth.getUser();
         if (!user) throw new Error("Not logged in");
         const teacherId = user.id;
 
-        // 2. call backend
         const res = await fetch(
-          `${
-            import.meta.env.VITE_API_URL
-          }/classes/teacher/${teacherId}/with-students`
+          `${import.meta.env.VITE_API_URL}/classes/teacher/${teacherId}/with-students`
         );
         const result = await res.json();
 
@@ -56,36 +52,32 @@ export default function ClassInsights() {
 
   if (loading) return <p>Loading...</p>;
 
-  const handleOpenComparison = async (student, cls) => {
+  const handleOpenComparison = async (student, challenge) => {
     setSelectedStudent({
       ...student,
-      challengeId: cls.challenge?.challenge_id,
-      challengeName: cls.challenge?.challenge_name ?? "No Challenge",
+      challengeId: challenge.challenge_id,
+      challengeName: challenge.challenge_name ?? "No Challenge",
     });
     setComparisonOpen(true);
 
-    if (cls.challenge?.challenge_id) {
+    // Fetch AI estimate
+    if (challenge.challenge_id) {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/cost-estimates/ai/${
-            cls.challenge.challenge_id
-          }`
+          `${import.meta.env.VITE_API_URL}/cost-estimates/ai/${challenge.challenge_id}`
         );
         const result = await res.json();
-        if (result.success) {
-          setAiData(result);
-        }
+        if (result.success) setAiData(result);
       } catch (err) {
         console.error("AI fetch error:", err);
       }
     }
 
-    if (student.id && cls.challenge?.challenge_id) {
+    // Fetch student estimate
+    if (student.id && challenge.challenge_id) {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/cost-estimates/student/${
-            student.id
-          }/challenge/${cls.challenge.challenge_id}`
+          `${import.meta.env.VITE_API_URL}/cost-estimates/student/${student.id}/challenge/${challenge.challenge_id}`
         );
         if (res.ok) {
           const result = await res.json();
@@ -103,9 +95,7 @@ export default function ClassInsights() {
 
       <div className="class-insights-wrapper">
         <h1 className="tcv-title">📘 Class Overview</h1>
-        <p className="tcv-subtitle">
-          Manage your classes and enrolled students
-        </p>
+        <p className="tcv-subtitle">Manage your classes and enrolled students</p>
 
         <div className="tcv-class-list">
           {classes.map((cls) => (
@@ -124,66 +114,107 @@ export default function ClassInsights() {
                 <span>{openClass === cls.id ? "▲" : "▼"}</span>
               </div>
 
-              {/* Expanded Class Body */}
+              {/* Expanded Class Content */}
               {openClass === cls.id && (
                 <div className="tcv-class-body">
-                  {/* Challenge Box */}
-                  {cls.challenge ? (
-                    <div className="tcv-challenge-box">
-                      <h3>{cls.challenge.challenge_name}</h3>
-                      <p>
-                        {cls.challenge.challenge_instructions.length > 100
-                          ? cls.challenge.challenge_instructions.substring(
-                              0,
-                              150
-                            ) + "..."
-                          : cls.challenge.challenge_instructions}
-                      </p>
+                  {/* Challenges */}
+                  {cls.challenges && cls.challenges.length > 0 ? (
+                    cls.challenges.map((ch, index) => (
+                      <div
+                        key={ch.challenge_id}
+                        className={`challenge-card ${
+                          index % 2 === 0 ? "blue-border" : "orange-border"
+                        }`}
+                      >
+                        <div className="challenge-header">
+                          <h3>📘 {ch.challenge_name}</h3>
+                          <p className="challenge-instructions">
+                            {ch.challenge_instructions?.length > 180
+                              ? ch.challenge_instructions.substring(0, 180) +
+                                "..."
+                              : ch.challenge_instructions ||
+                                "No instructions provided."}
+                          </p>
+                          <p className="challenge-due">
+                            Due:{" "}
+                            {ch.due_date
+                              ? new Date(ch.due_date).toLocaleDateString()
+                              : "No due date"}
+                          </p>
+                        </div>
 
-                      <p>
-                        Due:{" "}
-                        {cls.challenge.due_date
-                          ? new Date(
-                              cls.challenge.due_date
-                            ).toLocaleDateString()
-                          : "No due date"}
-                      </p>
-                    </div>
+                        {/* Student Submissions */}
+                        <details className="submissions-section">
+                          <summary>
+                            <span>
+                              📄 Student Submissions (
+                              {ch.submissions?.length || 0})
+                            </span>
+                          </summary>
+
+                          <div className="submissions-list">
+                            {ch.submissions && ch.submissions.length > 0 ? (
+                              ch.submissions.map((s) => (
+                                <div key={s.id} className="submission-card">
+                                  <div className="submission-left">
+                                    <div className="avatar-circle">
+                                      {s.name?.charAt(0)?.toUpperCase() || "?"}
+                                    </div>
+                                    <div>
+                                      <p className="student-name">{s.name}</p>
+                                      <p className="student-email">{s.email}</p>
+                                    </div>
+                                  </div>
+
+                                  <div className="submission-right">
+                                    {s.submitted_at ? (
+                                      <>
+                                        <p className="submitted-date">
+                                          Submitted:{" "}
+                                          {new Date(
+                                            s.submitted_at
+                                          ).toLocaleDateString()}
+                                        </p>
+                                        <button
+                                          className="view-comparison-btn"
+                                          onClick={() =>
+                                            handleOpenComparison(s, ch)
+                                          }
+                                        >
+                                          👁 View Comparison
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <p className="submitted-date">
+                                          Not submitted
+                                        </p>
+                                        <span className="status-badge pending">
+                                          Pending
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="no-submissions">
+                                No student submissions yet.
+                              </p>
+                            )}
+                          </div>
+                        </details>
+                      </div>
+                    ))
                   ) : (
-                    <p>No challenge created yet.</p>
+                    <p>No challenges created yet.</p>
                   )}
-
-                  {/* Students */}
-                  <h4>👩‍🎓 Enrolled Students</h4>
-                  <ul className="tcv-student-list">
-                    {cls.students.length === 0 ? (
-                      <li>No accepted students yet.</li>
-                    ) : (
-                      cls.students.map((student) => (
-                        <li key={student.id} className="tcv-student-row">
-                          <div>
-                            <p className="tcv-student-name">{student.name}</p>
-                            <p className="tcv-student-email">{student.email}</p>
-                          </div>
-                          <div className="tcv-student-actions">
-                            <button
-                              className="tcv-view-btn"
-                              onClick={() => handleOpenComparison(student, cls)}
-                            >
-                              👁 View Comparison
-                            </button>
-                          </div>
-                        </li>
-                      ))
-                    )}
-                  </ul>
                 </div>
               )}
             </div>
           ))}
         </div>
 
-        {/* Comparison Modal */}
         {/* Comparison Modal */}
         {comparisonOpen && selectedStudent && (
           <div className="tcv-modal-overlay">
@@ -197,7 +228,7 @@ export default function ClassInsights() {
                 {selectedStudent.name} • {selectedStudent.challengeName}
               </p>
 
-              {/* 🔹 AI Accuracy Section - At the Top */}
+              {/* AI Accuracy Section */}
               {studentData &&
                 aiData &&
                 (() => {
@@ -219,18 +250,18 @@ export default function ClassInsights() {
                   if (accuracy >= 85) {
                     conclusion =
                       "Very close to AI estimate — excellent accuracy!";
-                    accuracyColor = "#10b981"; // green
+                    accuracyColor = "#10b981";
                   } else if (accuracy >= 70) {
                     conclusion = "Fairly accurate compared to AI's estimation.";
-                    accuracyColor = "#3b82f6"; // blue
+                    accuracyColor = "#3b82f6";
                   } else if (accuracy >= 50) {
                     conclusion =
                       "Somewhat aligned but significant differences exist.";
-                    accuracyColor = "#f59e0b"; // orange
+                    accuracyColor = "#f59e0b";
                   } else {
                     conclusion =
                       "Low alignment with AI — major differences in estimation.";
-                    accuracyColor = "#ef4444"; // red
+                    accuracyColor = "#ef4444";
                   }
 
                   return (
