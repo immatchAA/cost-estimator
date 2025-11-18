@@ -12,6 +12,10 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const [submittedMap, setSubmittedMap] = useState({});
 
+  const sortedChallenges = [...challenges].sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          );
+
  useEffect(() => {
   (async () => {
     const {
@@ -127,9 +131,12 @@ function StudentDashboard() {
             {!loadingChallenges && challenges.length === 0 && (
               <p>No active challenges yet.</p>
             )}
+            
 
             {!loadingChallenges &&
-              challenges.map((c, idx) => (
+              [...challenges]
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+              .map((c, idx) => (
                 <div key={idx} className="student-project-card">
                   <div className="student-project-header">
                     <h4 className="student-project-title">

@@ -38,6 +38,11 @@ export default function EstimatesTable({ data }) {
         .reduce((s, r) => s + (Number(r.amount) || 0), 0) || 0,
   })).filter((g) => g.rows.length > 0 || !hasData);
 
+  const overallSubtotal = grouped.reduce((sum, g) => sum + g.subtotal, 0);
+  const contingencyRate = 0.10;
+  const totalWithContingency = overallSubtotal * (1 + contingencyRate);
+  const contingencyAmount = overallSubtotal * contingencyRate;
+
   return (
     <div className="cost-estimate">
       <div className="estimate-header">
@@ -62,30 +67,25 @@ export default function EstimatesTable({ data }) {
                     <td>{peso(c.subtotal)}</td>
                   </tr>
                 ))}
-                <tr>
-                  <td>
-                    <strong>Subtotal</strong>
-                  </td>
-                  <td>{peso(summary.subtotal)}</td>
-                </tr>
-                <tr>
-                  <td>
-                    <strong>
-                      Contingency (
-                      {Math.round(
-                        (summary.contingency_percentage || 0) * 100
-                      )}
-                      %)
-                    </strong>
-                  </td>
-                  <td>{peso(summary.contingency_amount)}</td>
-                </tr>
-                <tr>
-                  <td>
-                    <strong>Total</strong>
-                  </td>
-                  <td>{peso(summary.total)}</td>
-                </tr>
+                  <tr>
+                    <td>
+                      <strong>Subtotal</strong>
+                    </td>
+                    <td>{peso(overallSubtotal)}</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>Contingency (10%)</strong>
+                    </td>
+                    <td>{peso(contingencyAmount)}</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>Total</strong>
+                    </td>
+                    <td>{peso(totalWithContingency)}</td>
+                  </tr>
+
               </>
             ) : (
               <>
@@ -105,30 +105,6 @@ export default function EstimatesTable({ data }) {
           </tbody>
         </table>
 
-        {hasData && (
-          <div className="analysis-confidence">
-            <h5>Analysis confidence</h5>
-            <p>
-              <strong>Overall Accuracy: </strong>
-              {Math.round((overallConfidence || 0) * 100)}%
-            </p>
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{
-                  width: `${Math.round((overallConfidence || 0) * 100)}%`,
-                }}
-              />
-            </div>
-            <p className="confidence-text">
-              {overallConfidence >= 0.8
-                ? "High confidence in structural cost estimation"
-                : overallConfidence >= 0.5
-                ? "Moderate confidence in structural cost estimation"
-                : "Low confidence in structural cost estimation"}
-            </p>
-          </div>
-        )}
       </div>{/* ← CLOSE project-summary BEFORE starting right-column */}
 
       <div className="right-column">
@@ -203,7 +179,7 @@ export default function EstimatesTable({ data }) {
                   <strong>Total (incl. 10% Contingency)</strong>
                 </td>
                 <td>
-                  <strong>{peso(summary.total)}</strong>
+                   <strong>{peso(totalWithContingency)}</strong>
                 </td>
               </tr>
             )}

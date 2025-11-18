@@ -1,5 +1,4 @@
 import React from "react";
-import "./ComparisonTable.css";
 
 
 const peso = (v) => {
@@ -21,7 +20,7 @@ const CAT_ORDER = [
   "ROOFING WORK",
 ];
 
-// 🔹 Compute summary
+// 🔹 Compute summary (used by both Student & AI)
 function computeSummary(items = []) {
   const catSubs = CAT_ORDER.map((cat) => {
     const subtotal = items
@@ -44,40 +43,16 @@ function computeSummary(items = []) {
   };
 }
 
-function calculateAccuracy(studentData, aiData) {
-  if (!studentData || !aiData) return null;
+export default function ComparisonTable({ title, data }) {
+  console.log("📥 ComparisonTable RECEIVED DATA for:", title, data);
 
-  const sum = (items = []) =>
-    items.reduce((s, i) => s + (Number(i.amount) || 0), 0);
-
-  const sTotal = sum(studentData.estimates || studentData.items || []);
-  const aiTotal = sum(aiData.estimates || []);
-
-  if (!sTotal || !aiTotal) return null;
-
-  const diff = Math.abs(sTotal - aiTotal);
-  const accuracy = Math.max(0, 100 - (diff / aiTotal) * 100);
-
-  let conclusion = "";
-  if (accuracy >= 85) conclusion = "Very close to AI estimate — excellent accuracy!";
-  else if (accuracy >= 70) conclusion = "Fairly accurate compared to AI’s estimation.";
-  else if (accuracy >= 50) conclusion = "Somewhat aligned but significant differences exist.";
-  else conclusion = "Low alignment with AI — major differences in estimation.";
-
-  return { accuracy: accuracy.toFixed(2), conclusion };
-}
-
-
-export default function ComparisonTable({ title, data, studentData, aiData }) {
   const estimates = data?.estimates || data?.items || [];
+  console.log("📦 Extracted estimates:", estimates);
 
   // 🔹 Always compute summary from items
   const summary = computeSummary(estimates);
 
-  // 🔹 Accuracy
-  const accuracyResult = calculateAccuracy(studentData, aiData);
-
-  // 🔹 Group estimates by category
+  // Group estimates by category
   const grouped = CAT_ORDER.map((cat) => ({
     cat,
     rows: estimates.filter((r) => r.cost_category === cat),
@@ -85,6 +60,8 @@ export default function ComparisonTable({ title, data, studentData, aiData }) {
       .filter((r) => r.cost_category === cat)
       .reduce((s, r) => s + (Number(r.amount) || 0), 0),
   })).filter((g) => g.rows.length > 0);
+
+   console.log("📚 Grouped categories:", grouped);
 
   return (
     <div className="comparison-table">
@@ -164,8 +141,6 @@ export default function ComparisonTable({ title, data, studentData, aiData }) {
           </tbody>
         </table>
       </div>
-
-
     </div>
   );
 }

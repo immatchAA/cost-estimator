@@ -6,7 +6,7 @@ class GeminiPriceSearch:
         self.api_key = os.getenv("GEMINI_API_KEY")
         self.url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
-            "gemini-2.5-flash:generateContent"
+            "gemini-2.5-flash-lite:generateContent"
         )
 
     def _call_gemini(self, prompt: str) -> str:

@@ -1,4 +1,4 @@
-import uuid, os
+import uuid, os, time
 from datetime import datetime
 from collections import defaultdict
 
@@ -28,6 +28,10 @@ def run_ai_estimation(challenge_id: str, plan_file_url: str):
     challenge_obj  = challenge.get("challenge_objectives") or ""
     challenge_ins  = challenge.get("challenge_instructions") or ""
     site_location  = challenge.get("site_location") or "Cebu, Philippines"
+
+    elements_result = gemini.analyze_plan_extract_elements(plan_file_url)
+
+    time.sleep(2)
 
     elements_result = gemini.analyze_plan_extract_elements(plan_file_url)
     if isinstance(elements_result, list):

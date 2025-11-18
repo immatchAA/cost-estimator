@@ -156,11 +156,12 @@ function TeacherDashboard() {
 
       setUserId(user.id);
 
-      // fetch challenges
+
       const { data: challengesData, error: challengeError } = await supabase
         .from("student_challenges")
         .select("*")
-        .eq("teacher_id", user.id);
+        .eq("teacher_id", user.id)
+        .order("created_at", { ascending: false});
 
       if (challengeError) {
         console.error("Error fetching challenges:", challengeError.message);
@@ -255,11 +256,13 @@ function TeacherDashboard() {
                     <tr>
                       <th>Title</th>
                       <th>Instructions</th>
-                      <th>When Created</th>
+                      <th>Due Date</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {challenges.map((challenge) => (
+                    {[...challenges]
+                    .sort((a, b) => new Date(b.created_at) - new Date (a.created_at))
+                    .map((challenge) => (
                       <tr
                         key={challenge.challenge_id}
                         className="clickable-row"
@@ -270,7 +273,7 @@ function TeacherDashboard() {
                         <td>{challenge.challenge_name}</td>
                         <td>{challenge.challenge_instructions}</td>
                         <td>
-                          {new Date(challenge.created_at).toLocaleDateString()}
+                          {new Date(challenge.due_date).toLocaleDateString()}
                         </td>
                       </tr>
                     ))}

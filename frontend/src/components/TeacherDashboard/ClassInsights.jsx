@@ -53,6 +53,9 @@ export default function ClassInsights() {
   if (loading) return <p>Loading...</p>;
 
   const handleOpenComparison = async (student, challenge) => {
+    setAiData(null);
+    setStudentData(null);
+
     setSelectedStudent({
       ...student,
       challengeId: challenge.challenge_id,
@@ -60,18 +63,38 @@ export default function ClassInsights() {
     });
     setComparisonOpen(true);
 
-    // Fetch AI estimate
+
+
     if (challenge.challenge_id) {
       try {
+        console.log("🔍 Fetching AI estimates for challenge:", challenge.challenge_id);
+
         const res = await fetch(
           `${import.meta.env.VITE_API_URL}/cost-estimates/ai/${challenge.challenge_id}`
         );
+
+        console.log("🟦 AI Response status:", res.status);
+
         const result = await res.json();
-        if (result.success) setAiData(result);
+        console.log("🟧 Raw AI result from server:", result);
+        console.log("🟪 Type of AI result:", Array.isArray(result) ? "ARRAY" : typeof result);
+
+        // Normalize shape
+        if (Array.isArray(result)) {
+          console.log("🟨 Wrapping AI array into { estimates: [...] }");
+          setAiData({ estimates: result });
+          console.log("🟩 Final stored aiData:", { estimates: result });
+        } else {
+          console.log("🟥 AI result is NOT array — storing as is");
+          setAiData(result);
+          console.log("🟩 Final stored aiData (raw):", result);
+        }
       } catch (err) {
-        console.error("AI fetch error:", err);
+        console.error("🔥 AI fetch error:", err);
       }
     }
+
+
 
     // Fetch student estimate
     if (student.id && challenge.challenge_id) {
@@ -119,7 +142,9 @@ export default function ClassInsights() {
                 <div className="tcv-class-body">
                   {/* Challenges */}
                   {cls.challenges && cls.challenges.length > 0 ? (
-                    cls.challenges.map((ch, index) => (
+                    [...cls.challenges]
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    .map((ch, index) => (
                       <div
                         key={ch.challenge_id}
                         className={`challenge-card ${

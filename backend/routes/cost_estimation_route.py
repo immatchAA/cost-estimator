@@ -29,29 +29,44 @@ def get_cost_estimate(student_id: UUID, challenge_id: UUID):
     return data
 
 @router.get("/ai/{challenge_id}")
-def get_ai_estimates(challenge_id: str):
+def get_ai_estimates(challenge_id: UUID):
     try:
-  
-        estimates = supabase.table("ai_cost_estimates") \
-            .select("*") \
-            .eq("challenge_id", challenge_id) \
-            .execute()
+        challenge_id = str(challenge_id)
 
-  
-        summary = supabase.table("cost_estimates_summary") \
-            .select("*") \
-            .eq("challenge_id", challenge_id) \
-            .single() \
+        print("🔍 Fetching AI cost estimates for", challenge_id)
+
+        estimates_res = (
+            supabase.table("ai_cost_estimates")
+            .select("*")
+            .eq("challenge_id", challenge_id)
             .execute()
+        )
+
+        print("🟦 Supabase estimates response:", estimates_res)
+
+        estimates = estimates_res.data if estimates_res.data else []
+
+        summary_res = (
+            supabase.table("cost_estimates_summary")
+            .select("*")
+            .eq("challenge_id", challenge_id)
+            .limit(1)
+            .execute()
+        )
+
+        print("🟩 Supabase summary response:", summary_res)
+
+        summary = summary_res.data[0] if summary_res.data else {}
 
         return {
             "success": True,
             "challenge_id": challenge_id,
-            "estimates": estimates.data,
-            "summary": summary.data if summary.data else {}
+            "estimates": estimates,
+            "summary": summary,
         }
+
     except Exception as e:
+        print("🔥 BACKEND ERROR:", e)
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
     
-
-

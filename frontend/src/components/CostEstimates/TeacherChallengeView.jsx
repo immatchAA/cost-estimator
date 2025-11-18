@@ -485,16 +485,14 @@ export default function TeacherChallengeView() {
                         <td><strong>{summaryToDisplay.totalMaterial.toLocaleString()}</strong></td>
                       </tr>
                       <tr>
-                        <td><strong>Labor Cost (LC 40%)</strong></td>
-                        <td><strong>{summaryToDisplay.laborCost.toLocaleString()}</strong></td>
-                      </tr>
-                      <tr>
                         <td><strong>Contingencies (5% of TC+LC)</strong></td>
                         <td><strong>{summaryToDisplay.contingencies.toLocaleString()}</strong></td>
                       </tr>
                       <tr className="cec3-summary-grand">
                         <td><strong>Grand Total</strong></td>
-                        <td><strong>₱{summaryToDisplay.grandTotal.toLocaleString()}</strong></td>
+                         <strong>
+                          ₱{(summaryToDisplay.totalMaterial + summaryToDisplay.contingencies).toLocaleString()}
+                        </strong>
                       </tr>
                     </tbody>
                   </table>
@@ -509,7 +507,7 @@ export default function TeacherChallengeView() {
                   if (!window.confirm("⚠️ All changes will be updated, are you sure?")) return;
 
                   try {
-                    const response = await fetch("http://localhost:8000/cost-estimates/save", {
+                    const response = await fetch("http://localhost:8000/api/cost-estimates/save", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
