@@ -19,9 +19,37 @@ export default function ClassInsights() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [aiAccuracy, setAiAccuracy] = useState(null);
+
 
   const [aiData, setAiData] = useState(null);
   const [studentData, setStudentData] = useState(null);
+
+   useEffect(() => {
+    const calculateAccuracy = async () => {
+      if (!studentData || !aiData || !selectedStudent) return;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/cost-estimates/ai/calculate-accuracy`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            student_items: studentData.estimates ?? studentData.items,
+            ai_items: aiData.estimates,
+            student_id: selectedStudent.id,
+            challenge_id: selectedStudent.challengeId,
+          }),
+        }
+      );
+
+      const result = await res.json();
+      setAiAccuracy(result.accuracy);
+    };
+
+    calculateAccuracy();
+  }, [studentData, aiData, selectedStudent]);
+
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -111,6 +139,7 @@ export default function ClassInsights() {
       }
     }
   };
+
 
   return (
     <div className="class-insights-page">
@@ -253,70 +282,50 @@ export default function ClassInsights() {
                 {selectedStudent.name} • {selectedStudent.challengeName}
               </p>
 
-              {/* AI Accuracy Section */}
-              {studentData &&
-                aiData &&
-                (() => {
-                  const sum = (items = []) =>
-                    items.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+              {aiAccuracy && (
+                  <div className="tcv-accuracy-section">
+                    <h3>🤖 AI Accuracy (Gemini)</h3>
 
-                  const sTotal = sum(
-                    studentData.estimates || studentData.items || []
-                  );
-                  const aiTotal = sum(aiData.estimates || []);
+                    <div className="tcv-accuracy-content">
+                      <div
+                        className="tcv-accuracy-percentage"
+                        style={{ color: "#3b82f6" }}
+                      >
+                        <span className="tcv-accuracy-value">
+                          {aiAccuracy.final_accuracy.toFixed(2)}%
+                        </span>
+                      </div>
 
-                  if (!sTotal || !aiTotal) return null;
+                      <p className="tcv-accuracy-conclusion">
+                        Gemini evaluated the similarity between the student's estimate and the AI estimate.
+                      </p>
 
-                  const diff = Math.abs(sTotal - aiTotal);
-                  const accuracy = Math.max(0, 100 - (diff / aiTotal) * 100);
-
-                  let conclusion = "";
-                  let accuracyColor = "";
-                  if (accuracy >= 85) {
-                    conclusion =
-                      "Very close to AI estimate — excellent accuracy!";
-                    accuracyColor = "#10b981";
-                  } else if (accuracy >= 70) {
-                    conclusion = "Fairly accurate compared to AI's estimation.";
-                    accuracyColor = "#3b82f6";
-                  } else if (accuracy >= 50) {
-                    conclusion =
-                      "Somewhat aligned but significant differences exist.";
-                    accuracyColor = "#f59e0b";
-                  } else {
-                    conclusion =
-                      "Low alignment with AI — major differences in estimation.";
-                    accuracyColor = "#ef4444";
-                  }
-
-                  return (
-                    <div className="tcv-accuracy-section">
-                      <h3>🤖 AI Accuracy</h3>
-                      <div className="tcv-accuracy-content">
-                        <div
-                          className="tcv-accuracy-percentage"
-                          style={{ color: accuracyColor }}
-                        >
-                          <span className="tcv-accuracy-value">
-                            {accuracy.toFixed(2)}%
-                          </span>
-                        </div>
-                        <p className="tcv-accuracy-conclusion">{conclusion}</p>
-                        <div className="tcv-accuracy-details">
-                          <span>
-                            Student Total: <strong>{peso(sTotal)}</strong>
-                          </span>
-                          <span>
-                            AI Total: <strong>{peso(aiTotal)}</strong>
-                          </span>
-                          <span>
-                            Difference: <strong>{peso(diff)}</strong>
-                          </span>
-                        </div>
+                      <div className="tcv-accuracy-details">
+                        <span>
+                          Description Match:{" "}
+                          <strong>{aiAccuracy.description_accuracy}%</strong>
+                        </span>
+                        <span>
+                          Quantity Match:{" "}
+                          <strong>{aiAccuracy.quantity_accuracy}%</strong>
+                        </span>
+                        <span>
+                          Unit Match:{" "}
+                          <strong>{aiAccuracy.unit_accuracy}%</strong>
+                        </span>
+                        <span>
+                          Unit Price Match:{" "}
+                          <strong>{aiAccuracy.unit_price_accuracy}%</strong>
+                        </span>
+                        <span>
+                          Total Cost Accuracy:{" "}
+                          <strong>{aiAccuracy.total_cost_accuracy}%</strong>
+                        </span>
                       </div>
                     </div>
-                  );
-                })()}
+                  </div>
+                )}
+
 
               <div className="tcv-comparison-grid">
                 <div className="tcv-comparison-col">

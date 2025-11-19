@@ -14,6 +14,8 @@ function TeacherDashboard() {
   const [students, setStudents] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]); 
   const navigate = useNavigate();
+  const [globalAvgAccuracy, setGlobalAvgAccuracy] = useState(0);
+
 
   const fetchTotalStudents = async (teacherId) => {
     const { data, error } = await supabase
@@ -156,6 +158,15 @@ function TeacherDashboard() {
 
       setUserId(user.id);
 
+      const avgRes = await fetch(
+        "http://localhost:8000/api/cost-estimates/ai/average-accuracy"
+      );
+      const avgJson = await avgRes.json();
+
+      if (avgJson.success) {
+        setGlobalAvgAccuracy(avgJson.average_accuracy);
+      }
+
 
       const { data: challengesData, error: challengeError } = await supabase
         .from("student_challenges")
@@ -182,6 +193,7 @@ function TeacherDashboard() {
     };
 
     fetchData();
+
   }, []);
 
   return (
@@ -209,17 +221,11 @@ function TeacherDashboard() {
             <div className="card">
               <div className="card-icon">🎯</div>
               <p className="card-title">Class Avg Accuracy</p>
-              <h2 className="card-value green">84%</h2>
-              <span className="card-subtext">+3% from last month</span>
+              <h2 className="card-value green"> {globalAvgAccuracy ? `${globalAvgAccuracy}%` : "0%"} </h2>
+              <span className="card-subtext">Avergae Accuracy</span>
             </div>
 
-            <div className="card">
-              <div className="card-icon">⏱️</div>
-              <p className="card-title">AI Accuracy Rate</p>
-              <h2 className="card-value orange">91%</h2>
-              <span className="card-subtext">Across all projects</span>
-            </div>
-
+      
             <div className="card">
               <div className="card-icon">📂</div>
               <p className="card-title">Active Projects</p>
@@ -305,11 +311,8 @@ function TeacherDashboard() {
                   <tr>
                     <th>Student</th>
                     <th>Completed</th>
-                    <th>Avg Accuracy</th>
                     <th>AI Accuracy</th>
-                    <th>Current Project</th>
                     <th>Progress</th>
-                    <th>Rank</th>
                     <th>Actions</th>
                   </tr>
                 </thead>

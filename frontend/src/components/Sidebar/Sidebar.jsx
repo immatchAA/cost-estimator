@@ -151,8 +151,8 @@ function Sidebar() {
             <Link to="/student-dashboard" className="custom-nav-item">
               <FaHome className="custom-icon" /> Dashboard
             </Link>
-            <Link to="/student-challenges-details" className="custom-nav-item">
-              <FaGraduationCap className="custom-icon" /> All Challenges
+            <Link to="/completed-challenges" className="custom-nav-item">
+              <FaGraduationCap className="custom-icon" /> Completed Challenges
             </Link>
             <Link to="/reading-materials" className="custom-nav-item">
               <FaBook className="custom-icon" /> Reading Materials

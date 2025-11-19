@@ -29,6 +29,7 @@ import ProtectedRouteStudent from "./components/ProtectedRoute/ProtectedRouteStu
 import CostEstimationChallenge from "./components/StudentChallenges/CostEstimationChallenge.jsx";
 import TeacherChallengeView from "./components/CostEstimates/TeacherChallengeView.jsx";
 import ClassInsights from "./components/TeacherDashboard/ClassInsights.jsx";
+import CompletedChallenges from "./components/StudentDashboard/CompletedChallenges.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -114,10 +115,10 @@ createRoot(document.getElementById("root")).render(
           element={<CostEstimationChallenge />}
         />
         <Route
-          path="/student-challenges-details"
+          path="/completed-challenges"
           element={
             <ProtectedRouteStudent>
-              <AllChallenges />
+              <CompletedChallenges />
             </ProtectedRouteStudent>
           }
         />

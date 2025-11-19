@@ -42,6 +42,89 @@ class GeminiPriceSearch:
             print("⚠️ JSON decode error:", e)
             print("Raw content received (first 500 chars):", cleaned[:500])
             return {"error": "Invalid JSON format", "raw": cleaned}
+        
+    def calculate_accuracy(self, student_items, ai_items):
+                """
+                Uses Gemini to evaluate similarity between the student's cost estimate
+                and the AI-generated cost estimate.
+                Returns structured accuracy percentages.
+                """
+
+                prompt = f"""
+            You are an accuracy evaluator for construction cost estimates.
+
+            Compare the STUDENT items vs the AI items below:
+
+            STUDENT ITEMS:
+            {student_items}
+
+            AI ITEMS:
+            {ai_items}
+
+            Compare the following fields:
+            1. description similarity (text meaning match)
+            2. quantity similarity (numeric closeness)
+            3. unit similarity (cu.m, pcs, bags, etc.)
+            4. unit price similarity (PHP)
+            5. total cost similarity (amount)
+            6. overall final accuracy score (0 to 100)
+
+            Rules:
+            - Return ONLY a raw JSON object.
+            - No markdown. No explanations. No extra text.
+            - Format MUST be exactly:
+
+            {{
+            "description_accuracy": <number>,
+            "quantity_accuracy": <number>,
+            "unit_accuracy": <number>,
+            "unit_price_accuracy": <number>,
+            "total_cost_accuracy": <number>,
+            "final_accuracy": <number>
+            }}
+
+            Return only valid JSON.
+            """
+
+                response = self._call_gemini(prompt)
+
+                # Extract JSON object safely
+                import re, json
+                match = re.search(r"\{.*\}", response, re.DOTALL)
+
+                if not match:
+                    # fallback (Gemini misbehaved)
+                    return {
+                        "description_accuracy": 0,
+                        "quantity_accuracy": 0,
+                        "unit_accuracy": 0,
+                        "unit_price_accuracy": 0,
+                        "total_cost_accuracy": 0,
+                        "final_accuracy": 0
+                    }
+
+                try:
+                    data = json.loads(match.group(0))
+                except:
+                    return {
+                        "description_accuracy": 0,
+                        "quantity_accuracy": 0,
+                        "unit_accuracy": 0,
+                        "unit_price_accuracy": 0,
+                        "total_cost_accuracy": 0,
+                        "final_accuracy": 0
+                    }
+
+                # Ensure all fields exist
+                return {
+                    "description_accuracy": float(data.get("description_accuracy", 0)),
+                    "quantity_accuracy": float(data.get("quantity_accuracy", 0)),
+                    "unit_accuracy": float(data.get("unit_accuracy", 0)),
+                    "unit_price_accuracy": float(data.get("unit_price_accuracy", 0)),
+                    "total_cost_accuracy": float(data.get("total_cost_accuracy", 0)),
+                    "final_accuracy": float(data.get("final_accuracy", 0)),
+                }
+
 
 
     def analyze_plan_extract_elements(self, plan_file_url: str) -> List[Dict]:

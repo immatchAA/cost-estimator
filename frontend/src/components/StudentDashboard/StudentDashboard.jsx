@@ -11,6 +11,9 @@ function StudentDashboard() {
   const [loadingChallenges, setLoadingChallenges] = useState(true);
   const navigate = useNavigate();
   const [submittedMap, setSubmittedMap] = useState({});
+  const [completedCount, setCompletedCount] = useState(0);
+  const [avgAccuracy, setAvgAccuracy] = useState(0);
+
 
   const sortedChallenges = [...challenges].sort(
             (a, b) => new Date(b.created_at) - new Date(a.created_at)
@@ -65,6 +68,20 @@ function StudentDashboard() {
       console.error("Error fetching challenges:", challengeErr);
     }
 
+    const completedRes = await fetch(
+      `http://localhost:8000/api/cost-estimates/ai/student/${user.id}/completed`
+    );
+    const completedJson = await completedRes.json();
+    if (completedJson.success) setCompletedCount(completedJson.completed);
+
+    // Fetch average accuracy
+    const accuracyRes = await fetch(
+      `http://localhost:8000/api/cost-estimates/ai/student/${user.id}/average-accuracy`
+    );
+    const accuracyJson = await accuracyRes.json();
+    if (accuracyJson.success) setAvgAccuracy(accuracyJson.average_accuracy);
+
+
     setChallenges(rows || []);
     setLoadingChallenges(false);
 
@@ -84,6 +101,10 @@ function StudentDashboard() {
   const truncate = (s, n = 160) =>
     s ? (s.length > n ? s.slice(0, n) + "…" : s) : "—";
 
+  const activeChallenges = challenges.filter(
+      (ch) => !submittedMap[ch.challenge_id]
+    );
+
   return (
     <div className="student-dashboard-wrapper">
       <Sidebar />
@@ -97,20 +118,12 @@ function StudentDashboard() {
             </h2>
             <div className="student-metrics">
               <div className="student-metric-card">
-                <h3>0</h3>
+                <h3>{completedCount}</h3>
                 <p>Completed</p>
               </div>
               <div className="student-metric-card">
-                <h3 className="purple">0%</h3>
+                <h3 className="purple">{avgAccuracy}%</h3>
                 <p>Avg Accuracy</p>
-              </div>
-              <div className="student-metric-card">
-                <h3 className="orange">0</h3>
-                <p>Day Streak</p>
-              </div>
-              <div className="student-metric-card">
-                <h3 className="green">#0</h3>
-                <p>Class Rank</p>
               </div>
             </div>
           </header>
@@ -134,38 +147,32 @@ function StudentDashboard() {
             
 
             {!loadingChallenges &&
-              [...challenges]
-              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-              .map((c, idx) => (
-                <div key={idx} className="student-project-card">
-                  <div className="student-project-header">
-                    <h4 className="student-project-title">
-                      {c.challenge_name || "Untitled Challenge"}
-                    </h4>
-                    {submittedMap[c.challenge_id] ? (
-                      <button className="student-continue-btn" disabled>
-                        Challenge submitted
-                      </button>
-                    ) : (
-                      <button
-                        className="student-continue-btn"
-                        onClick={() =>
-                          navigate(`/student-challenges/${c.challenge_id}`)
-                        }
-                      >
-                        Start
-                      </button>
-                    )}
-                  </div>
-                  <div className="student-project-tags">
-                    <span className="tag">Challenge</span>
-                  </div>
-                  <p className="student-due"></p>
-                  <p style={{ marginTop: 8 }}>
-                    {truncate(c.challenge_instructions, 180)}
-                  </p>
-                </div>
-              ))}
+                [...activeChallenges]
+                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                  .map((c, idx) => (
+                    <div key={idx} className="student-project-card">
+                      <div className="student-project-header">
+                        <h4 className="student-project-title">
+                          {c.challenge_name || "Untitled Challenge"}
+                        </h4>
+
+                        <button
+                          className="student-continue-btn"
+                          onClick={() => navigate(`/student-challenges/${c.challenge_id}`)}
+                        >
+                          Start
+                        </button>
+                      </div>
+
+                      <div className="student-project-tags">
+                        <span className="tag">Challenge</span>
+                      </div>
+
+                      <p style={{ marginTop: 8 }}>
+                        {truncate(c.challenge_instructions, 180)}
+                      </p>
+                    </div>
+                  ))}
           </div>
         </div>
 
