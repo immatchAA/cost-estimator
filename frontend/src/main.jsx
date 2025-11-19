@@ -7,7 +7,7 @@ import App from "./App.jsx";
 import LoginPage from "./components/Login/LoginForm.jsx";
 import RegisterPage from "./components/Register/RegisterForm.jsx";
 
-import AccountE from "./components/UserProfile/accountE.jsx";
+import AccountE from "./components/UserProfile/AccountE.jsx";
 
 import MaterialSearch from "./components/MaterialSearch/MaterialSearch.jsx";
 import MaterialTable from "./components/MaterialSearch/MaterialTable.jsx";
