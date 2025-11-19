@@ -1,4 +1,3 @@
-
 import json, re, uuid
 from statistics import median
 from typing import Dict, Any, List, Tuple
@@ -34,19 +33,27 @@ class PriceService:
             f'["material","brand","unit","price","vendor","location","gmaps_link"]\n'
             f'Examples of unit values: "bag", "pcs", "m3", "m2", "kg", "sheet".'
         )
+
         raw = self.gemini._call_gemini(prompt)
-  
+
         match = re.search(r"\[.*\]", raw, re.DOTALL)
         clean = match.group(0) if match else raw.strip()
-        listings = json.loads(clean)
-        return listings if isinstance(listings, list) else []
+
+       
+        if not clean or clean == "":
+            return []
+
+        try:
+            listings = json.loads(clean)
+            return listings if isinstance(listings, list) else []
+        except Exception:
+            return []   
 
     def persist_listings(self, listings: List[Dict[str, Any]]) -> None:
         for item in listings:
             try:
-                self.sb.save_material_price(item)  
+                self.sb.save_material_price(item)
             except Exception:
-                
                 pass
 
     def pick_unit_price(self, listings: List[Dict[str, Any]]) -> float:
