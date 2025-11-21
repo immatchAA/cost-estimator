@@ -52,8 +52,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173", 
         "http://127.0.0.1:5173",
-        "https://archi-quest.vercel.app",
-        "https://archi-quest-biphfu62w-kinatulinans-projects.vercel.app"
+        "https://archiquest.vercel.app",
+        "https://archiquest-6s5fymguo-imrichellev123456-gmailcoms-projects.vercel.app"
     ],  
     allow_credentials=True,
     allow_methods=["*"],
