@@ -53,9 +53,14 @@ async def send_verification_code(request: VerificationCodeRequest):
             # If email failed to send, delete the verification code
             supabase.table("verification_codes").delete().eq("email", email).execute()
             # Log the detailed error message for debugging
-            print(f"Failed to send verification email to {email}: {error_message}")
-            raise HTTPException(status_code=500, detail=f"Failed to send verification email: {error_message}")
+            print(f"❌ Failed to send verification email to {email}: {error_message}")
+            # Return more detailed error information
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Failed to send verification email to {email}. Error: {error_message}. Please check Railway logs for more details."
+            )
         
+        print(f"✅ Verification code sent successfully to {email}")
         return {"message": "Verification code sent successfully", "email": email}
         
     except HTTPException:
@@ -148,9 +153,13 @@ async def resend_verification_code(request: VerificationCodeRequest):
             # If email failed to send, delete the verification code
             supabase.table("verification_codes").delete().eq("email", email).execute()
             # Log the detailed error message for debugging
-            print(f"Failed to resend verification email to {email}: {error_message}")
-            raise HTTPException(status_code=500, detail=f"Failed to send verification email: {error_message}")
+            print(f"❌ Failed to resend verification email to {email}: {error_message}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Failed to send verification email to {email}. Error: {error_message}. Please check Railway logs for more details."
+            )
         
+        print(f"✅ Verification code resent successfully to {email}")
         return {"message": "Verification code resent successfully", "email": email}
         
     except HTTPException:

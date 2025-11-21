@@ -2,11 +2,16 @@ import smtplib
 import os
 import random
 import string
+import logging
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 from typing import Optional, Tuple
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -27,10 +32,16 @@ class EmailService:
         Send verification code email
         Returns: (success: bool, error_message: str)
         """
+        logger.info(f"Attempting to send verification email to: {to_email}")
+        logger.info(f"Using SMTP server: {self.smtp_server}:{self.smtp_port}")
+        logger.info(f"From email: {self.from_email}")
+        
         try:
             # Validate SMTP configuration
             if not self.smtp_username or not self.smtp_password:
-                return False, "SMTP credentials not configured"
+                error_msg = "SMTP credentials not configured"
+                logger.error(f"SMTP configuration error: {error_msg}")
+                return False, error_msg
             
             # Create message with proper headers for better deliverability
             msg = MIMEMultipart('alternative')
@@ -111,20 +122,28 @@ This is an automated message. Please do not reply to this email.
                 
                 # Send email with detailed error handling
                 try:
+                    logger.info(f"Sending email from {self.from_email} to {to_email}")
                     send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
                     
                     # Check if there were any rejected recipients
                     if send_result:
                         rejected = list(send_result.keys())
                         error_details = {email: str(err) for email, err in send_result.items()}
-                        return False, f"Email rejected by server for: {', '.join(rejected)}. Details: {error_details}"
+                        error_msg = f"Email rejected by server for: {', '.join(rejected)}. Details: {error_details}"
+                        logger.error(f"Email send failed for {to_email}: {error_msg}")
+                        return False, error_msg
                     
+                    logger.info(f"✅ Email sent successfully to {to_email}")
                     print(f"✅ Email sent successfully to {to_email}")
                     return True, "Email sent successfully"
                 except smtplib.SMTPRecipientsRefused as e:
-                    return False, f"Recipient {to_email} was refused: {str(e)}"
+                    error_msg = f"Recipient {to_email} was refused: {str(e)}"
+                    logger.error(f"SMTP Recipients Refused for {to_email}: {error_msg}")
+                    return False, error_msg
                 except smtplib.SMTPDataError as e:
-                    return False, f"Email data rejected by server: {str(e)}"
+                    error_msg = f"Email data rejected by server: {str(e)}"
+                    logger.error(f"SMTP Data Error for {to_email}: {error_msg}")
+                    return False, error_msg
                 
             except smtplib.SMTPAuthenticationError as e:
                 return False, f"SMTP authentication failed: {str(e)}"
@@ -149,6 +168,7 @@ This is an automated message. Please do not reply to this email.
             
         except Exception as e:
             error_msg = f"Error preparing email: {str(e)}"
+            logger.error(f"Error preparing email for {to_email}: {error_msg}", exc_info=True)
             print(f"Error sending email to {to_email}: {error_msg}")
             print(f"Error type: {type(e).__name__}")
             import traceback
