@@ -13,32 +13,45 @@ This guide will help you deploy your FastAPI backend to Railway.
 ### Option 1: Deploy via Railway Dashboard (Recommended)
 
 1. **Push your code to GitHub/GitLab/Bitbucket**
+
    - Make sure your code is committed and pushed to your repository
    - Ensure the `backend` directory contains all necessary files
 
 2. **Create a New Project in Railway**
+
    - Go to [railway.app](https://railway.app) and sign in
    - Click "New Project"
    - Select "Deploy from GitHub repo" (or your Git provider)
    - Choose your repository
 
 3. **Configure the Service**
+
    - Railway will auto-detect your Python project
    - **Root Directory**: Set to `backend` (important!)
    - Railway will automatically detect `requirements.txt` and `Procfile`
 
 4. **Set Environment Variables**
+
    - In your Railway project, go to the "Variables" tab
    - Add the following environment variables:
 
    **Required Variables:**
+
    ```
    SUPABASE_URL=your-supabase-url
    SUPABASE_KEY=your-supabase-anon-key
    GEMINI_API_KEY=your-gemini-api-key
    ```
 
-   **Email Configuration (if using email verification):**
+   **Email Configuration (using Resend - Recommended):**
+
+   ```
+   RESEND_API_KEY=re_your_resend_api_key_here
+   FROM_EMAIL=onboarding@resend.dev
+   ```
+
+   **OR Email Configuration (using Gmail SMTP - Not Recommended):**
+
    ```
    SMTP_SERVER=smtp.gmail.com
    SMTP_PORT=587
@@ -47,9 +60,12 @@ This guide will help you deploy your FastAPI backend to Railway.
    FROM_EMAIL=your-email@gmail.com
    ```
 
+   **Note**: Resend is recommended for better deliverability across all email providers. See `RESEND_SETUP.md` for setup instructions.
+
    **Note:** Railway will automatically set the `PORT` environment variable, so you don't need to set it manually.
 
 5. **Deploy**
+
    - Railway will automatically start deploying when you connect the repository
    - Wait for the build to complete
    - Your API will be live at a URL like `https://your-project.up.railway.app`
@@ -62,26 +78,31 @@ This guide will help you deploy your FastAPI backend to Railway.
 ### Option 2: Deploy via Railway CLI
 
 1. **Install Railway CLI**
+
    ```bash
    npm install -g @railway/cli
    ```
 
 2. **Login to Railway**
+
    ```bash
    railway login
    ```
 
 3. **Navigate to backend directory**
+
    ```bash
    cd backend
    ```
 
 4. **Initialize Railway project**
+
    ```bash
    railway init
    ```
 
 5. **Set environment variables**
+
    ```bash
    railway variables set SUPABASE_URL=your-supabase-url
    railway variables set SUPABASE_KEY=your-supabase-anon-key
@@ -119,16 +140,19 @@ Make sure to set the following environment variables in Railway:
 ## Important Notes
 
 1. **Root Directory**: Make sure Railway is set to use the `backend` directory as the root directory. You can set this in:
+
    - Railway Dashboard → Your Service → Settings → Root Directory → Set to `backend`
 
 2. **Port Configuration**: Railway automatically sets the `PORT` environment variable. The `Procfile` uses this variable, so your app will automatically use the correct port.
 
 3. **CORS Configuration**: The backend has been configured to allow requests from:
+
    - `http://localhost:5173` (local development)
    - `https://archi-quest.vercel.app` (your Vercel domain)
    - `https://archi-quest-biphfu62w-kinatulinans-projects.vercel.app` (Vercel deployment URL)
 
 4. **Frontend Configuration**: After deployment, update your frontend's `VITE_API_URL` environment variable in Vercel to point to your Railway backend URL:
+
    ```
    VITE_API_URL=https://your-railway-app.up.railway.app/api
    ```
@@ -140,21 +164,25 @@ Make sure to set the following environment variables in Railway:
 ## Troubleshooting
 
 ### Build Fails
+
 - Check the build logs in Railway dashboard
 - Ensure `requirements.txt` is in the `backend` directory
 - Verify Python version compatibility (Railway uses Python 3.11+ by default)
 
 ### API Calls Fail
+
 - Verify `VITE_API_URL` is set correctly in Vercel
 - Check CORS configuration in `main.py`
 - Ensure Railway service is running (check the "Deployments" tab)
 
 ### Environment Variables Not Working
+
 - Make sure variables are set in Railway (not just in `.env` file)
 - Restart the service after adding new variables
 - Check variable names match exactly (case-sensitive)
 
 ### Port Issues
+
 - Railway automatically handles the port via `$PORT` environment variable
 - Don't hardcode port numbers in your code
 - The `Procfile` uses `$PORT` which Railway provides automatically
@@ -164,6 +192,7 @@ Make sure to set the following environment variables in Railway:
 After deployment:
 
 1. **Update Frontend API URL**
+
    - Go to your Vercel project settings
    - Add/Update `VITE_API_URL` environment variable:
      ```
@@ -172,10 +201,12 @@ After deployment:
    - Redeploy your frontend
 
 2. **Test the API**
+
    - Visit `https://your-railway-app.up.railway.app/` to see the status endpoint
    - Test API endpoints from your frontend
 
 3. **Monitor Logs**
+
    - Use Railway's logs tab to monitor your application
    - Check for any errors or warnings
 
@@ -193,8 +224,8 @@ After deployment:
 ## Support
 
 If you encounter issues:
+
 1. Check Railway deployment logs
 2. Verify all environment variables are set
 3. Ensure your code is pushed to the repository
 4. Check Railway status page for service issues
-

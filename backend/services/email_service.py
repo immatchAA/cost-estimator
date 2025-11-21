@@ -1,13 +1,15 @@
-import smtplib
 import os
 import random
 import string
 import logging
 from datetime import datetime, timedelta
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 from typing import Optional, Tuple
+
+try:
+    from resend import Resend
+except ImportError:
+    Resend = None
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -17,11 +19,19 @@ load_dotenv()
 
 class EmailService:
     def __init__(self):
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("SMTP_USERNAME")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
-        self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
+        self.resend_api_key = os.getenv("RESEND_API_KEY")
+        self.from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
+        
+        # Initialize Resend client
+        if Resend and self.resend_api_key:
+            self.resend = Resend(api_key=self.resend_api_key)
+            logger.info("Resend email service initialized")
+        else:
+            self.resend = None
+            if not Resend:
+                logger.warning("Resend package not installed. Install with: pip install resend")
+            if not self.resend_api_key:
+                logger.warning("RESEND_API_KEY not configured in environment variables")
         
     def generate_verification_code(self) -> str:
         """Generate a 6-digit verification code"""
@@ -29,28 +39,17 @@ class EmailService:
     
     def send_verification_email(self, to_email: str, verification_code: str) -> Tuple[bool, str]:
         """
-        Send verification code email
+        Send verification code email using Resend
         Returns: (success: bool, error_message: str)
         """
         logger.info(f"Attempting to send verification email to: {to_email}")
-        logger.info(f"Using SMTP server: {self.smtp_server}:{self.smtp_port}")
-        logger.info(f"From email: {self.from_email}")
+        
+        if not self.resend:
+            error_msg = "Resend email service not configured. Please set RESEND_API_KEY environment variable."
+            logger.error(error_msg)
+            return False, error_msg
         
         try:
-            # Validate SMTP configuration
-            if not self.smtp_username or not self.smtp_password:
-                error_msg = "SMTP credentials not configured"
-                logger.error(f"SMTP configuration error: {error_msg}")
-                return False, error_msg
-            
-            # Create message with proper headers for better deliverability
-            msg = MIMEMultipart('alternative')
-            msg['From'] = self.from_email
-            msg['To'] = to_email
-            msg['Subject'] = "Email Verification Code - Architectural AI Cost Estimator"
-            msg['Reply-To'] = self.from_email
-            msg['X-Mailer'] = 'Architectural AI Cost Estimator'
-            
             # Plain text version
             text_body = f"""Hello,
 
@@ -77,7 +76,7 @@ This is an automated message. Please do not reply to this email.
                     
                     <p>Hello,</p>
                     
-                    <p>Thank you for registering with the Architectural AI Cost Estimator. To complete your registration, please use the verification code below:</p>
+                    <p>Thank you for registering with Archiquest. To complete your registration, please use the verification code below:</p>
                     
                     <div style="background-color: #f8f9fa; border: 2px solid #007bff; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
                         <h1 style="color: #007bff; font-size: 32px; letter-spacing: 5px; margin: 0;">{verification_code}</h1>
@@ -101,98 +100,57 @@ This is an automated message. Please do not reply to this email.
             </html>
             """
             
-            # Attach both plain text and HTML versions
-            part1 = MIMEText(text_body, 'plain')
-            part2 = MIMEText(html_body, 'html')
-            msg.attach(part1)
-            msg.attach(part2)
+            # Send email using Resend API
+            logger.info(f"Sending email from {self.from_email} to {to_email}")
             
-            # Send email with better error handling
-            server = None
             try:
-                # Connect to SMTP server
-                server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30)
-                server.set_debuglevel(0)  # Set to 1 for debugging
+                params = {
+                    "from": self.from_email,
+                    "to": [to_email],
+                    "subject": "Email Verification Code - Architectural AI Cost Estimator",
+                    "html": html_body,
+                    "text": text_body
+                }
                 
-                # Start TLS
-                server.starttls()
+                result = self.resend.emails.send(params)
                 
-                # Login
-                server.login(self.smtp_username, self.smtp_password)
-                
-                # Send email with detailed error handling
-                try:
-                    logger.info(f"Sending email from {self.from_email} to {to_email}")
-                    send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
-                    
-                    # Check if there were any rejected recipients
-                    if send_result:
-                        rejected = list(send_result.keys())
-                        error_details = {email: str(err) for email, err in send_result.items()}
-                        error_msg = f"Email rejected by server for: {', '.join(rejected)}. Details: {error_details}"
-                        logger.error(f"Email send failed for {to_email}: {error_msg}")
-                        return False, error_msg
-                    
-                    logger.info(f"✅ Email sent successfully to {to_email}")
+                if result and hasattr(result, 'id'):
+                    logger.info(f"✅ Email sent successfully to {to_email} (Resend ID: {result.id})")
                     print(f"✅ Email sent successfully to {to_email}")
                     return True, "Email sent successfully"
-                except smtplib.SMTPRecipientsRefused as e:
-                    error_msg = f"Recipient {to_email} was refused: {str(e)}"
-                    logger.error(f"SMTP Recipients Refused for {to_email}: {error_msg}")
+                elif result and isinstance(result, dict) and result.get('id'):
+                    logger.info(f"✅ Email sent successfully to {to_email} (Resend ID: {result.get('id')})")
+                    print(f"✅ Email sent successfully to {to_email}")
+                    return True, "Email sent successfully"
+                else:
+                    error_msg = f"Unexpected response from Resend: {result}"
+                    logger.error(f"Resend API returned unexpected response: {error_msg}")
                     return False, error_msg
-                except smtplib.SMTPDataError as e:
-                    error_msg = f"Email data rejected by server: {str(e)}"
-                    logger.error(f"SMTP Data Error for {to_email}: {error_msg}")
-                    return False, error_msg
-                
-            except smtplib.SMTPAuthenticationError as e:
-                return False, f"SMTP authentication failed: {str(e)}"
-            except smtplib.SMTPRecipientsRefused as e:
-                return False, f"Recipient refused by server: {str(e)}"
-            except smtplib.SMTPSenderRefused as e:
-                return False, f"Sender refused by server: {str(e)}"
-            except smtplib.SMTPDataError as e:
-                return False, f"SMTP data error: {str(e)}"
-            except smtplib.SMTPConnectError as e:
-                return False, f"Could not connect to SMTP server: {str(e)}"
-            except smtplib.SMTPException as e:
-                return False, f"SMTP error: {str(e)}"
+                    
             except Exception as e:
-                return False, f"Unexpected error: {str(e)}"
-            finally:
-                if server:
-                    try:
-                        server.quit()
-                    except:
-                        pass
+                error_msg = f"Resend API error: {str(e)}"
+                logger.error(f"Failed to send email to {to_email}: {error_msg}", exc_info=True)
+                return False, error_msg
             
         except Exception as e:
             error_msg = f"Error preparing email: {str(e)}"
             logger.error(f"Error preparing email for {to_email}: {error_msg}", exc_info=True)
             print(f"Error sending email to {to_email}: {error_msg}")
-            print(f"Error type: {type(e).__name__}")
-            import traceback
-            traceback.print_exc()
             return False, error_msg
     
     def send_password_reset_email(self, to_email: str, reset_code: str) -> Tuple[bool, str]:
         """
-        Send password reset code email
+        Send password reset code email using Resend
         Returns: (success: bool, error_message: str)
         """
+        logger.info(f"Attempting to send password reset email to: {to_email}")
+        
+        if not self.resend:
+            error_msg = "Resend email service not configured. Please set RESEND_API_KEY environment variable."
+            logger.error(error_msg)
+            return False, error_msg
+        
         try:
-            # Validate SMTP configuration
-            if not self.smtp_username or not self.smtp_password:
-                return False, "SMTP credentials not configured"
-            
-            # Create message with proper headers for better deliverability
-            msg = MIMEMultipart('alternative')
-            msg['From'] = self.from_email
-            msg['To'] = to_email
-            msg['Subject'] = "Password Reset Code - Architectural AI Cost Estimator"
-            msg['Reply-To'] = self.from_email
-            msg['X-Mailer'] = 'Architectural AI Cost Estimator'
-            
             # Plain text version
             text_body = f"""Hello,
 
@@ -239,55 +197,40 @@ This is an automated message. Please do not reply to this email.
             </html>
             """
             
-            # Attach both plain text and HTML versions
-            part1 = MIMEText(text_body, 'plain')
-            part2 = MIMEText(html_body, 'html')
-            msg.attach(part1)
-            msg.attach(part2)
+            # Send email using Resend API
+            logger.info(f"Sending password reset email from {self.from_email} to {to_email}")
             
-            server = None
             try:
-                server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30)
-                server.starttls()
-                server.login(self.smtp_username, self.smtp_password)
+                params = {
+                    "from": self.from_email,
+                    "to": [to_email],
+                    "subject": "Password Reset Code - Architectural AI Cost Estimator",
+                    "html": html_body,
+                    "text": text_body
+                }
                 
-                try:
-                    send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
-                    
-                    if send_result:
-                        rejected = list(send_result.keys())
-                        error_details = {email: str(err) for email, err in send_result.items()}
-                        return False, f"Email rejected by server for: {', '.join(rejected)}. Details: {error_details}"
-                    
+                result = self.resend.emails.send(params)
+                
+                if result and hasattr(result, 'id'):
+                    logger.info(f"✅ Password reset email sent successfully to {to_email} (Resend ID: {result.id})")
                     print(f"✅ Password reset email sent successfully to {to_email}")
                     return True, "Email sent successfully"
-                except smtplib.SMTPRecipientsRefused as e:
-                    return False, f"Recipient {to_email} was refused: {str(e)}"
-                except smtplib.SMTPDataError as e:
-                    return False, f"Email data rejected by server: {str(e)}"
-                
-            except smtplib.SMTPAuthenticationError as e:
-                return False, f"SMTP authentication failed: {str(e)}"
-            except smtplib.SMTPRecipientsRefused as e:
-                return False, f"Recipient refused by server: {str(e)}"
-            except smtplib.SMTPSenderRefused as e:
-                return False, f"Sender refused by server: {str(e)}"
-            except smtplib.SMTPDataError as e:
-                return False, f"SMTP data error: {str(e)}"
-            except smtplib.SMTPConnectError as e:
-                return False, f"Could not connect to SMTP server: {str(e)}"
-            except smtplib.SMTPException as e:
-                return False, f"SMTP error: {str(e)}"
+                elif result and isinstance(result, dict) and result.get('id'):
+                    logger.info(f"✅ Password reset email sent successfully to {to_email} (Resend ID: {result.get('id')})")
+                    print(f"✅ Password reset email sent successfully to {to_email}")
+                    return True, "Email sent successfully"
+                else:
+                    error_msg = f"Unexpected response from Resend: {result}"
+                    logger.error(f"Resend API returned unexpected response: {error_msg}")
+                    return False, error_msg
+                    
             except Exception as e:
-                return False, f"Unexpected error: {str(e)}"
-            finally:
-                if server:
-                    try:
-                        server.quit()
-                    except:
-                        pass
+                error_msg = f"Resend API error: {str(e)}"
+                logger.error(f"Failed to send password reset email to {to_email}: {error_msg}", exc_info=True)
+                return False, error_msg
             
         except Exception as e:
-            error_msg = f"Error preparing email: {str(e)}"
+            error_msg = f"Error preparing password reset email: {str(e)}"
+            logger.error(f"Error preparing password reset email for {to_email}: {error_msg}", exc_info=True)
             print(f"Error sending password reset email to {to_email}: {error_msg}")
             return False, error_msg
