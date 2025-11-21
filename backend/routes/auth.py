@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
-from supabase_auth.errors import AuthApiError
 from datetime import datetime
 
 load_dotenv()
@@ -139,10 +138,12 @@ async def register_with_verification(request: RegisterWithVerificationRequest):
 
     except HTTPException:
         raise
-    except AuthApiError as e:
-        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        error_msg = str(e)
+        # Check if it's an authentication-related error
+        if "auth" in error_msg.lower() or "password" in error_msg.lower() or "email" in error_msg.lower():
+            raise HTTPException(status_code=400, detail=error_msg)
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {error_msg}")
 
 
 @auth_router.post("/login")
@@ -174,7 +175,11 @@ async def login_user(request: LoginRequest):
             },
         }
 
-    except AuthApiError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        error_msg = str(e)
+        # Check if it's an authentication-related error
+        if "auth" in error_msg.lower() or "password" in error_msg.lower() or "email" in error_msg.lower() or "invalid" in error_msg.lower():
+            raise HTTPException(status_code=401, detail=error_msg)
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {error_msg}")
