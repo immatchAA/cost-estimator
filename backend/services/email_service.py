@@ -32,14 +32,33 @@ class EmailService:
             if not self.smtp_username or not self.smtp_password:
                 return False, "SMTP credentials not configured"
             
-            # Create message
-            msg = MIMEMultipart()
+            # Create message with proper headers for better deliverability
+            msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
             msg['Subject'] = "Email Verification Code - Architectural AI Cost Estimator"
+            msg['Reply-To'] = self.from_email
+            msg['X-Mailer'] = 'Architectural AI Cost Estimator'
             
-            # Email body
-            body = f"""
+            # Plain text version
+            text_body = f"""Hello,
+
+Thank you for registering with the Architectural AI Cost Estimator. To complete your registration, please use the verification code below:
+
+{verification_code}
+
+Important:
+- This code will expire in 10 minutes
+- Do not share this code with anyone
+- If you didn't request this verification, please ignore this email
+
+If you have any questions, please contact our support team.
+
+This is an automated message. Please do not reply to this email.
+"""
+            
+            # HTML version
+            html_body = f"""
             <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -71,7 +90,11 @@ class EmailService:
             </html>
             """
             
-            msg.attach(MIMEText(body, 'html'))
+            # Attach both plain text and HTML versions
+            part1 = MIMEText(text_body, 'plain')
+            part2 = MIMEText(html_body, 'html')
+            msg.attach(part1)
+            msg.attach(part2)
             
             # Send email with better error handling
             server = None
@@ -86,15 +109,22 @@ class EmailService:
                 # Login
                 server.login(self.smtp_username, self.smtp_password)
                 
-                # Send email
-                send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
-                
-                # Check if there were any rejected recipients
-                if send_result:
-                    rejected = list(send_result.keys())
-                    return False, f"Email rejected by server for: {', '.join(rejected)}"
-                
-                return True, "Email sent successfully"
+                # Send email with detailed error handling
+                try:
+                    send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
+                    
+                    # Check if there were any rejected recipients
+                    if send_result:
+                        rejected = list(send_result.keys())
+                        error_details = {email: str(err) for email, err in send_result.items()}
+                        return False, f"Email rejected by server for: {', '.join(rejected)}. Details: {error_details}"
+                    
+                    print(f"✅ Email sent successfully to {to_email}")
+                    return True, "Email sent successfully"
+                except smtplib.SMTPRecipientsRefused as e:
+                    return False, f"Recipient {to_email} was refused: {str(e)}"
+                except smtplib.SMTPDataError as e:
+                    return False, f"Email data rejected by server: {str(e)}"
                 
             except smtplib.SMTPAuthenticationError as e:
                 return False, f"SMTP authentication failed: {str(e)}"
@@ -135,12 +165,31 @@ class EmailService:
             if not self.smtp_username or not self.smtp_password:
                 return False, "SMTP credentials not configured"
             
-            msg = MIMEMultipart()
+            # Create message with proper headers for better deliverability
+            msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
             msg['Subject'] = "Password Reset Code - Architectural AI Cost Estimator"
+            msg['Reply-To'] = self.from_email
+            msg['X-Mailer'] = 'Architectural AI Cost Estimator'
             
-            body = f"""
+            # Plain text version
+            text_body = f"""Hello,
+
+You have requested to reset your password. Please use the verification code below:
+
+{reset_code}
+
+Important:
+- This code will expire in 10 minutes
+- Do not share this code with anyone
+- If you didn't request this reset, please ignore this email
+
+This is an automated message. Please do not reply to this email.
+"""
+            
+            # HTML version
+            html_body = f"""
             <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -170,20 +219,32 @@ class EmailService:
             </html>
             """
             
-            msg.attach(MIMEText(body, 'html'))
+            # Attach both plain text and HTML versions
+            part1 = MIMEText(text_body, 'plain')
+            part2 = MIMEText(html_body, 'html')
+            msg.attach(part1)
+            msg.attach(part2)
             
             server = None
             try:
                 server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30)
                 server.starttls()
                 server.login(self.smtp_username, self.smtp_password)
-                send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
                 
-                if send_result:
-                    rejected = list(send_result.keys())
-                    return False, f"Email rejected by server for: {', '.join(rejected)}"
-                
-                return True, "Email sent successfully"
+                try:
+                    send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
+                    
+                    if send_result:
+                        rejected = list(send_result.keys())
+                        error_details = {email: str(err) for email, err in send_result.items()}
+                        return False, f"Email rejected by server for: {', '.join(rejected)}. Details: {error_details}"
+                    
+                    print(f"✅ Password reset email sent successfully to {to_email}")
+                    return True, "Email sent successfully"
+                except smtplib.SMTPRecipientsRefused as e:
+                    return False, f"Recipient {to_email} was refused: {str(e)}"
+                except smtplib.SMTPDataError as e:
+                    return False, f"Email data rejected by server: {str(e)}"
                 
             except smtplib.SMTPAuthenticationError as e:
                 return False, f"SMTP authentication failed: {str(e)}"
