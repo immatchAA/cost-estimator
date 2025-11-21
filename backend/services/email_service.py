@@ -22,16 +22,30 @@ class EmailService:
         self.resend_api_key = os.getenv("RESEND_API_KEY")
         self.from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
         
+        # Debug logging
+        logger.info(f"Initializing EmailService...")
+        logger.info(f"RESEND_API_KEY found: {bool(self.resend_api_key)}")
+        if self.resend_api_key:
+            logger.info(f"RESEND_API_KEY length: {len(self.resend_api_key)}")
+            logger.info(f"RESEND_API_KEY prefix: {self.resend_api_key[:3] if len(self.resend_api_key) >= 3 else 'N/A'}")
+        logger.info(f"Resend package available: {Resend is not None}")
+        logger.info(f"FROM_EMAIL: {self.from_email}")
+        
         # Initialize Resend client
         if Resend and self.resend_api_key:
-            self.resend = Resend(api_key=self.resend_api_key)
-            logger.info("Resend email service initialized")
+            try:
+                self.resend = Resend(api_key=self.resend_api_key)
+                logger.info("✅ Resend email service initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize Resend client: {str(e)}")
+                self.resend = None
         else:
             self.resend = None
             if not Resend:
-                logger.warning("Resend package not installed. Install with: pip install resend")
+                logger.error("❌ Resend package not installed. Install with: pip install resend")
             if not self.resend_api_key:
-                logger.warning("RESEND_API_KEY not configured in environment variables")
+                logger.error("❌ RESEND_API_KEY not configured in environment variables")
+                logger.error("Please set RESEND_API_KEY in Railway environment variables")
         
     def generate_verification_code(self) -> str:
         """Generate a 6-digit verification code"""
