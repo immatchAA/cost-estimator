@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
-from typing import Optional
+from typing import Optional, Tuple
 
 load_dotenv()
 
@@ -22,9 +22,16 @@ class EmailService:
         """Generate a 6-digit verification code"""
         return ''.join(random.choices(string.digits, k=6))
     
-    def send_verification_email(self, to_email: str, verification_code: str) -> bool:
-        """Send verification code email"""
+    def send_verification_email(self, to_email: str, verification_code: str) -> Tuple[bool, str]:
+        """
+        Send verification code email
+        Returns: (success: bool, error_message: str)
+        """
         try:
+            # Validate SMTP configuration
+            if not self.smtp_username or not self.smtp_password:
+                return False, "SMTP credentials not configured"
+            
             # Create message
             msg = MIMEMultipart()
             msg['From'] = self.from_email
@@ -66,26 +73,68 @@ class EmailService:
             
             msg.attach(MIMEText(body, 'html'))
             
-            # Send email
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
-            server.login(self.smtp_username, self.smtp_password)
-            text = msg.as_string()
-            server.sendmail(self.from_email, to_email, text)
-            server.quit()
-            
-            return True
+            # Send email with better error handling
+            server = None
+            try:
+                # Connect to SMTP server
+                server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30)
+                server.set_debuglevel(0)  # Set to 1 for debugging
+                
+                # Start TLS
+                server.starttls()
+                
+                # Login
+                server.login(self.smtp_username, self.smtp_password)
+                
+                # Send email
+                send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
+                
+                # Check if there were any rejected recipients
+                if send_result:
+                    rejected = list(send_result.keys())
+                    return False, f"Email rejected by server for: {', '.join(rejected)}"
+                
+                return True, "Email sent successfully"
+                
+            except smtplib.SMTPAuthenticationError as e:
+                return False, f"SMTP authentication failed: {str(e)}"
+            except smtplib.SMTPRecipientsRefused as e:
+                return False, f"Recipient refused by server: {str(e)}"
+            except smtplib.SMTPSenderRefused as e:
+                return False, f"Sender refused by server: {str(e)}"
+            except smtplib.SMTPDataError as e:
+                return False, f"SMTP data error: {str(e)}"
+            except smtplib.SMTPConnectError as e:
+                return False, f"Could not connect to SMTP server: {str(e)}"
+            except smtplib.SMTPException as e:
+                return False, f"SMTP error: {str(e)}"
+            except Exception as e:
+                return False, f"Unexpected error: {str(e)}"
+            finally:
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
             
         except Exception as e:
-            print(f"Error sending email: {str(e)}")
+            error_msg = f"Error preparing email: {str(e)}"
+            print(f"Error sending email to {to_email}: {error_msg}")
             print(f"Error type: {type(e).__name__}")
             import traceback
             traceback.print_exc()
-            return False
+            return False, error_msg
     
-    def send_password_reset_email(self, to_email: str, reset_code: str) -> bool:
-        """Send password reset code email"""
+    def send_password_reset_email(self, to_email: str, reset_code: str) -> Tuple[bool, str]:
+        """
+        Send password reset code email
+        Returns: (success: bool, error_message: str)
+        """
         try:
+            # Validate SMTP configuration
+            if not self.smtp_username or not self.smtp_password:
+                return False, "SMTP credentials not configured"
+            
             msg = MIMEMultipart()
             msg['From'] = self.from_email
             msg['To'] = to_email
@@ -123,15 +172,41 @@ class EmailService:
             
             msg.attach(MIMEText(body, 'html'))
             
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
-            server.login(self.smtp_username, self.smtp_password)
-            text = msg.as_string()
-            server.sendmail(self.from_email, to_email, text)
-            server.quit()
-            
-            return True
+            server = None
+            try:
+                server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30)
+                server.starttls()
+                server.login(self.smtp_username, self.smtp_password)
+                send_result = server.sendmail(self.from_email, [to_email], msg.as_string())
+                
+                if send_result:
+                    rejected = list(send_result.keys())
+                    return False, f"Email rejected by server for: {', '.join(rejected)}"
+                
+                return True, "Email sent successfully"
+                
+            except smtplib.SMTPAuthenticationError as e:
+                return False, f"SMTP authentication failed: {str(e)}"
+            except smtplib.SMTPRecipientsRefused as e:
+                return False, f"Recipient refused by server: {str(e)}"
+            except smtplib.SMTPSenderRefused as e:
+                return False, f"Sender refused by server: {str(e)}"
+            except smtplib.SMTPDataError as e:
+                return False, f"SMTP data error: {str(e)}"
+            except smtplib.SMTPConnectError as e:
+                return False, f"Could not connect to SMTP server: {str(e)}"
+            except smtplib.SMTPException as e:
+                return False, f"SMTP error: {str(e)}"
+            except Exception as e:
+                return False, f"Unexpected error: {str(e)}"
+            finally:
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
             
         except Exception as e:
-            print(f"Error sending password reset email: {str(e)}")
-            return False
+            error_msg = f"Error preparing email: {str(e)}"
+            print(f"Error sending password reset email to {to_email}: {error_msg}")
+            return False, error_msg

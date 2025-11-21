@@ -47,12 +47,14 @@ async def send_verification_code(request: VerificationCodeRequest):
             raise HTTPException(status_code=500, detail="Failed to save verification code")
         
         # Send email
-        email_sent = email_service.send_verification_email(email, verification_code)
+        email_sent, error_message = email_service.send_verification_email(email, verification_code)
         
         if not email_sent:
             # If email failed to send, delete the verification code
             supabase.table("verification_codes").delete().eq("email", email).execute()
-            raise HTTPException(status_code=500, detail="Failed to send verification email")
+            # Log the detailed error message for debugging
+            print(f"Failed to send verification email to {email}: {error_message}")
+            raise HTTPException(status_code=500, detail=f"Failed to send verification email: {error_message}")
         
         return {"message": "Verification code sent successfully", "email": email}
         
@@ -140,12 +142,14 @@ async def resend_verification_code(request: VerificationCodeRequest):
             raise HTTPException(status_code=500, detail="Failed to save verification code")
         
         # Send email
-        email_sent = email_service.send_verification_email(email, verification_code)
+        email_sent, error_message = email_service.send_verification_email(email, verification_code)
         
         if not email_sent:
             # If email failed to send, delete the verification code
             supabase.table("verification_codes").delete().eq("email", email).execute()
-            raise HTTPException(status_code=500, detail="Failed to send verification email")
+            # Log the detailed error message for debugging
+            print(f"Failed to resend verification email to {email}: {error_message}")
+            raise HTTPException(status_code=500, detail=f"Failed to send verification email: {error_message}")
         
         return {"message": "Verification code resent successfully", "email": email}
         
