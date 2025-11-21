@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import backgroundImage from "../../assets/bgbg.png";
-import googleIcon from "../../assets/google.png";
 import "../Register/Register.css";
 import { useNavigate } from "react-router-dom";
 import EmailVerification from "../EmailVerification/EmailVerification";
@@ -427,13 +426,6 @@ function RegisterForm() {
             <p className="register-text">
               Already have an account? <a href="/login">Log in here</a>
             </p>
-
-            <div className="google-signin">
-              <button className="google-btn">
-                <img src={googleIcon} alt="google icon" />
-                Sign-in with Google
-              </button>
-            </div>
           </div>
         </div>
       </div>
