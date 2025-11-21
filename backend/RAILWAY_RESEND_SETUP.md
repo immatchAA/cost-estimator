@@ -73,7 +73,7 @@
 5. **Set environment variables**
 
    ```bash
-   railway variables set RESEND_API_KEY=re_6sWrvHpK_3mvupFZJfptYd8KYChsLoBB6
+   railway variables set RESEND_API_KEY=re_AmdtQpRi_BFUxEA1wWA1PPz7w4tHfg2PC
    railway variables set FROM_EMAIL=onboarding@resend.dev
    ```
 
