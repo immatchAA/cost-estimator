@@ -17,7 +17,8 @@ class EmailService:
     def __init__(self):
         # SendGrid Configuration (HTTP API - works on Railway)
         self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
-        self.from_email = os.getenv("FROM_EMAIL", "noreply@archiquest.com")
+        # Support both SENDGRID_FROM_EMAIL and FROM_EMAIL for flexibility
+        self.from_email = os.getenv("SENDGRID_FROM_EMAIL") or os.getenv("FROM_EMAIL", "noreply@archiquest.com")
         self.sendgrid_api_url = "https://api.sendgrid.com/v3/mail/send"
         
         # Debug logging

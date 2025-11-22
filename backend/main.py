@@ -53,7 +53,8 @@ def check_email_config():
     from backend.services.email_service import EmailService
     
     sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
-    from_email = os.getenv("FROM_EMAIL", "noreply@archiquest.com")
+    # Support both SENDGRID_FROM_EMAIL and FROM_EMAIL
+    from_email = os.getenv("SENDGRID_FROM_EMAIL") or os.getenv("FROM_EMAIL", "noreply@archiquest.com")
     
     email_service = EmailService()
     
@@ -62,6 +63,7 @@ def check_email_config():
         "sendgrid_api_key_set": bool(sendgrid_api_key),
         "sendgrid_api_key_length": len(sendgrid_api_key) if sendgrid_api_key else 0,
         "from_email": from_email,
+        "from_email_source": "SENDGRID_FROM_EMAIL" if os.getenv("SENDGRID_FROM_EMAIL") else ("FROM_EMAIL" if os.getenv("FROM_EMAIL") else "default"),
         "configuration_complete": bool(sendgrid_api_key),
     }
 

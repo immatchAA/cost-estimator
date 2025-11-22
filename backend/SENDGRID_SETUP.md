@@ -72,9 +72,9 @@ If you own a domain (e.g., `archiquest.com`):
 
 3. **Add From Email:**
    - Click **"+ New Variable"**
-   - **Name**: `FROM_EMAIL`
+   - **Name**: `SENDGRID_FROM_EMAIL` (or `FROM_EMAIL` - both work)
    - **Value**: Use the email you verified in Step 3
-     - Example: `noreply@archiquest.com` or `aarchiquest@gmail.com`
+     - Example: `akosikyle505@gmail.com` or `noreply@archiquest.com`
    - Click **Save**
 
 4. **Remove old SMTP variables** (optional, they won't be used anymore):
@@ -88,8 +88,10 @@ Add these to Railway:
 
 ```
 SENDGRID_API_KEY=SG.your-api-key-here
-FROM_EMAIL=your-verified-email@example.com
+SENDGRID_FROM_EMAIL=your-verified-email@example.com
 ```
+
+**Note:** You can use either `SENDGRID_FROM_EMAIL` or `FROM_EMAIL` - both are supported. `SENDGRID_FROM_EMAIL` takes precedence if both are set.
 
 ## Verification
 
