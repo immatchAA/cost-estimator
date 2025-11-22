@@ -507,7 +507,7 @@ export default function TeacherChallengeView() {
                   if (!window.confirm("⚠️ All changes will be updated, are you sure?")) return;
 
                   try {
-                    const response = await fetch("http://localhost:8000/api/cost-estimates/save", {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cost-estimates/save`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({

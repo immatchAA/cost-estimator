@@ -36,7 +36,8 @@ function ReadingMaterialView() {
   useEffect(() => {
     const fetchMaterial = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/reading-materials/${id}`);
+        const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
+        const response = await fetch(`${apiBaseNoPrefix}/reading-materials/${id}`);
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.detail || "Failed to fetch material");

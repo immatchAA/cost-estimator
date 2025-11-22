@@ -67,8 +67,9 @@ function EmailVerification({
 
     try {
       // ✅ Single call that verifies AND creates the account.
+      const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
       const registerRes = await fetch(
-        "http://127.0.0.1:8000/auth/register-with-verification",
+        `${apiBaseNoPrefix}/auth/register-with-verification`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -108,8 +109,9 @@ function EmailVerification({
     setIsLoading(true);
 
     try {
+      const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
       const response = await fetch(
-        "http://127.0.0.1:8000/verification/resend-code",
+        `${apiBaseNoPrefix}/verification/resend-code`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

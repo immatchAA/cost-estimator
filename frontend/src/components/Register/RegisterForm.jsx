@@ -47,8 +47,10 @@ function RegisterForm() {
 
     try {
       // First, send verification code
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+      const apiBaseNoPrefix = apiBase.replace('/api', '') || "http://localhost:8000";
       const verificationResponse = await fetch(
-        "http://127.0.0.1:8000/verification/send-code",
+        `${apiBaseNoPrefix}/verification/send-code`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -66,7 +68,7 @@ function RegisterForm() {
 
       // Then, register user (without creating account yet)
       const registerResponse = await fetch(
-        "http://127.0.0.1:8000/auth/register",
+        `${apiBaseNoPrefix}/auth/register`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -107,8 +109,9 @@ function RegisterForm() {
     setSuccess("");
 
     try {
+      const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
       const response = await fetch(
-        "http://127.0.0.1:8000/auth/register-with-verification",
+        `${apiBaseNoPrefix}/auth/register-with-verification`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -133,7 +136,7 @@ function RegisterForm() {
       setSuccess(data.message);
 
       // ✅ After registration, auto-login to get tokens
-      const loginRes = await fetch("http://127.0.0.1:8000/auth/login", {
+      const loginRes = await fetch(`${apiBaseNoPrefix}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

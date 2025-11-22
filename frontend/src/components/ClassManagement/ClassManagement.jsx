@@ -38,7 +38,7 @@ function ClassManagement() {
   const fetchTeacherClasses = async (teacherId) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/classes/teacher/${teacherId}`
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/classes/teacher/${teacherId}`
       );
       const data = await response.json();
 
@@ -56,7 +56,7 @@ function ClassManagement() {
   const fetchRequests = async (classId) => {
     setActiveClassId(classId);
     const res = await fetch(
-      `http://localhost:8000/api/classes/${classId}/requests`
+      `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/classes/${classId}/requests`
     );
     const data = await res.json();
     if (data.success) {
@@ -66,7 +66,7 @@ function ClassManagement() {
 
   const approveRequest = async (requestId) => {
     const res = await fetch(
-      `http://localhost:8000/api/classes/requests/${requestId}/approve`,
+      `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/classes/requests/${requestId}/approve`,
       {
         method: "POST",
       }
@@ -81,7 +81,7 @@ function ClassManagement() {
 
   const rejectRequest = async (requestId) => {
     const res = await fetch(
-      `http://localhost:8000/api/classes/requests/${requestId}/reject`,
+      `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/classes/requests/${requestId}/reject`,
       {
         method: "POST",
       }
@@ -112,7 +112,7 @@ function ClassManagement() {
     setMessage("");
 
     try {
-      const response = await fetch(`http://localhost:8000/api/classes/create`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/classes/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

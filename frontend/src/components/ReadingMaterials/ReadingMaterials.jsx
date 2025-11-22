@@ -34,7 +34,8 @@ function ReadingMaterials() {
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        const response = await fetch("http://localhost:8000/reading-materials");
+        const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
+        const response = await fetch(`${apiBaseNoPrefix}/reading-materials`);
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.detail || "Failed to fetch materials");
@@ -69,7 +70,8 @@ function ReadingMaterials() {
       confirm: true,
       onConfirm: async () => {
         try {
-          const response = await fetch(`http://localhost:8000/reading-materials/${materialId}`, {
+          const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
+          const response = await fetch(`${apiBaseNoPrefix}/reading-materials/${materialId}`, {
             method: "DELETE",
           });
 

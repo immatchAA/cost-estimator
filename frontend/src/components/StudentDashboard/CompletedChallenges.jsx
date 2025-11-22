@@ -19,7 +19,7 @@ export default function CompletedChallenges() {
 
       // FETCH completed list
       const res = await fetch(
-        `http://localhost:8000/api/cost-estimates/ai/student/${user.id}/completed-list`
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cost-estimates/ai/student/${user.id}/completed-list`
       );
       const json = await res.json();
 

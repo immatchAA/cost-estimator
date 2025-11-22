@@ -28,8 +28,9 @@ function MaterialSearch() {
 
   const fetchTeacherMaterials = async (teacherId) => {
     try {
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
       const res = await axios.get(
-        `http://127.0.0.1:8000/api/materials/teacher/${teacherId}`
+        `${apiBase}/materials/teacher/${teacherId}`
       );
       setTeacherMaterials(res.data);
     } catch (err) {
@@ -42,7 +43,8 @@ function MaterialSearch() {
     e.preventDefault();
     if (!query.trim()) return;
     try {
-      const res = await axios.post("http://127.0.0.1:8000/search_price", {
+      const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
+      const res = await axios.post(`${apiBaseNoPrefix}/search_price`, {
         material: query,
       });
       setAiResults(res.data);
@@ -57,7 +59,8 @@ function MaterialSearch() {
     e.preventDefault();
     try {
       const payload = { ...newMaterial, teacher_id: teacherId };
-      await axios.post("http://127.0.0.1:8000/api/materials/add", payload);
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+      await axios.post(`${apiBase}/materials/add`, payload);
       alert("✅ Material added successfully!");
       setShowModal(false);
       setNewMaterial({

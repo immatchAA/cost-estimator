@@ -93,9 +93,10 @@ const handleSubmit = async (e) => {
 
     const userId = editMaterial?.user_id || crypto.randomUUID();
 
+    const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
     const url = editMaterial
-      ? `http://localhost:8000/reading-materials/${editMaterial.id}` // PUT needs ID
-      : "http://localhost:8000/reading-materials";
+      ? `${apiBaseNoPrefix}/reading-materials/${editMaterial.id}` // PUT needs ID
+      : `${apiBaseNoPrefix}/reading-materials`;
 
     const response = await fetch(url, {
       method: editMaterial ? "PUT" : "POST",

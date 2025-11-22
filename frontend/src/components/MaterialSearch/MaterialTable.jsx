@@ -14,7 +14,8 @@ function MaterialTable({ materials, tableType, onUpdate }) {
       if (userRole === "student") {
         try {
           console.log("📦 Fetching all teacher materials for student...");
-          const res = await axios.get("http://127.0.0.1:8000/api/materials/all");
+          const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+          const res = await axios.get(`${apiBase}/materials/all`);
           setClassMaterials(res.data);
         } catch (err) {
           console.error("❌ Error fetching all materials:", err);
@@ -45,8 +46,9 @@ function MaterialTable({ materials, tableType, onUpdate }) {
         unit: editData.unit,
       };
 
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
       await axios.put(
-        `http://127.0.0.1:8000/api/materials/update/${editingId}`,
+        `${apiBase}/materials/update/${editingId}`,
         payload
       );
 
@@ -65,7 +67,8 @@ function MaterialTable({ materials, tableType, onUpdate }) {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this material?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/materials/delete/${id}`);
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+      await axios.delete(`${apiBase}/materials/delete/${id}`);
       alert("🗑️ Material deleted successfully!");
       if (onUpdate) {
         const userId = localStorage.getItem("user_id");

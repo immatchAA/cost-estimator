@@ -92,7 +92,7 @@ const UploadChallenge = () => {
     if (dueDate) formData.append("due_date", dueDate);
 
     try {
-      const res = await fetch("http://localhost:8000/api/challenges", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/challenges`, {
         method: "POST",
         body: formData,
       });
@@ -121,7 +121,7 @@ const UploadChallenge = () => {
       // RUN AI ESTIMATE
       setEstimating(true);
       const estRes = await fetch(
-        `http://localhost:8000/api/cost-estimates/challenges/${challengeId}/estimate`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cost-estimates/challenges/${challengeId}/estimate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
