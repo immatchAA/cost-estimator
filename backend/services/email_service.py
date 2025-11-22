@@ -2,12 +2,10 @@ import os
 import random
 import string
 import logging
-import smtplib
+import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from typing import Optional, Tuple
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -17,33 +15,31 @@ load_dotenv()
 
 class EmailService:
     def __init__(self):
-        # SMTP Configuration
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("SMTP_USERNAME")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
-        self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
+        # SendGrid Configuration (HTTP API - works on Railway)
+        self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
+        self.from_email = os.getenv("FROM_EMAIL", "noreply@archiquest.com")
+        self.sendgrid_api_url = "https://api.sendgrid.com/v3/mail/send"
         
         # Debug logging
-        logger.info(f"Initializing EmailService (SMTP)...")
-        logger.info(f"SMTP_SERVER: {self.smtp_server}")
-        logger.info(f"SMTP_PORT: {self.smtp_port}")
-        logger.info(f"SMTP_USERNAME: {self.smtp_username if self.smtp_username else 'Not set'}")
-        logger.info(f"SMTP_PASSWORD: {'*' * len(self.smtp_password) if self.smtp_password else 'Not set'}")
+        logger.info(f"Initializing EmailService (SendGrid HTTP API)...")
+        logger.info(f"SENDGRID_API_KEY found: {bool(self.sendgrid_api_key)}")
+        if self.sendgrid_api_key:
+            logger.info(f"SENDGRID_API_KEY length: {len(self.sendgrid_api_key)}")
+            logger.info(f"SENDGRID_API_KEY prefix: {self.sendgrid_api_key[:5] + '...' if len(self.sendgrid_api_key) > 5 else 'Not set'}")
         logger.info(f"FROM_EMAIL: {self.from_email}")
         
         # Validate configuration
-        if not self.smtp_username or not self.smtp_password:
-            logger.warning("⚠️ SMTP credentials not fully configured. Email sending may fail.")
-            logger.warning("Please set SMTP_USERNAME and SMTP_PASSWORD in Railway environment variables")
+        if not self.sendgrid_api_key:
+            logger.warning("⚠️ SENDGRID_API_KEY not configured. Email sending will fail.")
+            logger.warning("Please set SENDGRID_API_KEY in Railway environment variables")
         else:
-            logger.info("✅ SMTP configuration loaded successfully")
+            logger.info("✅ SendGrid configuration loaded successfully")
         
     def generate_verification_code(self) -> str:
         """Generate a 6-digit verification code"""
         return ''.join(random.choices(string.digits, k=6))
     
-    def _send_email_via_smtp(
+    def _send_email_via_sendgrid(
         self, 
         to_email: str, 
         subject: str, 
@@ -51,63 +47,64 @@ class EmailService:
         html_body: str
     ) -> Tuple[bool, str]:
         """
-        Send email via SMTP
+        Send email via SendGrid HTTP API
         Returns: (success: bool, error_message: str)
         """
-        if not self.smtp_username or not self.smtp_password:
-            error_msg = "SMTP credentials not configured. Please set SMTP_USERNAME and SMTP_PASSWORD environment variables."
+        if not self.sendgrid_api_key:
+            error_msg = "SendGrid API key not configured. Please set SENDGRID_API_KEY environment variable."
             logger.error(error_msg)
             return False, error_msg
         
         try:
-            # Create message
-            msg = MIMEMultipart('alternative')
-            msg['From'] = self.from_email
-            msg['To'] = to_email
-            msg['Subject'] = subject
+            # Prepare SendGrid API request
+            payload = {
+                "personalizations": [
+                    {
+                        "to": [{"email": to_email}],
+                        "subject": subject
+                    }
+                ],
+                "from": {"email": self.from_email, "name": "Archiquest"},
+                "content": [
+                    {
+                        "type": "text/plain",
+                        "value": text_body
+                    },
+                    {
+                        "type": "text/html",
+                        "value": html_body
+                    }
+                ]
+            }
             
-            # Add both plain text and HTML versions
-            part1 = MIMEText(text_body, 'plain')
-            part2 = MIMEText(html_body, 'html')
+            headers = {
+                "Authorization": f"Bearer {self.sendgrid_api_key}",
+                "Content-Type": "application/json"
+            }
             
-            msg.attach(part1)
-            msg.attach(part2)
+            logger.info(f"Sending email via SendGrid API to {to_email}")
+            response = requests.post(self.sendgrid_api_url, json=payload, headers=headers)
             
-            # Connect to SMTP server and send
-            logger.info(f"Connecting to SMTP server {self.smtp_server}:{self.smtp_port}")
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()  # Enable TLS encryption
-            logger.info("TLS enabled, authenticating...")
-            server.login(self.smtp_username, self.smtp_password)
-            logger.info("Authentication successful, sending email...")
-            
-            text = msg.as_string()
-            server.sendmail(self.from_email, to_email, text)
-            server.quit()
-            
-            logger.info(f"✅ Email sent successfully to {to_email}")
-            return True, "Email sent successfully"
-            
-        except smtplib.SMTPAuthenticationError as e:
-            error_msg = f"SMTP authentication failed: {str(e)}. Please check your SMTP_USERNAME and SMTP_PASSWORD."
-            logger.error(f"Failed to send email to {to_email}: {error_msg}")
-            return False, error_msg
-        except smtplib.SMTPRecipientsRefused as e:
-            error_msg = f"Invalid recipient email address: {str(e)}"
-            logger.error(f"Failed to send email to {to_email}: {error_msg}")
-            return False, error_msg
-        except smtplib.SMTPServerDisconnected as e:
-            error_msg = f"SMTP server disconnected: {str(e)}. Please check SMTP_SERVER and SMTP_PORT."
-            logger.error(f"Failed to send email to {to_email}: {error_msg}")
+            if response.status_code == 202:
+                logger.info(f"✅ Email sent successfully to {to_email}")
+                return True, "Email sent successfully"
+            else:
+                error_msg = f"SendGrid API error (Status {response.status_code}): {response.text}"
+                logger.error(f"Failed to send email to {to_email}: {error_msg}")
+                return False, error_msg
+                
+        except requests.exceptions.RequestException as e:
+            error_msg = f"SendGrid API request failed: {str(e)}"
+            logger.error(f"Failed to send email to {to_email}: {error_msg}", exc_info=True)
             return False, error_msg
         except Exception as e:
-            error_msg = f"SMTP error: {str(e)}"
+            error_msg = f"SendGrid error: {str(e)}"
             logger.error(f"Failed to send email to {to_email}: {error_msg}", exc_info=True)
             return False, error_msg
     
     def send_verification_email(self, to_email: str, verification_code: str) -> Tuple[bool, str]:
         """
-        Send verification code email using SMTP
+        Send verification code email using SendGrid
         Returns: (success: bool, error_message: str)
         """
         logger.info(f"Attempting to send verification email to: {to_email}")
@@ -163,7 +160,7 @@ This is an automated message. Please do not reply to this email.
 </html>
 """
             
-            return self._send_email_via_smtp(
+            return self._send_email_via_sendgrid(
                 to_email=to_email,
                 subject="Email Verification Code - Archiquest",
                 text_body=text_body,
@@ -177,7 +174,7 @@ This is an automated message. Please do not reply to this email.
     
     def send_password_reset_email(self, to_email: str, reset_code: str) -> Tuple[bool, str]:
         """
-        Send password reset code email using SMTP
+        Send password reset code email using SendGrid
         Returns: (success: bool, error_message: str)
         """
         logger.info(f"Attempting to send password reset email to: {to_email}")
@@ -229,7 +226,7 @@ This is an automated message. Please do not reply to this email.
 </html>
 """
             
-            return self._send_email_via_smtp(
+            return self._send_email_via_sendgrid(
                 to_email=to_email,
                 subject="Password Reset Code - Archiquest",
                 text_body=text_body,

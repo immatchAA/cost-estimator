@@ -52,22 +52,17 @@ def check_email_config():
     import os
     from backend.services.email_service import EmailService
     
-    smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-    smtp_port = os.getenv("SMTP_PORT", "587")
-    smtp_username = os.getenv("SMTP_USERNAME")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    from_email = os.getenv("FROM_EMAIL", smtp_username)
+    sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
+    from_email = os.getenv("FROM_EMAIL", "noreply@archiquest.com")
     
     email_service = EmailService()
     
     return {
-        "email_service": "SMTP",
-        "smtp_server": smtp_server,
-        "smtp_port": smtp_port,
-        "smtp_username_set": bool(smtp_username),
-        "smtp_password_set": bool(smtp_password),
+        "email_service": "SendGrid",
+        "sendgrid_api_key_set": bool(sendgrid_api_key),
+        "sendgrid_api_key_length": len(sendgrid_api_key) if sendgrid_api_key else 0,
         "from_email": from_email,
-        "configuration_complete": bool(smtp_username and smtp_password),
+        "configuration_complete": bool(sendgrid_api_key),
     }
 
 # CORS
