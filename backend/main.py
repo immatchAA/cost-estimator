@@ -9,18 +9,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 
-from routes.challenges import router as challenges_router
-from routes.auth import auth_router
-from routes import reading_materials
-from routes.class_routes import class_router
-from routes.verification import verification_router
+from backend.routes.challenges import router as challenges_router
+from backend.routes.auth import auth_router
+from backend.routes import reading_materials
+from backend.routes.class_routes import class_router
+from backend.routes.verification import verification_router
 from pydantic import BaseModel
-from services.gemini_service import GeminiPriceSearch
-from services.supabase_service import SupabaseClient
-from routes.cost_estimation_route import router as cost_estimation_router
-from routes import ai_suggestion_route
-from routes import estimate_route
-from routes import materials
+from backend.services.gemini_service import GeminiPriceSearch
+from backend.services.supabase_service import SupabaseClient
+from backend.routes.cost_estimation_route import router as cost_estimation_router
+from backend.routes import ai_suggestion_route
+from backend.routes import estimate_route
+from backend.routes import materials
 
 
 load_dotenv()
@@ -50,7 +50,7 @@ def root():
 def check_email_config():
     """Check email service configuration"""
     import os
-    from services.email_service import EmailService
+    from backend.services.email_service import EmailService
     
     resend_key = os.getenv("RESEND_API_KEY")
     from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
