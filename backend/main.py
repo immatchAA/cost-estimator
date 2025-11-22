@@ -52,18 +52,22 @@ def check_email_config():
     import os
     from backend.services.email_service import EmailService
     
-    resend_key = os.getenv("RESEND_API_KEY")
-    from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
+    smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    smtp_port = os.getenv("SMTP_PORT", "587")
+    smtp_username = os.getenv("SMTP_USERNAME")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    from_email = os.getenv("FROM_EMAIL", smtp_username)
     
     email_service = EmailService()
     
     return {
-        "resend_api_key_set": bool(resend_key),
-        "resend_api_key_length": len(resend_key) if resend_key else 0,
-        "resend_api_key_prefix": resend_key[:5] + "..." if resend_key and len(resend_key) > 5 else "Not set",
+        "email_service": "SMTP",
+        "smtp_server": smtp_server,
+        "smtp_port": smtp_port,
+        "smtp_username_set": bool(smtp_username),
+        "smtp_password_set": bool(smtp_password),
         "from_email": from_email,
-        "resend_client_initialized": email_service.resend is not None,
-        "resend_package_available": True
+        "configuration_complete": bool(smtp_username and smtp_password),
     }
 
 # CORS
