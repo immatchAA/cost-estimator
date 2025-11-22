@@ -69,14 +69,14 @@ function StudentDashboard() {
     }
 
     const completedRes = await fetch(
-      `http://localhost:8000/api/cost-estimates/ai/student/${user.id}/completed`
+      `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cost-estimates/ai/student/${user.id}/completed`
     );
     const completedJson = await completedRes.json();
     if (completedJson.success) setCompletedCount(completedJson.completed);
 
     // Fetch average accuracy
     const accuracyRes = await fetch(
-      `http://localhost:8000/api/cost-estimates/ai/student/${user.id}/average-accuracy`
+      `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cost-estimates/ai/student/${user.id}/average-accuracy`
     );
     const accuracyJson = await accuracyRes.json();
     if (accuracyJson.success) setAvgAccuracy(accuracyJson.average_accuracy);

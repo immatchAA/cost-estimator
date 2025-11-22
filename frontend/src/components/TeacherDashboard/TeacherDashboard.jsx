@@ -95,7 +95,7 @@ function TeacherDashboard() {
       let allRequests = [];
       for (const c of classes || []) {
         const res = await fetch(
-          `http://localhost:8000/api/classes/${c.id}/requests`
+          `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/classes/${c.id}/requests`
         );
         const json = await res.json();
         if (json.success && json.requests.length > 0) {
@@ -115,7 +115,7 @@ function TeacherDashboard() {
   // 🔹 Approve request
   const approveRequest = async (requestId) => {
     const res = await fetch(
-      `http://localhost:8000/api/classes/requests/${requestId}/approve`,
+      `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/classes/requests/${requestId}/approve`,
       { method: "POST" }
     );
     const data = await res.json();
@@ -129,7 +129,7 @@ function TeacherDashboard() {
   // 🔹 Reject request
   const rejectRequest = async (requestId) => {
     const res = await fetch(
-      `http://localhost:8000/api/classes/requests/${requestId}/reject`,
+      `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/classes/requests/${requestId}/reject`,
       { method: "POST" }
     );
     const data = await res.json();
@@ -159,7 +159,7 @@ function TeacherDashboard() {
       setUserId(user.id);
 
       const avgRes = await fetch(
-        "http://localhost:8000/api/cost-estimates/ai/average-accuracy"
+        `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cost-estimates/ai/average-accuracy`
       );
       const avgJson = await avgRes.json();
 
