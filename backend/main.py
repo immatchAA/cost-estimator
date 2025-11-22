@@ -50,21 +50,24 @@ def root():
 def check_email_config():
     """Check email service configuration"""
     import os
-    from backend.services.email_service import EmailService
+    try:
+        import resend
+        resend_available = True
+    except ImportError:
+        resend_available = False
     
-    sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
-    # Support both SENDGRID_FROM_EMAIL and FROM_EMAIL
-    from_email = os.getenv("SENDGRID_FROM_EMAIL") or os.getenv("FROM_EMAIL", "noreply@archiquest.com")
-    
-    email_service = EmailService()
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    from_email = os.getenv("RESEND_FROM_EMAIL") or os.getenv("FROM_EMAIL", "onboarding@resend.dev")
     
     return {
-        "email_service": "SendGrid",
-        "sendgrid_api_key_set": bool(sendgrid_api_key),
-        "sendgrid_api_key_length": len(sendgrid_api_key) if sendgrid_api_key else 0,
+        "email_service": "Resend",
+        "resend_api_key_set": bool(resend_api_key),
+        "resend_api_key_length": len(resend_api_key) if resend_api_key else 0,
+        "resend_api_key_prefix": resend_api_key[:3] + "..." if resend_api_key and len(resend_api_key) > 3 else "Not set",
         "from_email": from_email,
-        "from_email_source": "SENDGRID_FROM_EMAIL" if os.getenv("SENDGRID_FROM_EMAIL") else ("FROM_EMAIL" if os.getenv("FROM_EMAIL") else "default"),
-        "configuration_complete": bool(sendgrid_api_key),
+        "from_email_source": "RESEND_FROM_EMAIL" if os.getenv("RESEND_FROM_EMAIL") else ("FROM_EMAIL" if os.getenv("FROM_EMAIL") else "default"),
+        "resend_package_available": resend_available,
+        "configuration_complete": bool(resend_api_key) and resend_available,
     }
 
 # CORS

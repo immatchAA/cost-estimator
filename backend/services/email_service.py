@@ -2,7 +2,6 @@ import os
 import random
 import string
 import logging
-import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from typing import Optional, Tuple
@@ -13,34 +12,46 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+# Try importing Resend
+try:
+    import resend
+    RESEND_AVAILABLE = True
+except ImportError:
+    RESEND_AVAILABLE = False
+    logger.warning("⚠️ Resend package not installed. Install with: pip install resend")
+
 class EmailService:
     def __init__(self):
-        # SendGrid Configuration (HTTP API - works on Railway)
-        self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
-        # Support both SENDGRID_FROM_EMAIL and FROM_EMAIL for flexibility
-        self.from_email = os.getenv("SENDGRID_FROM_EMAIL") or os.getenv("FROM_EMAIL", "noreply@archiquest.com")
-        self.sendgrid_api_url = "https://api.sendgrid.com/v3/mail/send"
+        # Resend Configuration
+        self.resend_api_key = os.getenv("RESEND_API_KEY")
+        # Support both RESEND_FROM_EMAIL and FROM_EMAIL for flexibility
+        self.from_email = os.getenv("RESEND_FROM_EMAIL") or os.getenv("FROM_EMAIL", "onboarding@resend.dev")
         
         # Debug logging
-        logger.info(f"Initializing EmailService (SendGrid HTTP API)...")
-        logger.info(f"SENDGRID_API_KEY found: {bool(self.sendgrid_api_key)}")
-        if self.sendgrid_api_key:
-            logger.info(f"SENDGRID_API_KEY length: {len(self.sendgrid_api_key)}")
-            logger.info(f"SENDGRID_API_KEY prefix: {self.sendgrid_api_key[:5] + '...' if len(self.sendgrid_api_key) > 5 else 'Not set'}")
+        logger.info(f"Initializing EmailService (Resend)...")
+        logger.info(f"RESEND_API_KEY found: {bool(self.resend_api_key)}")
+        if self.resend_api_key:
+            logger.info(f"RESEND_API_KEY length: {len(self.resend_api_key)}")
+            logger.info(f"RESEND_API_KEY prefix: {self.resend_api_key[:3] + '...' if len(self.resend_api_key) > 3 else 'Not set'}")
         logger.info(f"FROM_EMAIL: {self.from_email}")
+        logger.info(f"Resend package available: {RESEND_AVAILABLE}")
         
         # Validate configuration
-        if not self.sendgrid_api_key:
-            logger.warning("⚠️ SENDGRID_API_KEY not configured. Email sending will fail.")
-            logger.warning("Please set SENDGRID_API_KEY in Railway environment variables")
+        if not RESEND_AVAILABLE:
+            logger.error("❌ Resend package not installed. Install with: pip install resend")
+        elif not self.resend_api_key:
+            logger.warning("⚠️ RESEND_API_KEY not configured. Email sending will fail.")
+            logger.warning("Please set RESEND_API_KEY in Railway environment variables")
         else:
-            logger.info("✅ SendGrid configuration loaded successfully")
+            # Initialize Resend client
+            resend.api_key = self.resend_api_key
+            logger.info("✅ Resend configuration loaded successfully")
         
     def generate_verification_code(self) -> str:
         """Generate a 6-digit verification code"""
         return ''.join(random.choices(string.digits, k=6))
     
-    def _send_email_via_sendgrid(
+    def _send_email_via_resend(
         self, 
         to_email: str, 
         subject: str, 
@@ -48,64 +59,52 @@ class EmailService:
         html_body: str
     ) -> Tuple[bool, str]:
         """
-        Send email via SendGrid HTTP API
+        Send email via Resend API
         Returns: (success: bool, error_message: str)
         """
-        if not self.sendgrid_api_key:
-            error_msg = "SendGrid API key not configured. Please set SENDGRID_API_KEY environment variable."
+        if not RESEND_AVAILABLE:
+            error_msg = "Resend package not installed. Install with: pip install resend"
+            logger.error(error_msg)
+            return False, error_msg
+        
+        if not self.resend_api_key:
+            error_msg = "Resend API key not configured. Please set RESEND_API_KEY environment variable."
             logger.error(error_msg)
             return False, error_msg
         
         try:
-            # Prepare SendGrid API request
-            payload = {
-                "personalizations": [
-                    {
-                        "to": [{"email": to_email}],
-                        "subject": subject
-                    }
-                ],
-                "from": {"email": self.from_email, "name": "Archiquest"},
-                "content": [
-                    {
-                        "type": "text/plain",
-                        "value": text_body
-                    },
-                    {
-                        "type": "text/html",
-                        "value": html_body
-                    }
-                ]
+            logger.info(f"Sending email via Resend API to {to_email}")
+            
+            params = {
+                "from": f"Archiquest <{self.from_email}>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_body,
+                "text": text_body
             }
             
-            headers = {
-                "Authorization": f"Bearer {self.sendgrid_api_key}",
-                "Content-Type": "application/json"
-            }
+            email_response = resend.Emails.send(params)
             
-            logger.info(f"Sending email via SendGrid API to {to_email}")
-            response = requests.post(self.sendgrid_api_url, json=payload, headers=headers)
-            
-            if response.status_code == 202:
-                logger.info(f"✅ Email sent successfully to {to_email}")
+            # Resend returns an object with id if successful
+            if email_response and hasattr(email_response, 'id'):
+                logger.info(f"✅ Email sent successfully to {to_email} (ID: {email_response.id})")
+                return True, "Email sent successfully"
+            elif email_response and isinstance(email_response, dict) and email_response.get('id'):
+                logger.info(f"✅ Email sent successfully to {to_email} (ID: {email_response['id']})")
                 return True, "Email sent successfully"
             else:
-                error_msg = f"SendGrid API error (Status {response.status_code}): {response.text}"
+                error_msg = f"Resend API returned unexpected response: {email_response}"
                 logger.error(f"Failed to send email to {to_email}: {error_msg}")
                 return False, error_msg
                 
-        except requests.exceptions.RequestException as e:
-            error_msg = f"SendGrid API request failed: {str(e)}"
-            logger.error(f"Failed to send email to {to_email}: {error_msg}", exc_info=True)
-            return False, error_msg
         except Exception as e:
-            error_msg = f"SendGrid error: {str(e)}"
+            error_msg = f"Resend API error: {str(e)}"
             logger.error(f"Failed to send email to {to_email}: {error_msg}", exc_info=True)
             return False, error_msg
     
     def send_verification_email(self, to_email: str, verification_code: str) -> Tuple[bool, str]:
         """
-        Send verification code email using SendGrid
+        Send verification code email using Resend
         Returns: (success: bool, error_message: str)
         """
         logger.info(f"Attempting to send verification email to: {to_email}")
@@ -161,7 +160,7 @@ This is an automated message. Please do not reply to this email.
 </html>
 """
             
-            return self._send_email_via_sendgrid(
+            return self._send_email_via_resend(
                 to_email=to_email,
                 subject="Email Verification Code - Archiquest",
                 text_body=text_body,
@@ -175,7 +174,7 @@ This is an automated message. Please do not reply to this email.
     
     def send_password_reset_email(self, to_email: str, reset_code: str) -> Tuple[bool, str]:
         """
-        Send password reset code email using SendGrid
+        Send password reset code email using Resend
         Returns: (success: bool, error_message: str)
         """
         logger.info(f"Attempting to send password reset email to: {to_email}")
@@ -227,7 +226,7 @@ This is an automated message. Please do not reply to this email.
 </html>
 """
             
-            return self._send_email_via_sendgrid(
+            return self._send_email_via_resend(
                 to_email=to_email,
                 subject="Password Reset Code - Archiquest",
                 text_body=text_body,
