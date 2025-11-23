@@ -1,21 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
 import Sidebar from "../Sidebar/Sidebar";
 import { supabase } from "../../supabaseClient";
-import './ReadingMaterials.css';
+import "./ReadingMaterials.css";
 
 function ReadingMaterials() {
   const [materials, setMaterials] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
-  const [modal, setModal] = useState({ open: false, title: "", message: "", confirm: false, onConfirm: null });
+  const [modal, setModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    confirm: false,
+    onConfirm: null,
+  });
 
+  // Correct API BASE
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
-  // Get user role
+  // Load user role
   useEffect(() => {
     const fetchUserRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: profile } = await supabase
@@ -30,15 +40,15 @@ function ReadingMaterials() {
     fetchUserRole();
   }, []);
 
-  // Get reading materials
+  // Load all reading materials
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
-        const response = await fetch(`${apiBaseNoPrefix}/reading-materials`);
-        const data = await response.json();
+        const res = await fetch(`${apiBase}/reading-materials`);
+        const data = await res.json();
 
-        if (!response.ok) throw new Error(data.detail || "Failed to fetch materials");
+        if (!res.ok)
+          throw new Error(data.detail || "Failed to fetch materials");
 
         const sorted = (data || []).sort((a, b) => {
           const dateA = new Date(a.updated_at || a.created_at);
@@ -55,28 +65,28 @@ function ReadingMaterials() {
     fetchMaterials();
   }, []);
 
-  const handleAddClick = () => {
-    navigate('/add-reading-material');
-  };
+  const handleAddClick = () => navigate("/add-reading-material");
 
   const handleEdit = (material) => {
-    navigate('/add-reading-material', { state: { material } });
+    navigate("/add-reading-material", { state: { material } });
   };
 
   const handleDelete = (materialId) => {
     setModal({
       open: true,
-      message: "Are you sure you want to delete this shi?",
+      message: "Are you sure you want to delete this material?",
       confirm: true,
       onConfirm: async () => {
         try {
-          const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
-          const response = await fetch(`${apiBaseNoPrefix}/reading-materials/${materialId}`, {
-            method: "DELETE",
-          });
+          const res = await fetch(
+            `${apiBase}/reading-materials/${materialId}`,
+            {
+              method: "DELETE",
+            }
+          );
 
-          if (!response.ok) {
-            const err = await response.json();
+          if (!res.ok) {
+            const err = await res.json();
             throw new Error(err.detail || "Delete failed");
           }
 
@@ -97,7 +107,7 @@ function ReadingMaterials() {
             confirm: false,
           });
         }
-      }
+      },
     });
   };
 
@@ -119,7 +129,9 @@ function ReadingMaterials() {
         </div>
 
         {materials.length === 0 ? (
-          <p style={{ color: "#888", marginTop: "20px" }}>No reading materials available yet.</p>
+          <p style={{ color: "#888", marginTop: "20px" }}>
+            No reading materials available yet.
+          </p>
         ) : (
           materials.map((material) => (
             <div key={material.id} className="readingmaterial-section-card">
@@ -133,7 +145,10 @@ function ReadingMaterials() {
 
                 {userRole === "teacher" && (
                   <div>
-                    <button className="edit-btn" onClick={() => handleEdit(material)}>
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(material)}
+                    >
                       Edit
                     </button>
                     <button
@@ -150,14 +165,18 @@ function ReadingMaterials() {
               {userRole === "teacher" && (
                 <p style={{ fontSize: "0.85rem", color: "#888" }}>
                   {material.updated_at
-                    ? `Updated on: ${new Date(material.updated_at).toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })} (${formatDistanceToNow(new Date(material.updated_at), { addSuffix: true })})`
-                    : `Created on: ${new Date(material.created_at).toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })} (${formatDistanceToNow(new Date(material.created_at), { addSuffix: true })})`}
+                    ? `Updated on: ${new Date(
+                        material.updated_at
+                      ).toLocaleString()} (${formatDistanceToNow(
+                        new Date(material.updated_at),
+                        { addSuffix: true }
+                      )})`
+                    : `Created on: ${new Date(
+                        material.created_at
+                      ).toLocaleString()} (${formatDistanceToNow(
+                        new Date(material.created_at),
+                        { addSuffix: true }
+                      )})`}
                 </p>
               )}
             </div>
@@ -200,7 +219,6 @@ function ReadingMaterials() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
