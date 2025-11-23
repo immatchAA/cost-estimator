@@ -2,6 +2,7 @@ import os
 import random
 import string
 import logging
+import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from typing import Optional, Tuple
@@ -12,46 +13,33 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-# Try importing Resend
-try:
-    import resend
-    RESEND_AVAILABLE = True
-except ImportError:
-    RESEND_AVAILABLE = False
-    logger.warning("⚠️ Resend package not installed. Install with: pip install resend")
-
 class EmailService:
     def __init__(self):
-        # Resend Configuration
-        self.resend_api_key = os.getenv("RESEND_API_KEY")
-        # Support both RESEND_FROM_EMAIL and FROM_EMAIL for flexibility
-        self.from_email = os.getenv("RESEND_FROM_EMAIL") or os.getenv("FROM_EMAIL", "onboarding@resend.dev")
+        # Brevo Configuration
+        self.brevo_api_key = os.getenv("BREVO_API_KEY")
+        self.from_email = os.getenv("FROM_EMAIL", "aarchiquest@gmail.com")
+        self.brevo_api_url = "https://api.brevo.com/v3/smtp/email"
         
         # Debug logging
-        logger.info(f"Initializing EmailService (Resend)...")
-        logger.info(f"RESEND_API_KEY found: {bool(self.resend_api_key)}")
-        if self.resend_api_key:
-            logger.info(f"RESEND_API_KEY length: {len(self.resend_api_key)}")
-            logger.info(f"RESEND_API_KEY prefix: {self.resend_api_key[:3] + '...' if len(self.resend_api_key) > 3 else 'Not set'}")
+        logger.info(f"Initializing EmailService (Brevo)...")
+        logger.info(f"BREVO_API_KEY found: {bool(self.brevo_api_key)}")
+        if self.brevo_api_key:
+            logger.info(f"BREVO_API_KEY length: {len(self.brevo_api_key)}")
+            logger.info(f"BREVO_API_KEY prefix: {self.brevo_api_key[:10] + '...' if len(self.brevo_api_key) > 10 else 'Not set'}")
         logger.info(f"FROM_EMAIL: {self.from_email}")
-        logger.info(f"Resend package available: {RESEND_AVAILABLE}")
         
         # Validate configuration
-        if not RESEND_AVAILABLE:
-            logger.error("❌ Resend package not installed. Install with: pip install resend")
-        elif not self.resend_api_key:
-            logger.warning("⚠️ RESEND_API_KEY not configured. Email sending will fail.")
-            logger.warning("Please set RESEND_API_KEY in Railway environment variables")
+        if not self.brevo_api_key:
+            logger.warning("⚠️ BREVO_API_KEY not configured. Email sending will fail.")
+            logger.warning("Please set BREVO_API_KEY in environment variables")
         else:
-            # Initialize Resend client
-            resend.api_key = self.resend_api_key
-            logger.info("✅ Resend configuration loaded successfully")
+            logger.info("✅ Brevo configuration loaded successfully")
         
     def generate_verification_code(self) -> str:
         """Generate a 6-digit verification code"""
         return ''.join(random.choices(string.digits, k=6))
     
-    def _send_email_via_resend(
+    def _send_email_via_brevo(
         self, 
         to_email: str, 
         subject: str, 
@@ -59,52 +47,58 @@ class EmailService:
         html_body: str
     ) -> Tuple[bool, str]:
         """
-        Send email via Resend API
+        Send email via Brevo API
         Returns: (success: bool, error_message: str)
         """
-        if not RESEND_AVAILABLE:
-            error_msg = "Resend package not installed. Install with: pip install resend"
-            logger.error(error_msg)
-            return False, error_msg
-        
-        if not self.resend_api_key:
-            error_msg = "Resend API key not configured. Please set RESEND_API_KEY environment variable."
+        if not self.brevo_api_key:
+            error_msg = "Brevo API key not configured. Please set BREVO_API_KEY environment variable."
             logger.error(error_msg)
             return False, error_msg
         
         try:
-            logger.info(f"Sending email via Resend API to {to_email}")
+            logger.info(f"Sending email via Brevo API to {to_email}")
             
-            params = {
-                "from": f"Archiquest <{self.from_email}>",
-                "to": [to_email],
-                "subject": subject,
-                "html": html_body,
-                "text": text_body
+            headers = {
+                "accept": "application/json",
+                "api-key": self.brevo_api_key,
+                "content-type": "application/json"
             }
             
-            email_response = resend.Emails.send(params)
+            payload = {
+                "sender": {
+                    "name": "Archiquest",
+                    "email": self.from_email
+                },
+                "to": [
+                    {
+                        "email": to_email
+                    }
+                ],
+                "subject": subject,
+                "htmlContent": html_body,
+                "textContent": text_body
+            }
             
-            # Resend returns an object with id if successful
-            if email_response and hasattr(email_response, 'id'):
-                logger.info(f"✅ Email sent successfully to {to_email} (ID: {email_response.id})")
-                return True, "Email sent successfully"
-            elif email_response and isinstance(email_response, dict) and email_response.get('id'):
-                logger.info(f"✅ Email sent successfully to {to_email} (ID: {email_response['id']})")
+            response = requests.post(self.brevo_api_url, json=payload, headers=headers)
+            
+            if response.status_code == 201:
+                response_data = response.json()
+                message_id = response_data.get("messageId", "unknown")
+                logger.info(f"✅ Email sent successfully to {to_email} (Message ID: {message_id})")
                 return True, "Email sent successfully"
             else:
-                error_msg = f"Resend API returned unexpected response: {email_response}"
+                error_msg = f"Brevo API error: {response.status_code} - {response.text}"
                 logger.error(f"Failed to send email to {to_email}: {error_msg}")
                 return False, error_msg
                 
         except Exception as e:
-            error_msg = f"Resend API error: {str(e)}"
+            error_msg = f"Brevo API error: {str(e)}"
             logger.error(f"Failed to send email to {to_email}: {error_msg}", exc_info=True)
             return False, error_msg
     
     def send_verification_email(self, to_email: str, verification_code: str) -> Tuple[bool, str]:
         """
-        Send verification code email using Resend
+        Send verification code email using Brevo
         Returns: (success: bool, error_message: str)
         """
         logger.info(f"Attempting to send verification email to: {to_email}")
@@ -160,7 +154,7 @@ This is an automated message. Please do not reply to this email.
 </html>
 """
             
-            return self._send_email_via_resend(
+            return self._send_email_via_brevo(
                 to_email=to_email,
                 subject="Email Verification Code - Archiquest",
                 text_body=text_body,
@@ -174,7 +168,7 @@ This is an automated message. Please do not reply to this email.
     
     def send_password_reset_email(self, to_email: str, reset_code: str) -> Tuple[bool, str]:
         """
-        Send password reset code email using Resend
+        Send password reset code email using Brevo
         Returns: (success: bool, error_message: str)
         """
         logger.info(f"Attempting to send password reset email to: {to_email}")
@@ -226,7 +220,7 @@ This is an automated message. Please do not reply to this email.
 </html>
 """
             
-            return self._send_email_via_resend(
+            return self._send_email_via_brevo(
                 to_email=to_email,
                 subject="Password Reset Code - Archiquest",
                 text_body=text_body,

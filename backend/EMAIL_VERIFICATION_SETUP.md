@@ -6,7 +6,7 @@ This guide will help you set up email verification functionality for your Archit
 
 The email verification system includes:
 
-- 6-digit verification codes sent via email
+- 6-digit verification codes sent via email using Brevo (formerly Sendinblue)
 - 10-minute expiration for codes
 - Resend functionality with rate limiting
 - Integration with Supabase authentication
@@ -32,37 +32,45 @@ Make sure these tables exist in your Supabase database:
 
 ## Environment Variables
 
-Add these environment variables to your `.env` file:
+Add these environment variables to your `.env` file or your deployment platform (e.g., Render):
 
 ```env
-# Email Configuration (SMTP)
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-FROM_EMAIL=your-email@gmail.com
+# Email Configuration (Brevo)
+BREVO_API_KEY=your-brevo-api-key
+FROM_EMAIL=aarchiquest@gmail.com
 
 # Existing Supabase variables
 SUPABASE_URL=your-supabase-url
 SUPABASE_KEY=your-supabase-anon-key
 ```
 
-### Gmail Setup (Recommended)
+### Brevo Setup
 
-1. Enable 2-Factor Authentication on your Gmail account
-2. Generate an App Password:
-   - Go to Google Account settings
-   - Security → 2-Step Verification → App passwords (tgrq cgof feqz hrmo)
-   - Generate password for "Mail"
-   - Use this password as `SMTP_PASSWORD`
+1. **Create a Brevo Account**
+   - Sign up at [brevo.com](https://www.brevo.com) (formerly Sendinblue)
+   - Verify your email address
 
-### Alternative Email Providers
+2. **Generate an API Key**
+   - Log in to your Brevo account
+   - Navigate to **SMTP & API** → **API Keys**
+   - Click **Generate a new API key**
+   - Name your API key (e.g., "VerificationEmails")
+   - Copy the generated API key and set it as `BREVO_API_KEY`
 
-You can use other SMTP providers by updating these variables:
+3. **Configure Sender Email**
+   - Set `FROM_EMAIL` to the email address you want to send from
+   - Make sure this email is verified in your Brevo account
+   - For better deliverability, authenticate your domain in Brevo
 
-- **Outlook/Hotmail**: `smtp-mail.outlook.com`, port `587`
-- **Yahoo**: `smtp.mail.yahoo.com`, port `587`
-- **Custom SMTP**: Update `SMTP_SERVER` and `SMTP_PORT`
+### For Render Deployment
+
+When deploying to Render, add these environment variables in your Render dashboard:
+
+1. Go to your service settings
+2. Navigate to **Environment** section
+3. Add the following variables:
+   - `BREVO_API_KEY`: Your Brevo API key
+   - `FROM_EMAIL`: aarchiquest@gmail.com (or your verified sender email)
 
 ## API Endpoints
 
@@ -154,9 +162,11 @@ You can use other SMTP providers by updating these variables:
 
 **Email not sending:**
 
-- Check SMTP credentials
-- Verify email provider settings
-- Check server logs for errors
+- Check Brevo API key is correct
+- Verify `FROM_EMAIL` is set and matches a verified sender in Brevo
+- Check server logs for API errors
+- Verify your Brevo account is active and not suspended
+- Check Brevo dashboard for delivery status
 
 **Code not verifying:**
 
@@ -208,8 +218,9 @@ Modify CSS in:
 ### Environment Variables
 
 - Use secure environment variable management
-- Never commit SMTP credentials to version control
-- Use different email accounts for development/production
+- Never commit Brevo API keys to version control
+- Use different API keys for development/production
+- Rotate API keys periodically for security
 
 ### Monitoring
 
@@ -219,9 +230,10 @@ Modify CSS in:
 
 ### Scaling
 
-- Consider using email service providers (SendGrid, Mailgun) for high volume
-- Implement Redis for verification code storage
+- Brevo handles high volume email sending automatically
+- Implement Redis for verification code storage if needed
 - Add database connection pooling
+- Monitor Brevo API rate limits and upgrade plan if necessary
 
 ## Support
 
