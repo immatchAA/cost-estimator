@@ -10,6 +10,7 @@ function MaterialSearch() {
   const [aiResults, setAiResults] = useState([]);
   const [teacherMaterials, setTeacherMaterials] = useState([]);
   const [showModal, setShowModal] = useState(false);
+
   const [newMaterial, setNewMaterial] = useState({
     material: "",
     brand: "",
@@ -20,18 +21,24 @@ function MaterialSearch() {
   });
 
   const [userRole, setUserRole] = useState("");
-  const teacherId = localStorage.getItem("user_id");
+  const [teacherId, setTeacherId] = useState(null);
 
-
+  // 🚀 Load both userId + role in ONE unified effect (prevents race conditions)
   useEffect(() => {
-    const loadRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    const loadUserData = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
-        console.log("No Supabase user logged in");
+        console.log("No logged-in user");
         return;
       }
 
+      // Set teacherId (same as auth user.id)
+      setTeacherId(user.id);
+
+      // Fetch role from users table
       const { data, error } = await supabase
         .from("users")
         .select("role")
@@ -43,14 +50,16 @@ function MaterialSearch() {
         return;
       }
 
-      setUserRole(data.role?.toLowerCase() || "");
-      console.log("Loaded role from users table:", data.role);
+      const role = data.role?.toLowerCase() || "";
+      setUserRole(role);
+
+      console.log("Loaded user:", { teacherId: user.id, role });
     };
 
-    loadRole();
+    loadUserData();
   }, []);
 
-
+  // 🚀 Fetch teacher materials once teacherId & role are ready
   useEffect(() => {
     if (teacherId && userRole === "teacher") {
       fetchTeacherMaterials(teacherId);
@@ -59,7 +68,9 @@ function MaterialSearch() {
 
   const fetchTeacherMaterials = async (teacherId) => {
     try {
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+      const apiBase =
+        import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
       const res = await axios.get(`${apiBase}/materials/teacher/${teacherId}`);
       setTeacherMaterials(res.data);
     } catch (err) {
@@ -67,17 +78,18 @@ function MaterialSearch() {
     }
   };
 
-  // AI search
+  // 🔍 AI material search
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
 
     try {
-      const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api")
-        .replace("/api", "");
-      const res = await axios.post(`${apiBaseNoPrefix}/search_price`, {
+      const base = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
+
+      const res = await axios.post(`${base}/search_price`, {
         material: query,
       });
+
       setAiResults(res.data);
     } catch (err) {
       console.error("Search error:", err);
@@ -85,19 +97,26 @@ function MaterialSearch() {
     }
   };
 
-  // Add teacher material
+  // ➕ Add new material (teachers only)
   const handleAddMaterial = async (e) => {
     e.preventDefault();
 
+    if (!teacherId) {
+      alert("User is not fully loaded yet. Please wait 1–2 seconds then retry.");
+      return;
+    }
+
     try {
       const payload = { ...newMaterial, teacher_id: teacherId };
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+      const apiBase =
+        import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
       await axios.post(`${apiBase}/materials/add`, payload);
 
       alert("Material added!");
       setShowModal(false);
 
+      // Reset form
       setNewMaterial({
         material: "",
         brand: "",
@@ -107,6 +126,7 @@ function MaterialSearch() {
         unit: "",
       });
 
+      // Reload materials
       fetchTeacherMaterials(teacherId);
     } catch (err) {
       console.error("Add material error:", err);
@@ -117,15 +137,15 @@ function MaterialSearch() {
   return (
     <div className="material-search-page">
       <Sidebar />
-      <div className="search-content">
 
+      <div className="search-content">
         {/* HEADER */}
         <header className="virtualstore-header">
           <h1>Virtual Store</h1>
           <p>Explore real-time price searches powered by AI</p>
         </header>
 
-        {/* SEARCH FORM */}
+        {/* SEARCH BAR */}
         <form className="virtualstore-row" onSubmit={handleSearch}>
           <div className="left-controls">
             <div className="search-input-wrap">
@@ -141,38 +161,46 @@ function MaterialSearch() {
               <option>Category</option>
             </select>
           </div>
-          <button type="submit" className="primary-btn">Search</button>
+          <button type="submit" className="primary-btn">
+            Search
+          </button>
         </form>
 
         {/* AI RESULTS */}
         <div className="table-section">
           <h2>AI Search Results</h2>
-          <MaterialTable materials={aiResults} tableType="ai" />
+          <MaterialTable materials={aiResults} tableType="ai" userRole={userRole} />
         </div>
 
         {/* TEACHER MATERIALS */}
         <div className="table-section">
           <div className="table-header">
-            <h2>{userRole === "teacher" ? "My Materials" : "All Teacher Materials"}</h2>
+            <h2>
+              {userRole === "teacher" ? "My Materials" : "All Teacher Materials"}
+            </h2>
 
+            {/* Only teachers see button */}
             {userRole === "teacher" && (
               <button className="add-btn" onClick={() => setShowModal(true)}>
                 + Add Material
               </button>
             )}
           </div>
+
           <MaterialTable
             materials={teacherMaterials}
             tableType="teacher"
+            userRole={userRole}
             onUpdate={fetchTeacherMaterials}
           />
         </div>
 
         {/* MODAL */}
-         {showModal && (
+        {showModal && (
           <div className="modal-overlay">
             <div className="modal-content">
               <h2>Add New Material</h2>
+
               <form onSubmit={handleAddMaterial}>
                 <input
                   type="text"
@@ -183,6 +211,7 @@ function MaterialSearch() {
                   }
                   required
                 />
+
                 <input
                   type="text"
                   placeholder="Brand"
@@ -192,6 +221,7 @@ function MaterialSearch() {
                   }
                   required
                 />
+
                 <input
                   type="text"
                   placeholder="Unit"
@@ -200,6 +230,7 @@ function MaterialSearch() {
                     setNewMaterial({ ...newMaterial, unit: e.target.value })
                   }
                 />
+
                 <input
                   type="text"
                   placeholder="Price"
@@ -209,6 +240,7 @@ function MaterialSearch() {
                   }
                   required
                 />
+
                 <input
                   type="text"
                   placeholder="Vendor"
@@ -218,6 +250,7 @@ function MaterialSearch() {
                   }
                   required
                 />
+
                 <input
                   type="text"
                   placeholder="Location"
