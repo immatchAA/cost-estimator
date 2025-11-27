@@ -169,14 +169,77 @@ function MaterialSearch() {
         </div>
 
         {/* MODAL */}
-        {showModal && (
+         {showModal && (
           <div className="modal-overlay">
             <div className="modal-content">
               <h2>Add New Material</h2>
               <form onSubmit={handleAddMaterial}>
+                <input
+                  type="text"
+                  placeholder="Material"
+                  value={newMaterial.material}
+                  onChange={(e) =>
+                    setNewMaterial({ ...newMaterial, material: e.target.value })
+                  }
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Brand"
+                  value={newMaterial.brand}
+                  onChange={(e) =>
+                    setNewMaterial({ ...newMaterial, brand: e.target.value })
+                  }
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Unit"
+                  value={newMaterial.unit}
+                  onChange={(e) =>
+                    setNewMaterial({ ...newMaterial, unit: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Price"
+                  value={newMaterial.price}
+                  onChange={(e) =>
+                    setNewMaterial({ ...newMaterial, price: e.target.value })
+                  }
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Vendor"
+                  value={newMaterial.vendor}
+                  onChange={(e) =>
+                    setNewMaterial({ ...newMaterial, vendor: e.target.value })
+                  }
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Location"
+                  value={newMaterial.location}
+                  onChange={(e) =>
+                    setNewMaterial({ ...newMaterial, location: e.target.value })
+                  }
+                  required
+                />
 
-                {/* Fields... */}
-
+                <div className="modal-buttons">
+                  <button type="submit" className="primary-btn">
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
             </div>
           </div>
