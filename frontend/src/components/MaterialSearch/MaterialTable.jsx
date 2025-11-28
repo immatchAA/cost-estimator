@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./MaterialTable.css";
 
-function MaterialTable({ materials, tableType, onUpdate }) {
+function MaterialTable({ materials, tableType, onUpdate, userRole: roleProp }) {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [classMaterials, setClassMaterials] = useState([]);
-  const userRole = (localStorage.getItem("role") || "").toLowerCase();
+  const userRole = (roleProp || "").toLowerCase();
 
   // 🔹 Students: Fetch all materials from all teachers
   useEffect(() => {

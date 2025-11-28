@@ -78,7 +78,7 @@ async def get_all_materials():
         response = (
             supabase.table("materials_prices")
             .select("*")
-            .not_.is_("teacher_id", None) 
+            .filter("teacher_id", "not.is", "null") 
             .execute()
         )
 

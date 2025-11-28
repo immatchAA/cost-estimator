@@ -42,16 +42,17 @@ function MaterialSearch() {
       const { data, error } = await supabase
         .from("users")
         .select("role")
-        .eq("auth_id", user.id)
-        .single();
+        .eq("id", user.id)
+        .maybeSingle();
 
       if (error) {
         console.error("Error loading role:", error);
         return;
       }
 
-      const role = data.role?.toLowerCase() || "";
+      const role = data?.role?.toLowerCase() || "";
       setUserRole(role);
+      localStorage.setItem("role", role);
 
       console.log("Loaded user:", { teacherId: user.id, role });
     };
