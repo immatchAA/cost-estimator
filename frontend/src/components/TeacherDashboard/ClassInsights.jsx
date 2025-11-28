@@ -284,7 +284,7 @@ export default function ClassInsights() {
 
               {aiAccuracy && (
                   <div className="tcv-accuracy-section">
-                    <h3>🤖 AI Accuracy (Gemini)</h3>
+                    <h3>🤖 AI Accuracy Percentage</h3>
 
                     <div className="tcv-accuracy-content">
                       <div
