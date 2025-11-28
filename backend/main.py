@@ -35,7 +35,8 @@ app = FastAPI()
 app.include_router(challenges_router, prefix="/api")
 app.include_router(estimate_route.router, prefix="/api") 
 app.include_router(auth_router)
-app.include_router(verification_router)
+# Verification router temporarily disabled - will be re-enabled later
+# app.include_router(verification_router)
 app.include_router(reading_materials.router, prefix="/api")
 
 app.include_router(class_router, prefix="/api")
@@ -92,44 +93,45 @@ class MaterialRequest(BaseModel):
     material: str
 
 
-class RegisterRequest(BaseModel):
-    first_name: str
-    last_name: str
-    email: str
-    password: str
-    role: str
+# RegisterRequest model and register endpoint moved to routes/auth.py
+# Keeping this commented for reference - using auth_router instead
+# class RegisterRequest(BaseModel):
+#     first_name: str
+#     last_name: str
+#     email: str
+#     password: str
+#     role: str
 
-
-@app.post("/auth/register")
-async def register_user(request: RegisterRequest):
-    try:
-        auth_response = supabase.auth.sign_up({
-            "email": request.email,
-            "password": request.password
-        })
-
-        if auth_response.user:
-            user_id = auth_response.user.id
-        else:
-            raise HTTPException(status_code=400, detail="User already registered")
-
-        # Insert/Upsert user into your custom users table
-        insert_response = supabase.table("users").upsert({
-            "id": user_id,
-            "first_name": request.first_name,
-            "last_name": request.last_name,
-            "email": request.email,
-            "role": request.role
-        }).execute()
-
-        if insert_response.error:
-            raise HTTPException(status_code=400, detail=insert_response.error.message)
-
-        return {"message": "User registered successfully"}
-
-    except Exception as e:
-        logging.error(f"Registration failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+# @app.post("/auth/register")
+# async def register_user(request: RegisterRequest):
+#     try:
+#         auth_response = supabase.auth.sign_up({
+#             "email": request.email,
+#             "password": request.password
+#         })
+#
+#         if auth_response.user:
+#             user_id = auth_response.user.id
+#         else:
+#             raise HTTPException(status_code=400, detail="User already registered")
+#
+#         # Insert/Upsert user into your custom users table
+#         insert_response = supabase.table("users").upsert({
+#             "id": user_id,
+#             "first_name": request.first_name,
+#             "last_name": request.last_name,
+#             "email": request.email,
+#             "role": request.role
+#         }).execute()
+#
+#         if insert_response.error:
+#             raise HTTPException(status_code=400, detail=insert_response.error.message)
+#
+#         return {"message": "User registered successfully"}
+#
+#     except Exception as e:
+#         logging.error(f"Registration failed: {e}")
+#         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 
 @app.post("/search_price")

@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import backgroundImage from "../../assets/bgbg.png";
 import "../Register/Register.css";
 import { useNavigate } from "react-router-dom";
-import EmailVerification from "../EmailVerification/EmailVerification";
+// EmailVerification component kept for future use when verification is re-enabled
+// import EmailVerification from "../EmailVerification/EmailVerification";
 
 function RegisterForm() {
   const navigate = useNavigate();
@@ -21,7 +22,8 @@ function RegisterForm() {
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
+  // Verification step temporarily disabled
+  // const [showVerification, setShowVerification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // update input values
@@ -46,27 +48,10 @@ function RegisterForm() {
     setIsLoading(true);
 
     try {
-      // First, send verification code
+      // Direct registration without verification (verification feature temporarily disabled)
       const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
       const apiBaseNoPrefix = apiBase.replace('/api', '') || "http://localhost:8000";
-      const verificationResponse = await fetch(
-        `${apiBaseNoPrefix}/verification/send-code`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: formData.email,
-          }),
-        }
-      );
-
-      if (!verificationResponse.ok) {
-        const data = await verificationResponse.json();
-        setError(data.detail || "Failed to send verification code");
-        return;
-      }
-
-      // Then, register user (without creating account yet)
+      
       const registerResponse = await fetch(
         `${apiBaseNoPrefix}/auth/register`,
         {
@@ -85,57 +70,14 @@ function RegisterForm() {
       if (!registerResponse.ok) {
         const data = await registerResponse.json();
         setError(data.detail || "Registration failed");
+        setIsLoading(false);
         return;
       }
 
-      await registerResponse.json();
-      setSuccess("Verification code sent! Please check your email.");
+      const data = await registerResponse.json();
+      setSuccess(data.message || "Registration successful!");
 
-      // Show verification component
-      setTimeout(() => {
-        setShowVerification(true);
-      }, 1000);
-    } catch (err) {
-      setError("Server error. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // ✅ Complete registration with verification
-  const handleVerificationComplete = async (verificationCode) => {
-    setIsLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const apiBaseNoPrefix = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '') || "http://localhost:8000";
-      const response = await fetch(
-        `${apiBaseNoPrefix}/auth/register-with-verification`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            email: formData.email,
-            password: formData.password,
-            role: formData.role,
-            verification_code: verificationCode,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json();
-        setError(data.detail || "Registration failed");
-        return;
-      }
-
-      const data = await response.json();
-      setSuccess(data.message);
-
-      // ✅ After registration, auto-login to get tokens
+      // Auto-login after registration
       const loginRes = await fetch(`${apiBaseNoPrefix}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,6 +93,7 @@ function RegisterForm() {
         localStorage.setItem("refresh_token", loginData.session.refresh_token);
       }
 
+      // Redirect to login page after successful registration
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setError("Server error. Please try again later.");
@@ -159,24 +102,21 @@ function RegisterForm() {
     }
   };
 
-  // Go back to registration form
-  const handleBackToRegister = () => {
-    setShowVerification(false);
-    setError("");
-    setSuccess("");
-  };
-
-  // Show verification component if verification step is active
-  if (showVerification) {
-    return (
-      <EmailVerification
-        email={formData.email}
-        onVerificationComplete={handleVerificationComplete}
-        onBack={handleBackToRegister}
-        registrationData={formData}
-      />
-    );
-  }
+  // Verification handlers temporarily disabled - will be re-enabled later
+  // const handleVerificationComplete = async (verificationCode) => { ... }
+  // const handleBackToRegister = () => { ... }
+  
+  // Verification component rendering temporarily disabled
+  // if (showVerification) {
+  //   return (
+  //     <EmailVerification
+  //       email={formData.email}
+  //       onVerificationComplete={handleVerificationComplete}
+  //       onBack={handleBackToRegister}
+  //       registrationData={formData}
+  //     />
+  //   );
+  // }
 
   return (
     <div
@@ -421,7 +361,7 @@ function RegisterForm() {
               {/* Submit */}
               <div className="actions">
                 <button type="submit" disabled={isLoading}>
-                  {isLoading ? "SENDING CODE..." : "SIGN UP"}
+                  {isLoading ? "REGISTERING..." : "SIGN UP"}
                 </button>
               </div>
             </form>

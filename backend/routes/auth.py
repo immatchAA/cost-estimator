@@ -43,7 +43,7 @@ class LoginRequest(BaseModel):
 
 @auth_router.post("/register")
 async def register(request: RegisterRequest):
-    """Initial registration - sends verification code but doesn't create user yet"""
+    """Direct registration without email verification (verification feature temporarily disabled)"""
     try:
         email = request.email.lower().strip()
 
@@ -58,16 +58,40 @@ async def register(request: RegisterRequest):
             # Skip if table doesn't exist yet
             pass
 
-        return {
-            "message": "Registration data received. Please verify your email to complete registration.",
-            "email": email,
-            "requires_verification": True,
-        }
+        # Create user in Supabase Auth directly (verification disabled for now)
+        auth_response = supabase.auth.sign_up(
+            {"email": request.email, "password": request.password}
+        )
+
+        if not auth_response.user:
+            raise HTTPException(status_code=400, detail="Failed to create user")
+
+        # Insert into custom users table
+        try:
+            supabase.table("users").insert(
+                {
+                    "id": auth_response.user.id,
+                    "first_name": request.first_name,
+                    "last_name": request.last_name,
+                    "email": request.email,
+                    "role": request.role,
+                    "email_verified": False,  # Will be set to True when verification is re-enabled
+                }
+            ).execute()
+        except Exception:
+            # Don't fail the whole request if the users table isn't ready
+            pass
+
+        return {"message": "User registered successfully"}
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        error_msg = str(e)
+        # Check if it's an authentication-related error
+        if "auth" in error_msg.lower() or "password" in error_msg.lower() or "email" in error_msg.lower():
+            raise HTTPException(status_code=400, detail=error_msg)
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {error_msg}")
 
 
 @auth_router.post("/register-with-verification")
