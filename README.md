@@ -2,6 +2,18 @@
 
 A full-stack web application for architectural cost estimation with AI-powered material pricing.
 
+## 📖 About
+
+This project is a capstone research that aims to revolutionize architectural cost estimation through AI-powered material pricing and intelligent cost analysis. The system provides educators and students with a comprehensive platform for learning and practicing cost estimation in architectural projects, featuring real-time material price updates, challenge-based learning, and collaborative features.
+
+## 👥 Team
+
+- **Richelle Villanueva**
+- **Shaina Miparanum**
+- **Kimmer Vargas**
+- **Gerard Tac-an**
+- **Kyle Ezekiel Moreno**
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -48,9 +60,9 @@ A full-stack web application for architectural cost estimation with AI-powered m
    - Root Directory: `backend`
 4. **Environment Variables** (Variables tab):
    ```
-   SUPABASE_URL=https://mlsfklcnggvwhynkhigx.supabase.co
-   SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sc2ZrbGNuZ2d2d2h5bmtoaWd4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDg4Njk0NiwiZXhwIjoyMDY2NDYyOTQ2fQ.W0pwxgmXhguSKS0PKKdv2-fQZhcG6NSSq7UAwTgrKVU
-   GEMINI_API_KEY=AIzaSyDsCJkYoUTYR46EIBhXLoNZ7GzANV5c3Xw
+   SUPABASE_URL=your-supabase-url
+   SUPABASE_KEY=your-supabase-anon-key
+   GEMINI_API_KEY=your-gemini-api-key
    ```
 5. Railway auto-deploys
 
