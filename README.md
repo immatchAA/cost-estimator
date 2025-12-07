@@ -72,12 +72,12 @@ This project is a capstone research that aims to revolutionize architectural cos
 
 ### Teacher
 
-- **Email**: `teacher@archiquest.com`
-- **Password**: `Teacher123!`
+- **Email**: `imrichellev.123456@gmail.com`
+- **Password**: `p@ssw0rd`
 
 ### Student
 
-- **Email**: `student@archiquest.com`
-- **Password**: `Student123!`
+- **Email**: `GStudent@gmail.com`
+- **Password**: `p@ssw0rd`
 
 **Note**: Create these accounts via `/register` or Supabase dashboard.
