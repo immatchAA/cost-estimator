@@ -48,9 +48,9 @@ A full-stack web application for architectural cost estimation with AI-powered m
    - Root Directory: `backend`
 4. **Environment Variables** (Variables tab):
    ```
-   SUPABASE_URL=your-supabase-url
-   SUPABASE_KEY=your-supabase-anon-key
-   GEMINI_API_KEY=your-gemini-api-key
+   SUPABASE_URL=https://mlsfklcnggvwhynkhigx.supabase.co
+   SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sc2ZrbGNuZ2d2d2h5bmtoaWd4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDg4Njk0NiwiZXhwIjoyMDY2NDYyOTQ2fQ.W0pwxgmXhguSKS0PKKdv2-fQZhcG6NSSq7UAwTgrKVU
+   GEMINI_API_KEY=AIzaSyDsCJkYoUTYR46EIBhXLoNZ7GzANV5c3Xw
    ```
 5. Railway auto-deploys
 
