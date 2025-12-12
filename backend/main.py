@@ -155,7 +155,7 @@ async def search_price(request: MaterialRequest):
             "- location (e.g., Cebu City, Mandaue, Talisay)\n"
             "- optional: Google Maps link (gmaps_link)\n\n"
             "Strictly return the output as a **raw JSON array only** — do NOT include markdown formatting, do NOT wrap the result with backticks (```) or 'json'. "
-            "Return only the valid JSON array like this:\n"
+            "Return only the valid JSON array like thiss:\n"
             "[\n"
             "  {\n"
             "    \"material\": \"Cement\",\n"
