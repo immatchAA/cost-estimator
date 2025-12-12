@@ -40,7 +40,7 @@ class PriceService:
     f"4. All items must be realistic and updated Cebu, Philippines-market accurate.\n\n"
     f"5. ALL prices must be in REALISTIC PH Peso values.\n"
     f"6. Price must NEVER be a decimal like 5.5, 4.95, 6.0 — THESE ARE INVALID. Price must always include a peso sign. Use only formats like: ₱120, ₱350, ₱1,250\n"
-    f"7. Provide all materials that you can search as much as possible. And provide different price range.\n"
+    f"7. Provide all materials that you can search as much as possible. And provide different price ranges.\n"
 
     f"Return ONLY a raw JSON array with fields:\n"
     f"[\"material\", \"brand\", \"size\", \"unit\", \"price\", \"vendor\", \"location\"]\n\n"
