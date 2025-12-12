@@ -80,9 +80,7 @@ function MaterialTable({ materials, tableType, onUpdate, userRole: roleProp }) {
     }
   };
 
-  // 🧩 Display logic:
-  // - Teachers: show own materials (from props)
-  // - Students: show all materials from all teachers
+
   const displayMaterials =
     userRole === "student" && tableType === "teacher"
       ? classMaterials
@@ -96,12 +94,12 @@ function MaterialTable({ materials, tableType, onUpdate, userRole: roleProp }) {
         <thead>
           <tr>
             <th>Material</th>
+            <th>Size</th>
             <th>Brand</th>
             <th>Unit</th>
             <th>Price</th>
             <th>Location</th>
             <th>Vendor</th>
-            <th>Map</th>
             {tableType === "teacher" && userRole === "teacher" && <th>Actions</th>}
           </tr>
         </thead>
@@ -121,6 +119,16 @@ function MaterialTable({ materials, tableType, onUpdate, userRole: roleProp }) {
                   )}
                 </td>
 
+                <td>
+                {editingId === item.material_id ? (
+                  <input
+                    value={editData.size}
+                    onChange={(e) => handleChange(e, "size")}
+                  />
+                ) : (
+                  item.size
+                )}
+              </td>
                 <td>
                   {editingId === item.material_id ? (
                     <input
@@ -173,22 +181,6 @@ function MaterialTable({ materials, tableType, onUpdate, userRole: roleProp }) {
                     />
                   ) : (
                     item.vendor
-                  )}
-                </td>
-
-                <td>
-                  {item.gmaps_link ? (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                        item.location || item.gmaps_link
-                      )}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      📍
-                    </a>
-                  ) : (
-                    "N/A"
                   )}
                 </td>
 

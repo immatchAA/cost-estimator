@@ -42,6 +42,16 @@
   gap: 12px;
 }
 
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
 .search-input-wrap {
   display: flex;
   align-items: center;
@@ -49,7 +59,7 @@
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 8px 12px;
-  width: 320px;
+  width: 220px;
 }
 
 .search-input-wrap input {
@@ -188,6 +198,16 @@
 
 .secondary-btn:hover {
   background: #cbd5e1;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Animations */

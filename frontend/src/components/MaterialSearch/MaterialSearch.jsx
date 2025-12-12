@@ -10,6 +10,8 @@ function MaterialSearch() {
   const [aiResults, setAiResults] = useState([]);
   const [teacherMaterials, setTeacherMaterials] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [size, setSize] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [newMaterial, setNewMaterial] = useState({
     material: "",
@@ -79,22 +81,27 @@ function MaterialSearch() {
     }
   };
 
-  // 🔍 AI material search
+
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
+
+    setLoading(true);
 
     try {
       const base = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
 
       const res = await axios.post(`${base}/search_price`, {
         material: query,
+        size: size
       });
 
       setAiResults(res.data);
     } catch (err) {
       console.error("Search error:", err);
       alert("AI search failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,13 +165,18 @@ function MaterialSearch() {
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
-            <select>
-              <option>Category</option>
-            </select>
+            <div className="search-input-wrap">
+              <input
+                type="text"
+                placeholder="Size (e.g., 0.4mm x 8')"
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+              />
+            </div>
           </div>
-          <button type="submit" className="primary-btn">
-            Search
-          </button>
+          <button type="submit" className="primary-btn" disabled={loading}>
+          {loading ? <span className="spinner"></span> : "Search"}
+        </button>
         </form>
 
         {/* AI RESULTS */}
