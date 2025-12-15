@@ -536,7 +536,7 @@ export default function TeacherChallengeView() {
                                 challenge_id: challengeId,
                                 analysis_id: summary?.analysis_id || null,
                                 items: aiEstimates.map((row, idx) => ({
-                                  estimate_id: row.estimate_id || null,
+                                  ...(row.estimate_id && { estimate_id: row.estimate_id }),
                                   description: row.description,
                                   quantity: row.quantity || 0,
                                   unit: row.unit || "",

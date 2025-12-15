@@ -30,17 +30,22 @@ def estimate(payload: dict):
 
 @router.post("/save")
 def save_estimates(payload: dict):
-    try:
-        challenge_id = payload.get("challenge_id")
-        analysis_id = payload.get("analysis_id")
-        items = payload.get("items", [])
-        summary = payload.get("summary", {})
+    challenge_id = payload.get("challenge_id")
+    analysis_id = payload.get("analysis_id")
+    items = payload.get("items", [])
+    summary = payload.get("summary", {})
 
-        if not challenge_id:
-            raise HTTPException(status_code=400, detail="challenge_id required")
+    if not challenge_id:
+        raise HTTPException(status_code=400, detail="challenge_id required")
+
+    try:
+        print("ITEMS:", items)
+        print("SUMMARY:", summary)
 
         save_teacher_estimates(challenge_id, analysis_id, items, summary)
         return {"status": "success"}
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()  
         raise HTTPException(status_code=400, detail=str(e))
