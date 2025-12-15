@@ -31,9 +31,6 @@ def run_ai_estimation(challenge_id: str, plan_file_url: str):
 
     elements_result = gemini.analyze_plan_extract_elements(plan_file_url)
 
-    time.sleep(2)
-
-    elements_result = gemini.analyze_plan_extract_elements(plan_file_url)
     if isinstance(elements_result, list):
         elements = elements_result
         confidence = 0.50
@@ -111,6 +108,10 @@ def run_ai_estimation(challenge_id: str, plan_file_url: str):
         row["unit"] = unit
         qty  = float(row.get("quantity") or 0)
         cat  = row.get("cost_category") or "UNCATEGORIZED"
+        size = row.get("size")
+
+        if not size or not str(size).strip():
+            size = "N/A"
 
         
         desc = row.get("description") or ""
@@ -124,7 +125,7 @@ def run_ai_estimation(challenge_id: str, plan_file_url: str):
             _listings = []
         else:
             unit_price, _listings = price_service.get_unit_price(
-    desc, unit, site_hint=site_location, challenge_id=challenge_id
+    desc, unit, size=size, site_hint=site_location, challenge_id=challenge_id
 )
 
         amount = round(qty * unit_price, 2) if unit_price else 0.0

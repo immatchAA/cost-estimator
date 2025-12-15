@@ -54,7 +54,7 @@ class PriceService:
     f"    \"unit\": \"{unit}\",\n"
     f"    \"price\": \"₱300\",\n"
     f"    \"vendor\": \"Wilcon Depot\",\n"
-    f"    \"location\": \"Cebu City\",\n"
+    f"    \"location\": \"Cebu Cityy\",\n"
     f"  }}\n"
     f"]\n"
 )
