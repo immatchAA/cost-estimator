@@ -127,10 +127,10 @@ function MaterialSearch() {
       // Reset form
       setNewMaterial({
         material: "",
+        size:"",
         brand: "",
         price: "",
         vendor: "",
-        location: "",
         unit: "",
       });
 
@@ -266,7 +266,7 @@ function MaterialSearch() {
 
                 <input
                   type="text"
-                  placeholder="Location"
+                  placeholder="Size"
                   value={newMaterial.location}
                   onChange={(e) =>
                     setNewMaterial({ ...newMaterial, location: e.target.value })
