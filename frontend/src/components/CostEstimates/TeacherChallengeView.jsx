@@ -501,55 +501,103 @@ export default function TeacherChallengeView() {
             )}
         </div>
 
-        <div style={{ marginTop: "20px", textAlign: "right" }}>
-              <button
-                onClick={async () => {
-                  if (!window.confirm("⚠️ All changes will be updated, are you sure?")) return;
+            <div style={{ marginTop: "20px", textAlign: "right" }}>
+                  <button
+                    onClick={async () => {
+                      if (!window.confirm("⚠️ All changes will be updated, are you sure?")) return;
 
-                  try {
-                    const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cost-estimates/save`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        challenge_id: challengeId,
-                        analysis_id: summary?.analysis_id || null, 
-                        items: aiEstimates.map((row, idx) => ({
-                          estimate_id: row.estimate_id || null, 
-                          description: row.description,
-                          quantity: row.quantity || 0,
-                          unit: row.unit || "",
-                          unit_price: row.unit_price || 0,
-                          amount: (row.quantity || 0) * (row.unit_price || 0),
-                          cost_category: row.cost_category,
-                          item_number: idx + 1,
-                          challenge_id: challengeId,
-                        })),
-                        summary: calculateSummary(), 
-                      }),
-                    });
+                      try {
+                        // 1️⃣ Always update challenge details
+                        const { error: challengeError } = await supabase
+                          .from("student_challenges")
+                          .update({
+                            challenge_name: challenge.challenge_name,
+                            challenge_instructions: challenge.challenge_instructions,
+                            challenge_objectives: challenge.challenge_objectives,
+                            due_date: editingDueDate || challenge.due_date,
+                          })
+                          .eq("challenge_id", challengeId);
 
-                    if (!response.ok) {
-                      alert("❌ Failed to save changes: " + response.statusText);
-                    } else {
-                      alert("✅ Changes saved successfully!");
-                    }
-                  } catch (err) {
-                    console.error(err);
-                    alert("❌ Failed to save changes: " + err.message);
-                  }
-                }}
-                style={{
-                  padding: "10px 18px",
-                  background: "#176bb7",
-                  color: "#fff",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                }}
-              >
-                💾 Save Changes
-              </button>
-            </div>
+                        if (challengeError) {
+                          alert("❌ Failed to update challenge details: " + challengeError.message);
+                          return;
+                        }
+
+                        // 2️⃣ Only save AI estimates IF they were modified
+                        if (isDirty) {
+                          const summaryCalc = calculateSummary();
+
+                          const response = await fetch(
+                            `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cost-estimates/save`,
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                challenge_id: challengeId,
+                                analysis_id: summary?.analysis_id || null,
+                                items: aiEstimates.map((row, idx) => ({
+                                  estimate_id: row.estimate_id || null,
+                                  description: row.description,
+                                  quantity: row.quantity || 0,
+                                  unit: row.unit || "",
+                                  unit_price: row.unit_price || 0,
+                                  amount: (row.quantity || 0) * (row.unit_price || 0),
+                                  cost_category: row.cost_category,
+                                  item_number: idx + 1,
+                                  challenge_id: challengeId,
+                                })),
+                                summary: {
+                                  earthwork_amount:
+                                    summaryCalc.grouped["EARTHWORK"]?.subtotal || 0,
+                                  formwork_amount:
+                                    summaryCalc.grouped["FORMWORK & SCAFFOLDING"]?.subtotal || 0,
+                                  masonry_amount:
+                                    summaryCalc.grouped["MASONRY WORK"]?.subtotal || 0,
+                                  concrete_amount:
+                                    summaryCalc.grouped["CONCRETE WORK"]?.subtotal || 0,
+                                  steelwork_amount:
+                                    summaryCalc.grouped["STEELWORK"]?.subtotal || 0,
+                                  carpentry_amount:
+                                    summaryCalc.grouped["CARPENTRY WORK"]?.subtotal || 0,
+                                  roofing_amount:
+                                    summaryCalc.grouped["ROOFING WORK"]?.subtotal || 0,
+                                  total_material_cost: summaryCalc.totalMaterial || 0,
+                                  labor_cost: summaryCalc.laborCost || 0,
+                                  contingencies_amount: summaryCalc.contingencies || 0,
+                                  grand_total_cost: summaryCalc.grandTotal || 0,
+                                },
+                              }),
+                            }
+                          );
+
+                          if (!response.ok) {
+                            alert("❌ Failed to save AI cost estimates");
+                            return;
+                          }
+                        }
+
+                        // 3️⃣ Final success
+                        alert("✅ Changes saved successfully!");
+                        setIsDirty(false);
+
+                      } catch (err) {
+                        console.error(err);
+                        alert("❌ Failed to save changes: " + err.message);
+                      }
+                    }}
+                    style={{
+                      padding: "10px 18px",
+                      background: "#176bb7",
+                      color: "#fff",
+                      borderRadius: "8px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                    }}
+                  >
+                    💾 Save Changes
+                  </button>
+                </div>
+
       </div>
     </div>
   );
